@@ -1,0 +1,85 @@
+<script setup>
+import Day1Assignment from './components/exercise/Day1Assignment.vue'
+import Day2Assignment from './components/exercise/Day2Assignment.vue'
+import WeatherParent from './components/exercise/WeatherParent.vue'
+import UnitToggler from './components/exercise/UnitToggler.vue'
+</script>
+
+<template>
+  <div>
+    <h1>⛅ 종합실습 1: SKALA 날씨 (Mockup)</h1>
+    <hr />
+    <Day1Assignment />
+    <h1>⛅ 종합실습 2: SKALA 날씨 (검색)</h1>
+    <hr />
+    <Day2Assignment />
+    <h1>⛅ 종합실습 3: SKALA 날씨 (컴포넌트)</h1>
+    <hr />
+    <WeatherParent />
+    <h1>⛅ 종합실습 4: 라우터적용</h1>
+    <hr />
+    <div class="dashboard-wrapper">
+      <nav class="navigation-bar">
+        <RouterLink to="/" class="nav-item">🌦️ 날씨 대시보드</RouterLink>
+        <span class="divider">|</span>
+        <RouterLink to="/about" class="nav-item">ℹ️ 서비스 소개</RouterLink>
+      </nav>
+      <main>
+        <RouterView />
+      </main>
+    </div>
+    <h1>⛅ 종합실습 5: 스토어적용, 라우터적용</h1>
+    <hr />
+    <div class="dashboard-wrapper">
+      <nav class="navigation-bar">
+        <RouterLink to="/" class="nav-item">🌦️ 날씨 대시보드</RouterLink>
+        <span class="divider">|</span>
+        <RouterLink to="/about" class="nav-item">ℹ️ 서비스 소개</RouterLink>
+        <UnitToggler />
+      </nav>
+      <main>
+        <RouterView />
+      </main>
+    </div>
+  </div>
+</template>
+
+<style scoped>
+.dashboard-wrapper {
+  width: 600px;
+  margin: 0 auto;
+  font-family: 'Malgun Gothic', sans-serif;
+}
+
+.navigation-bar {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #ffffff;
+  padding: 15px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  margin-bottom: 20px;
+}
+.nav-item {
+  text-decoration: none;
+  color: #7f8c8d;
+  font-weight: bold;
+  font-size: 16px;
+  transition: color 0.2s ease;
+}
+.nav-item:hover {
+  color: #2c3e50;
+}
+.divider {
+  margin: 0 15px;
+  color: #dcdde1;
+}
+
+/* 🔥 Vue Router가 활성화된 링크 태그에 자동으로 부여하는 클래스 스펙 */
+.navigation-bar .router-link-exact-active {
+  color: #3498db;
+  border-bottom: 2px solid #3498db;
+  padding-bottom: 2px;
+}
+</style>
