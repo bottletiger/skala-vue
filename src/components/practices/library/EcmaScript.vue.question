@@ -85,7 +85,6 @@ const runTask3 = async () => {
 </template>
 
 <style scoped>
-.quiz-container { max-width: 600px; margin: 30px auto; font-family: sans-serif; }
 .card { background: #f9f9f9; padding: 20px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #ddd; }
 button { background: #409eff; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-weight: bold; }
 button:hover { background: #66b1ff; }

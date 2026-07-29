@@ -40,6 +40,13 @@ const runTask2 = () => {
   result2.value = `카트: ${updatedCart} / 이미지: ${imgStatus} / 수량: ${finalStock}개`
 }
 
+// =================================================================
+// 📝 [과제 3] 서버 연쇄 데이터 요청 및 에러 통합 제어 (Async/Await)
+// =================================================================
+// 가상의 백엔드 API (수정 금지 - Promise 반환형 화살표 함수)
+const fetchUserId = () => new Promise((res) => setTimeout(() => res({ uid: 777 }), 400))
+const fetchUserProfile = (uid) => new Promise((res) => setTimeout(() => res({ uid, nick: 'Graves' }), 400))
+
 const runTask3 = async () => {
   result3.value = '⏳ 데이터 동기화 중...'
 
@@ -60,7 +67,7 @@ const runTask3 = async () => {
 </script>
 
 <template>
-  <div class="quiz-container">
+  <div class="practice-section">
     <h2>🎯 Modern JavaScript (ES6+) 실무 검증 과제룸</h2>
 
     <div class="card">
@@ -84,11 +91,6 @@ const runTask3 = async () => {
 </template>
 
 <style scoped>
-.quiz-container {
-  max-width: 600px;
-  margin: 30px auto;
-  font-family: sans-serif;
-}
 .card {
   background: #f9f9f9;
   padding: 20px;

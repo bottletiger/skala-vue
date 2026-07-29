@@ -66,8 +66,8 @@ const startDownload = () => {
 </script>
 
 <template>
-  <div class="sample-container">
-    <h2>🧪 Element Plus 핵심 기능 마스터룸 (단독 실습)</h2>
+  <div class="practice-section">
+    <h2>🧪 Element Plus 활용 실습</h2>
     <p class="subtitle">외부 API와 무관하게 템플릿과 상태값 변동만을 관측하는 샘플입니다.</p>
 
     <el-card class="box-card">
@@ -124,11 +124,6 @@ const startDownload = () => {
 </template>
 
 <style scoped>
-.sample-container {
-  padding: 30px 20px;
-  max-width: 800px;
-  margin: 0 auto;
-}
 .subtitle {
   color: #909399;
   margin-bottom: 30px;
