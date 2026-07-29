@@ -1,14 +1,14 @@
 <script setup>
 import { ref, computed, watch, watchEffect } from 'vue'
 
-// 1. [1일차 데이터 유지] 가상의 백엔드 데이터 배열
+// 1. [1일차 데이터] 가상의 백엔드 데이터 배열
 const weatherList = ref([
   { id: 'city_01', name: '서울', temp: 28, status: '맑음' },
   { id: 'city_02', name: '수원', temp: 24, status: '비' },
   { id: 'city_03', name: '부산', temp: 26, status: '구름' },
 ])
 
-// 2. [1일차 데이터 유지] 검색어 및 알림창 제어용 데이터
+// 2. [1일차 데이터] 검색어 및 알림창 제어용 데이터
 const searchQuery = ref('')
 const selectedCityInfo = ref('카드를 클릭하거나 검색해 보세요.')
 
@@ -47,7 +47,7 @@ const showDetail = (cityName, status) => {
 <template>
   <div class="dashboard-wrapper">
     <section class="search-box">
-      <h3>🔍 도시 검색 (한글 즉시 동기화)</h3>
+      <h3>🔍 도시 검색</h3>
       <input type="text" :value="searchQuery" @input="(e) => (searchQuery = e.target.value)" placeholder="검색할 도시 이름 입력" />
       <p>
         검색 중인 도시: <strong>{{ searchQuery }}</strong>
@@ -75,57 +75,3 @@ const showDetail = (cityName, status) => {
     </div>
   </div>
 </template>
-
-<style scoped>
-/* 1일차 scoped 스타일 100% 원본 계승 */
-.search-box,
-.list-box {
-  background: #f8f9fa;
-  padding: 15px;
-  border-radius: 8px;
-  margin-bottom: 15px;
-  border: 1px solid #e9ecef;
-}
-input {
-  padding: 8px;
-  width: 90%;
-  font-size: 14px;
-}
-.weather-card {
-  background: #fff;
-  border: 1px solid #dee2e6;
-  padding: 12px;
-  margin-bottom: 10px;
-  border-radius: 6px;
-  cursor: pointer;
-  position: relative;
-}
-.badge {
-  display: inline-block;
-  padding: 4px 8px;
-  font-size: 12px;
-  border-radius: 4px;
-  color: #fff;
-}
-.hot {
-  background-color: #ff7675;
-}
-.cool {
-  background-color: #74b9ff;
-}
-.btn-detail {
-  position: absolute;
-  right: 12px;
-  top: 15px;
-  padding: 6px 10px;
-  cursor: pointer;
-}
-.status-bar {
-  background: #e8f5e9;
-  padding: 10px;
-  text-align: center;
-  color: #2e7d32;
-  font-weight: bold;
-  border-radius: 6px;
-}
-</style>

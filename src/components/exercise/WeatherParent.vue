@@ -55,12 +55,8 @@ const showDetail = (cityName, status) => {
 </template>
 
 <style scoped>
-.status-bar {
-  background: #e8f5e9;
-  padding: 10px;
-  text-align: center;
-  color: #2e7d32;
-  font-weight: bold;
-  border-radius: 6px;
+.dashboard-wrapper {
+  width: 600px;
+  margin: 0 auto;
 }
 </style>

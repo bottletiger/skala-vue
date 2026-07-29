@@ -21,7 +21,8 @@ const showDetail = (cityName, status) => {
 <template>
   <div class="dashboard-wrapper">
     <section class="search-box">
-      <h3>🔍 도시 검색 (한글 즉시 동기화)</h3>
+      <h3>🔍 도시 검색</h3>
+      <!-- input type="text" v-model="searchQuery" placeholder="검색할 도시 이름 입력" / -->
       <input type="text" :value="searchQuery" @input="(e) => (searchQuery = e.target.value)" placeholder="검색할 도시 이름 입력" />
       <p>
         검색 중인 도시: <strong>{{ searchQuery }}</strong>
@@ -47,57 +48,3 @@ const showDetail = (cityName, status) => {
     </div>
   </div>
 </template>
-
-<style scoped>
-/* 1일차에 배운 scoped 스타일 격리 */
-.search-box,
-.list-box {
-  background: #f8f9fa;
-  padding: 15px;
-  border-radius: 8px;
-  margin-bottom: 15px;
-  border: 1px solid #e9ecef;
-}
-input {
-  padding: 8px;
-  width: 90%;
-  font-size: 14px;
-}
-.weather-card {
-  background: #fff;
-  border: 1px solid #dee2e6;
-  padding: 12px;
-  margin-bottom: 10px;
-  border-radius: 6px;
-  cursor: pointer;
-  position: relative;
-}
-.badge {
-  display: inline-block;
-  padding: 4px 8px;
-  font-size: 12px;
-  border-radius: 4px;
-  color: #fff;
-}
-.hot {
-  background-color: #ff7675;
-}
-.cool {
-  background-color: #74b9ff;
-}
-.btn-detail {
-  position: absolute;
-  right: 12px;
-  top: 15px;
-  padding: 6px 10px;
-  cursor: pointer;
-}
-.status-bar {
-  background: #e8f5e9;
-  padding: 10px;
-  text-align: center;
-  color: #2e7d32;
-  font-weight: bold;
-  border-radius: 6px;
-}
-</style>

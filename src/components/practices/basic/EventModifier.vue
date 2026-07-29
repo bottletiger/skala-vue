@@ -9,11 +9,11 @@ const handleBox = () => {
 </script>
 
 <template>
-  <div style="padding: 20px">
-    <h2>3-3. 이벤트 수식어(Modifiers) 학습</h2>
+  <div class="practice-section">
+    <h2>이벤트 수식어(Modifiers) 학습</h2>
     <h3>1) .prevent (기본 동작 막기)</h3>
     <a href="https://www.naver.com" @click.prevent="handleLink">네이버 링크</a>
-    <br /><br />
+    <br />
 
     <h3>2) .stop (이벤트 버블링 막기)</h3>
     <div @click="handleBox" style="padding: 20px; background-color: #eee">

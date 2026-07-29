@@ -8,8 +8,8 @@ const vueCount = ref(0)
 </script>
 
 <template>
-  <div style="padding: 20px">
-    <h2>1-1. Hello Skala-Vue</h2>
+  <div class="practice-section">
+    <h2>Hello Skala-Vue</h2>
     <h3>일반 변수 클릭: {{ normalCount }}</h3>
     <button @click="normalCount++">일반 변수 증가</button>
     <br />

@@ -1,5 +1,6 @@
 <script setup>
 import { ref } from 'vue'
+
 const fruits = ref(['사과', '바나나', '딸기'])
 const user = ref({
   name: '홍길동',
@@ -11,9 +12,10 @@ const items = ref([
   { id: 'prod_102', name: '갤럭시' },
 ])
 </script>
+
 <template>
-  <div style="padding: 20px">
-    <h2>2-6. v-for 디렉티브 학습</h2>
+  <div class="practice-section">
+    <h2>v-for 디렉티브 학습</h2>
     <h3>1) 배열 렌더링</h3>
     <ul>
       <li v-for="(fruit, index) in fruits" :key="index">{{ index + 1 }}번 과일: {{ fruit }}</li>

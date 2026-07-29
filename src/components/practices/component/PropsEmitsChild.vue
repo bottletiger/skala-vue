@@ -19,12 +19,11 @@ const sendNotification = () => {
 
 <template>
   <div class="child-container">
-    <h3>🔽 하위 컴포넌트 (Child)</h3>
-
+    <h2>하위 컴포넌트 (Child)</h2>
     <p>
       수신된 Props 데이터: <strong>{{ parentData }}</strong>
     </p>
-
+    <br />
     <button @click="sendNotification">상위 컴포넌트로 갱신 요청 (Emit)</button>
   </div>
 </template>
@@ -32,16 +31,8 @@ const sendNotification = () => {
 <style scoped>
 .child-container {
   border: 2px dashed #3498db;
-  padding: 15px;
+  padding: 20px;
   background-color: #fff;
   border-radius: 6px;
-}
-button {
-  padding: 6px 12px;
-  background-color: #3498db;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
 }
 </style>

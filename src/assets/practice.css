@@ -1,0 +1,128 @@
+/* 최상위 컨테이너 중앙 정렬 및 배경 세팅 */
+div.practice-container {
+  max-width: 1200px;
+  width: 800px;
+  margin: 0 auto;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  color: #2c3e50;
+  line-height: 1.6;
+}
+/* 개별 실습 예제 섹션 박스 */
+div.practice-section {
+  padding: 10px 20px 20px 20px;
+  margin-top: 10px;
+  margin-bottom: 24px;
+  background-color: #ffffff;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+}
+/* 세션 대제목 (h1) 스타일링 */
+h1 {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #1a252f;
+  margin-top: 40px;
+  margin-bottom: 8px;
+}
+/* 세션 중제목 (h2) 스타일링 */
+h2 {
+  font-size: 1.4rem; /* h1(1.8rem)보다 작고 본문보다 강조되는 크기 */
+  font-weight: 600; /* h1(700)보다 한 단계 낮은 두께감 */
+  color: #34495e; /* h1(#1a252f)보다 살짝 밝은 딥 블루-그레이 */
+  margin-top: 0px; /* h1(40px)보다 좁은 상단 간격 */
+  margin-bottom: 12px; /* 하단 콘텐츠와의 간격 */
+  padding-bottom: 6px; /* 밑줄과의 여백 */
+  border-bottom: 2px solid #ecf0f1; /* 세션 구분을 위한 은은한 구분선 */
+}
+/* 서브 섹션 소제목 (h3) 스타일링 */
+h3 {
+  font-size: 1.15rem; /* h2(1.4rem)보다 작고 본문(1rem)보다 직관적으로 강조되는 크기 */
+  font-weight: 600; /* 선명한 시각적 가독성 확보 */
+  color: #2c3e50; /* 기본 본문 텍스트 색상과 통일하여 자연스러운 흐름 형성 */
+  margin-top: 20px; /* h2(28px)보다 좁은 상단 간격 */
+  margin-bottom: 8px; /* 본문/설명 요소와의 긴밀한 배치 */
+}
+/* 기존 <hr /> 구분선을 모던한 디자인으로 교체 */
+hr {
+  border: none;
+  height: 3px;
+  background: linear-gradient(to right, #42b883, #35495e); /* Vue 포인트 컬러 */
+  border-radius: 2px;
+  margin-bottom: 14px;
+}
+
+/* 버튼 태그 기본 스타일 (회색 계통) */
+button {
+  padding: 6px 14px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #333333; /* 진한 회색 텍스트 */
+  background-color: #f1f3f5; /* 차분한 연회색 배경 */
+  border: 1px solid #ced4da; /* 연한 회색 테두리로 경계 구분 */
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+/* 마우스 호버(Hover) 효과 - 비활성화가 아닐 때만 작동 */
+button:not(:disabled):hover {
+  background-color: #e9ecef; /* 호버 시 한 단계 짙은 회색 */
+  border-color: #adb5bd;
+  color: #212529;
+}
+/* 클릭(Active) 시 효과 - 비활성화가 아닐 때만 작동 */
+button:not(:disabled):active {
+  background-color: #dee2e6; /* 눌렸을 때 조금 더 짙은 회색 */
+  border-color: #6c757d;
+}
+/* 비활성화(Disabled) 상태 제어 - 마우스 반응 및 눌림 방지 */
+button:disabled {
+  background-color: #f8f9fa; /* 더 옅은 회색으로 톤다운 */
+  border-color: #e9ecef;
+  color: #adb5bd; /* 흐릿한 텍스트 */
+  cursor: not-allowed;
+
+  /* 핵심: 호버/클릭 인터랙션 완전 차단 */
+  pointer-events: none;
+  box-shadow: none;
+}
+/* 인풋 태그 기본 스타일 (참고용) */
+input {
+  padding: 6px 10px;
+  font-size: 14px;
+  color: #2c3e50;
+  background-color: #ffffff;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  outline: none;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+/* 인풋 포커스(클릭) 효과 - 버튼과 어울리는 회색 톤 포커스 */
+input:focus {
+  border-color: #868e96;
+  box-shadow: 0 0 0 3px rgba(134, 142, 150, 0.15);
+}
+/* 버튼 스타일: 담백한 플랫 타입 */
+.btn-external {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 500; /* 600 -> 500으로 살짝 부드럽게 조정 */
+  color: #ffffff;
+  background-color: #42b883;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.15s ease; /* 색상 전환만 깔끔하게 적용 */
+}
+/* 마우스 호버(Hover) 효과 */
+.btn-external:hover {
+  background-color: #33a06f;
+}
+/* 클릭(Active) 시 효과 */
+.btn-external:active {
+  background-color: #2c8a5f;
+}

@@ -3,8 +3,8 @@ const content = '안녕하세요! <strong>Skala-Vue</strong> 강의입니다.'
 </script>
 
 <template>
-  <div style="padding: 20px">
-    <h2>2-2. v-text 디렉티브 학습</h2>
+  <div class="practice-section">
+    <h2>v-text 디렉티브 학습</h2>
     <h3>1) 일반 보간법 {{}} 결과:</h3>
     <p>출력: {{ content }}</p>
     <br />

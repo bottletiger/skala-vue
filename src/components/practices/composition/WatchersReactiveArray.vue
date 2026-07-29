@@ -7,9 +7,9 @@ const cityList = reactive(['서울', '수원'])
 const logAuto = ref('대기 중...')
 const logCopy = ref('대기 중...')
 
-// 🟢 1) 변수명 쌩으로 넣기 (배열 추가/삭제 자동 추적)
+// 🟢 1) 변수명 그대로 넣기 (배열 추가/삭제 자동 추적)
 watch(cityList, (newArr, oldArr) => {
-  // ⚠️ 함정: newArr.length와 oldArr.length가 똑같이 늘어난 상태로 출력됩니다.
+  // newArr.length와 oldArr.length가 똑같이 늘어난 상태로 출력됩니다.
   logAuto.value = `[자동 감시] 배열 변동 발생! 옛날길이인척하는:${oldArr.length} / 현재길이:${newArr.length}`
 })
 
@@ -24,24 +24,22 @@ watch(
 </script>
 
 <template>
-  <div style="padding: 20px">
-    <h2>1-9. reactive() 배열 데이터 watch 감시 정석</h2>
-    <div class="box">
-      <h3>🏙️ 즐겨찾기 도시 목록 (reactive 배열)</h3>
-      <p>
-        현재 등록된 도시: <strong>{{ cityList }}</strong>
-      </p>
-      <button @click="cityList.push('부산')">부산 추가 (push)</button> &nbsp;
-      <button @click="cityList.pop()">최근 도시 삭제 (pop)</button>
-    </div>
+  <div class="practice-section">
+    <h2>reactive() 배열의 특정 인덱스/요소 감시하기</h2>
+    <h3>즐겨찾기 도시 목록 (reactive 배열)</h3>
+    <p>
+      현재 등록된 도시: <strong>{{ cityList }}</strong>
+    </p>
+    <button @click="cityList.push('부산')">부산 추가 (push)</button> &nbsp;
+    <button @click="cityList.pop()">최근 도시 삭제 (pop)</button>
 
-    <div class="box monitor auto">
+    <div class="monitor auto">
       <h3>👁️‍🗨️ 1) cityList 변수명 쌩으로 감시</h3>
       <p>{{ logAuto }}</p>
       <small>※ 주의: 이전 배열과 현재 배열의 내용물/길이가 똑같이 동기화되어 버립니다.</small>
     </div>
 
-    <div class="box monitor target">
+    <div class="monitor target">
       <h3>🎯 2) () => [...cityList] 복사본 감시</h3>
       <p>{{ logCopy }}</p>
       <small>※ 성공: 과거 배열에 들어있던 내용물이 지워지지 않고 정상 대조됩니다.</small>
@@ -50,13 +48,6 @@ watch(
 </template>
 
 <style scoped>
-.box {
-  background: #f8f9fa;
-  padding: 15px;
-  border-radius: 8px;
-  margin-bottom: 15px;
-  border: 1px solid #e9ecef;
-}
 .monitor {
   font-weight: bold;
 }
@@ -69,19 +60,5 @@ watch(
   border-color: #00b894;
   background: #e8f5e9;
   color: #27ae60;
-}
-button {
-  padding: 6px 12px;
-  cursor: pointer;
-  background: #2d3436;
-  color: white;
-  border: none;
-  border-radius: 4px;
-}
-small {
-  color: #7f8c8d;
-  font-weight: normal;
-  display: block;
-  margin-top: 5px;
 }
 </style>

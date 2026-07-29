@@ -16,49 +16,32 @@ watch([city, dateType], ([newCity, newDate], [oldCity, oldDate]) => {
 </script>
 
 <template>
-  <div style="padding: 20px">
-    <h2>1-5. 여러 개의 변수 동시 감시 (watch)</h2>
-    <div class="box">
-      <h3>🌍 날씨 조건 설정</h3>
-      <label>도시: </label>
-      <select v-model="city">
-        <option value="서울">서울</option>
-        <option value="수원">수원</option>
-        <option value="부산">부산</option>
-      </select>
+  <div class="practice-section">
+    <h2>여러 개의 변수 동시 감시 (watch)</h2>
+    <h3>날씨 조건 설정</h3>
+    <label>도시: </label>
+    <select v-model="city">
+      <option value="서울">서울</option>
+      <option value="수원">수원</option>
+      <option value="부산">부산</option>
+    </select>
 
-      <br /><br />
+    <br />
 
-      <label>날짜: </label>
-      <label><input type="radio" value="오늘" v-model="dateType" /> 오늘</label> &nbsp; <label><input type="radio" value="내일" v-model="dateType" /> 내일</label> &nbsp;
-      <label><input type="radio" value="주간예보" v-model="dateType" /> 주간예보</label>
-    </div>
+    <label>날짜: </label>
+    <label><input type="radio" value="오늘" v-model="dateType" /> 오늘</label> &nbsp; <label><input type="radio" value="내일" v-model="dateType" /> 내일</label> &nbsp;
+    <label><input type="radio" value="주간예보" v-model="dateType" /> 주간예보</label>
 
-    <div class="box monitor">
-      <h3>👁️‍🗨️ 통합 모니터링 로그</h3>
-      <p>
-        현재 상태: <strong>{{ apiStatus }}</strong>
-      </p>
+    <div class="monitor">
+      <h3>통합 모니터링 로그</h3>
+      <p>현재 상태: {{ apiStatus }}</p>
     </div>
   </div>
 </template>
 
 <style scoped>
-.box {
-  background: #f8f9fa;
-  padding: 15px;
-  border-radius: 8px;
-  margin-bottom: 15px;
-  border: 1px solid #e9ecef;
-}
 .monitor {
   border-color: #00b894;
   background: #e8f5e9;
-}
-strong {
-  color: #0984e3;
-}
-select {
-  padding: 4px;
 }
 </style>

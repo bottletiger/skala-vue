@@ -6,8 +6,8 @@ const isShow = ref(true)
 </script>
 
 <template>
-  <div style="padding: 20px">
-    <h2>2-1. Lifecycle Hook</h2>
+  <div class="practice-section">
+    <h2>Lifecycle Hook</h2>
     <button @click="isShow = !isShow" class="toggle-btn">
       {{ isShow ? '🛑 실습 컴포넌트 파괴하기 (v-if="false")' : '🟢 실습 컴포넌트 다시 살리기' }}
     </button>

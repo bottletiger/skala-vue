@@ -8,8 +8,8 @@ const selectedCar = ref('')
 </script>
 
 <template>
-  <div style="padding: 20px">
-    <h2>4-2. 모든 HTML Form 요소와 v-model 매핑</h2>
+  <div class="practice-section">
+    <h2>모든 HTML Form 요소와 v-model 매핑</h2>
     <div>
       <h3>1) Textarea (장문 텍스트)</h3>
       <textarea v-model="comment" placeholder="의견을 남겨주세요"></textarea>
