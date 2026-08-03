@@ -1,7 +1,7 @@
 <template>
     <main class="practice-page">
         <RouterLink class="back-link" to="/">← 처음으로</RouterLink>
-        <h1>실습 페이지</h1>
+        <h1>Day 1</h1>
         <SampleOne />
         <VHtml />
         <VText />
@@ -14,6 +14,7 @@
         <ExReactive></ExReactive>
         <ExComputed></ExComputed>
         <ExDeepWatch></ExDeepWatch>
+        <ExLifeCycleHookParents></ExLifeCycleHookParents>
     </main>
 </template>
 
@@ -28,6 +29,7 @@ import ExRef from './basic/practice/exRef.vue'
 import ExReactive from './basic/practice/exReactive.vue'
 import ExComputed from './basic/practice/exComputed.vue'
 import ExDeepWatch from './basic/practice/exDeepWatch.vue'
+import ExLifeCycleHookParents from './basic/practice/exLifeCycleHookParents.vue'
 </script>
 
 <style scoped>
@@ -46,5 +48,8 @@ import ExDeepWatch from './basic/practice/exDeepWatch.vue'
     display: inline-block;
     color: #335c67;
     font-weight: 700;
+}
+h1{
+    background-color: rgb(247, 204, 32);
 }
 </style>

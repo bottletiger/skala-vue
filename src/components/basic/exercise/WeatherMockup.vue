@@ -1,23 +1,24 @@
 <script setup>
 import { getWeatherList } from '@/api/weatherApi';
-import { cs } from 'element-plus/es/locales.mjs';
 import { computed, onMounted, ref, watch, watchEffect } from 'vue';
 
 // const degree = () =>{
 //  return (Math.round(Math.random()*100)) % 40;
 // }
+const HOT_TEMPERATURE= 28;
+const API_LOADING = 'OpenWeather API 데이터 불러오는 중...';
+const API_SUCCESS = 'OpenWeather API 데이터 로드 성공';
+const API_FAIL = 'OpenWeather API 데이터 로드 실패';
+
 const weatherList = ref([]);
 const apiStatus = ref('loading');
-const ApiLoading = 'OpenWeather API 데이터 불러오는 중...';
-const ApiSuccess = 'OpenWeather API 데이터 로드 성공';
-const ApiFail = 'OpenWeather API 데이터 로드 실패';
 
 onMounted(async () => {
   try {
     weatherList.value = await getWeatherList();
     apiStatus.value = 'success';
   } catch (error) {
-    console.error(ApiFail, error);
+    console.error(API_FAIL, error);
     apiStatus.value = 'error';
   }
 })
@@ -41,22 +42,24 @@ watch(selectedCityInfo, (newValue, oldValue) => {
 const temperatureFilter = ref('all');
 
 const filteredWeatherList = computed(() => {
-  const keyword = searchQuery.value.trim()
+  const keyword = searchQuery.value.trim().toLowerCase()
+  let result = weatherList.value
 
-  if(!keyword){
-    return weatherList.value; 
+  if (temperatureFilter.value === 'hot') {
+    result = result.filter((item) => item.temp >= HOT_TEMPERATURE)
   }
-  // if (temperatureFilter.value === 'hot') {
-  //   return weatherList.value.filter((item) => item.temp >= 28);
-  // }
 
-  // if (temperatureFilter.value === 'cold') {
-  //   return weatherList.value.filter((item) => item.temp < 28);
-  // }
-  return weatherList.value.filter((item) =>
-    item.name.toLowerCase().includes(keyword) ||
-    item.name_kr.includes(keyword)
-  )
+  if (temperatureFilter.value === 'cold') {
+    result = result.filter((item) => item.temp < HOT_TEMPERATURE)
+  }
+
+  if (keyword) {
+    result = result.filter((item) =>
+      item.name.toLowerCase().includes(keyword) || item.name_kr.includes(keyword)
+    )
+  }
+
+  return result
 })
 
 </script>
@@ -76,43 +79,48 @@ const filteredWeatherList = computed(() => {
 
     <div class="region-list">
       <h3>🏞️ 지역별 날씨 현황</h3>
-      <p class="api-status" :class="`api-status--${apiStatus}`" aria-live="polite">
-        <span v-if="apiStatus === 'loading'">{{ ApiLoading }}</span>
-        <span v-else-if="apiStatus === 'success'">{{ ApiSuccess }}</span>
-        <span v-else>{{ ApiFail }}</span>
+      <p class="api-status" :class="`api-status--${apiStatus}`">
+        <span v-if="apiStatus === 'loading'">{{ API_LOADING }}</span>
+        <span v-else-if="apiStatus === 'success'">{{ API_SUCCESS }}</span>
+        <span v-else>{{ API_FAIL }}</span>
       </p>
 
       <label class="temperature-filter">
         온도 필터
         <select v-model="temperatureFilter">
           <option value="all">전체 도시</option>
-          <option value="hot">🔥 더운 도시 (28도 이상)</option>
-          <option value="cold">❄️ 시원한 도시 (28도 미만)</option>
+          <option value="hot">🔥 더운 도시 ({{HOT_TEMPERATURE}}도 이상)</option>
+          <option value="cold">❄️ 시원한 도시 ({{HOT_TEMPERATURE}}도 미만)</option>
         </select>
       </label>
 
       <div v-for="item in filteredWeatherList" 
         :key="item.id" 
         class="weather-card" 
-        :class="item.temp >= 28 ? 'card-hot' : 'card-cool'"
+        :class="item.temp >= HOT_TEMPERATURE ? 'card-hot' : 'card-cool'"
         @click="selectedCityInfo = `${item.name}이(가) 선택되었습니다.`">
 
-        <h4>{{ item.name }} ({{ item.status }})</h4>
+        <h3>{{ item.name }} ({{ item.status }})</h3>
 
         <p >🌡️ 현재 기온: 
-          <span :style="{color: item.temp >= 28 ? 'red': 'blue' }">
+          <span :style="{color: item.temp >= HOT_TEMPERATURE ? 'red': 'blue' }">
             {{ item.temp }}°C
           </span>
         </p>
 
-        <p>👤 체감온도: {{ item.main.feels_like }}</p>
+        <p>👤 체감온도: 
+          <span :style="{color: item.main.feels_like >= HOT_TEMPERATURE ? 'red': 'blue' }">
+              {{ Math.round(item.main.feels_like)}}°C
+          </span>
+        
+        </p>
         <p>💦 습도: {{ item.main.humidity }}%</p>
-        <span v-if="item.temp >= 28" class="badge hot">🔥 더움 </span>
+        <span v-if="item.temp >= HOT_TEMPERATURE" class="badge hot">🔥 더움 </span>
         <span v-else class="badge cool">❄️ 선선함</span>
 
         <button class="detail-button" @click.stop="showDetail(item.name, item.status)">상세보기</button>
       </div>
-      <p v-if="apiStatus === 'success' && searchQuery.trim() && filteredWeatherList.length === 0"
+      <p v-if="filteredWeatherList.length === 0"
         class="empty-message">
         검색 결과와 일치하는 도시가 없습니다.
       </p>
@@ -215,7 +223,7 @@ input {
   margin-bottom: 0;
 }
 
-.weather-card h4 {
+.weather-card h3 {
   font-weight: 700;
 }
 
@@ -251,5 +259,8 @@ input {
   color: #2e7d32;
   font-weight: bold;
   text-align: center;
+}
+.empty-message{
+  color: red;
 }
 </style>
