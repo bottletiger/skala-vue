@@ -15,6 +15,10 @@
         <ExComputed></ExComputed>
         <ExDeepWatch></ExDeepWatch>
         <ExLifeCycleHookParents></ExLifeCycleHookParents>
+        <ExPropsEmitsParent></ExPropsEmitsParent>
+        <ExDefaultSlotParent></ExDefaultSlotParent>
+        <ExNamedSlotParent></ExNamedSlotParent>
+        <ExScopedSlotParent></ExScopedSlotParent>
     </main>
 </template>
 
@@ -30,6 +34,10 @@ import ExReactive from './basic/practice/exReactive.vue'
 import ExComputed from './basic/practice/exComputed.vue'
 import ExDeepWatch from './basic/practice/exDeepWatch.vue'
 import ExLifeCycleHookParents from './basic/practice/exLifeCycleHookParents.vue'
+import ExPropsEmitsParent from './basic/practice/exPropsEmitsParent.vue'
+import ExDefaultSlotParent from './basic/practice/slot/exDefaultSlotParent.vue'
+import ExNamedSlotParent from './basic/practice/slot/exNamedSlotParent.vue'
+import ExScopedSlotParent from './basic/practice/slot/exScopedSlotParent.vue'
 </script>
 
 <style scoped>

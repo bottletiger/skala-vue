@@ -1,4 +1,5 @@
 <script setup>
+import WeatherParent from '@/components/basic/exercise/weatherParent.vue';
 import WeatherMockup from '../components/basic/exercise/WeatherMockup.vue'
 </script>
 
@@ -6,7 +7,8 @@ import WeatherMockup from '../components/basic/exercise/WeatherMockup.vue'
   <main class="assignment-page">
     <RouterLink class="back-link" to="/">← 처음으로</RouterLink>
     <p class="eyebrow">과제</p>
-    <WeatherMockup />
+    <!-- <WeatherMockup /> -->
+    <WeatherParent></WeatherParent>
   </main>
 </template>
 

@@ -2,7 +2,7 @@ import axios from 'axios'
 import { cities } from '@/data/cities'
 
 const CACHE_KEY = 'weather-list'
-const CACHE_DURATION = 60 * 60 * 1000 // 60분
+const CACHE_DURATION = 60 * 60 * 1000
 
 const getCachedWeather = () => {
   try {
@@ -25,7 +25,7 @@ const getCachedWeather = () => {
 export const getWeatherList = async () => {
   const cachedWeather = getCachedWeather()
 
-  // 유효한 캐시가 있으면 API를 호출하지 않음
+  // 유효 캐시
   if (cachedWeather) {
     return cachedWeather
   }

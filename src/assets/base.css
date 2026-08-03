@@ -90,5 +90,6 @@ button{
 
 }
 .practice-section{
-  border: 0.1px solid black;
+  border: 1px dotted black;
+  margin-bottom: 10px;
 }
