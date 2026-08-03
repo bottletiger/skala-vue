@@ -29,7 +29,7 @@ const showDetail = (cityName, status) => {
 const searchQuery = ref('');
 // - searchQuery 감시 (watchEffect 이용): 도시 검색어를 타이핑할 때 마다 변하는 searchQuery를 추적하여 콘솔로그로 작성
 watchEffect(() => {
-  console.log('[도시 검색어]', searchQuery.value)
+  console.log(`[watchEffect 자동 호출] 현재 검색어 '${searchQuery.value}' 에 매칭되는 API 데이터를 필터링했습니다`)
 })
 
 const selectedCityInfo = ref('카드를 클릭하거나 검색해 보세요.');
@@ -54,7 +54,8 @@ const filteredWeatherList = computed(() => {
   //   return weatherList.value.filter((item) => item.temp < 28);
   // }
   return weatherList.value.filter((item) =>
-    item.name.toLowerCase().includes(keyword),
+    item.name.toLowerCase().includes(keyword) ||
+    item.name_kr.includes(keyword)
   )
 })
 
