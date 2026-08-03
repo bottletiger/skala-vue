@@ -8,6 +8,12 @@
         <VBind />
         <ClassBind />
         <StyleBind />
+
+        <h1>Day 2 Composition API</h1>
+        <ExRef></ExRef> 
+        <ExReactive></ExReactive>
+        <ExComputed></ExComputed>
+        <ExDeepWatch></ExDeepWatch>
     </main>
 </template>
 
@@ -18,6 +24,10 @@ import VBind from './basic/practice/vBind.vue'
 import VHtml from './basic/practice/vHtml.vue'
 import VText from './basic/practice/vText.vue'
 import StyleBind from './basic/practice/StyleBind.vue'
+import ExRef from './basic/practice/exRef.vue'
+import ExReactive from './basic/practice/exReactive.vue'
+import ExComputed from './basic/practice/exComputed.vue'
+import ExDeepWatch from './basic/practice/exDeepWatch.vue'
 </script>
 
 <style scoped>
