@@ -13,6 +13,15 @@ const nonEmptyStringOrNull = (value) => {
   const normalized = value.trim()
   return normalized || null
 }
+const getCountryName = (countryCode) => {
+  if (!countryCode) return null
+
+  try {
+    return new Intl.DisplayNames(['ko'], { type: 'region' }).of(countryCode) ?? countryCode
+  } catch {
+    return countryCode
+  }
+}
 const FORECAST_ITEM_LIMIT = 8
 const DAILY_FORECAST_LIMIT = 5
 const SECONDS_PER_DAY = 24 * 60 * 60
@@ -107,9 +116,20 @@ export const hasWeatherApiKey = () => {
 
 export const mapWeatherResponse = (city, payload = {}) => {
   const currentCondition = payload?.weather?.[0]
+  const resolvedLocationName = city?.isCurrentLocation ? nonEmptyStringOrNull(payload?.name) : null
+  const resolvedCountryCode = city?.isCurrentLocation ? nonEmptyStringOrNull(payload?.sys?.country) : null
+  const resolvedCountryName = getCountryName(resolvedCountryCode)
 
   return {
     ...city,
+    ...(resolvedLocationName
+      ? {
+          name: resolvedLocationName,
+          displayName: resolvedLocationName.toLocaleUpperCase('en-US'),
+          fullName: `내 위치 · ${resolvedLocationName}`,
+        }
+      : {}),
+    ...(resolvedCountryCode ? { countryCode: resolvedCountryCode, countryName: resolvedCountryName } : {}),
     temp: finiteNumberOrNull(payload?.main?.temp),
     feelsLike: finiteNumberOrNull(payload?.main?.feels_like),
     humidity: finiteNumberOrNull(payload?.main?.humidity),

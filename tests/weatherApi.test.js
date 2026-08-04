@@ -83,6 +83,29 @@ test('누락되거나 잘못된 OpenWeather 필드는 임의 값 없이 null로 
   })
 })
 
+test('현재 위치 응답은 실제 도시명과 국가명을 같은 Hero 형식으로 보강한다', () => {
+  const result = mapWeatherResponse(
+    {
+      id: 'current-location',
+      name: '현재 위치',
+      fullName: '내 위치',
+      countryName: '현재 위치',
+      isCurrentLocation: true,
+    },
+    {
+      name: 'Seoul',
+      sys: { country: 'KR' },
+      weather: [{ description: '구름조금' }],
+    },
+  )
+
+  assert.equal(result.name, 'Seoul')
+  assert.equal(result.displayName, 'SEOUL')
+  assert.equal(result.countryCode, 'KR')
+  assert.equal(result.countryName, '대한민국')
+  assert.equal(result.fullName, '내 위치 · Seoul')
+})
+
 test('OpenWeather 3시간 예보를 첫 8개 시간대와 현지 날짜별 일간 예보로 매핑한다', () => {
   const startTimestamp = Date.parse('2024-01-01T00:00:00Z') / 1000
   const list = Array.from({ length: 10 }, (_, index) => createForecastEntry(startTimestamp + index * 3 * 60 * 60, index))

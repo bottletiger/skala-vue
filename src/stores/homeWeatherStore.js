@@ -8,7 +8,7 @@ export const useHomeWeatherStore = defineStore('home-weather', () => {
   const selectedCityId = ref('')
   const lastUpdated = ref('')
   const weatherLoadedAt = ref(0)
-  const isCityListOpen = ref(false)
+  const isWorldDrawerOpen = ref(false)
 
   const hasFreshWeather = (now = Date.now()) => {
     const cacheAge = now - weatherLoadedAt.value
@@ -31,7 +31,7 @@ export const useHomeWeatherStore = defineStore('home-weather', () => {
     selectedCityId,
     lastUpdated,
     weatherLoadedAt,
-    isCityListOpen,
+    isWorldDrawerOpen,
     hasFreshWeather,
     markWeatherLoaded,
     clearWeatherData,

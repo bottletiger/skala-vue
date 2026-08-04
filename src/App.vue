@@ -1,12 +1,17 @@
 <script setup>
-import { computed } from 'vue'
+import { computed, watch } from 'vue'
+import { storeToRefs } from 'pinia'
 import { RouterLink, RouterView, useRoute } from 'vue-router'
 
 import UnitToggler from '@/components/exercise/UnitToggler.vue'
+import { useHomeWeatherStore } from '@/stores/homeWeatherStore'
 
 const route = useRoute()
+const homeWeatherStore = useHomeWeatherStore()
+const { isWorldDrawerOpen } = storeToRefs(homeWeatherStore)
 const isWeatherScene = computed(() => route.meta.layout === 'weather-scene')
 const isLabScene = computed(() => route.meta.layout === 'lab-scene')
+const isWeatherHome = computed(() => route.name === 'WeatherHome')
 const activeNavigationIndex = computed(() => {
   if (route.name === 'Dashboard') return 1
   if (route.name === 'Login') return 2
@@ -17,6 +22,17 @@ const activeNavigationIndex = computed(() => {
 const navigationStyle = computed(() => ({
   '--active-route-index': Math.max(activeNavigationIndex.value, 0),
 }))
+
+const toggleWorldDrawer = () => {
+  isWorldDrawerOpen.value = !isWorldDrawerOpen.value
+}
+
+watch(
+  () => route.name,
+  (routeName) => {
+    if (routeName !== 'WeatherHome') isWorldDrawerOpen.value = false
+  },
+)
 </script>
 
 <template>
@@ -26,6 +42,7 @@ const navigationStyle = computed(() => ({
       class="app-navigation"
       :class="{
         'app-navigation--weather': isWeatherScene,
+        'is-world-drawer-open': isWeatherHome && isWorldDrawerOpen,
       }"
     >
       <nav class="primary-navigation" :class="{ 'has-active-route': activeNavigationIndex >= 0 }" :style="navigationStyle" aria-label="주요 메뉴">
@@ -54,6 +71,22 @@ const navigationStyle = computed(() => ({
       </nav>
 
       <UnitToggler />
+
+      <button
+        v-if="isWeatherHome"
+        class="world-drawer-handle"
+        type="button"
+        aria-controls="world-weather-drawer"
+        :aria-expanded="isWorldDrawerOpen"
+        :aria-label="isWorldDrawerOpen ? '세계 날씨 서랍 닫기' : '세계 날씨 서랍 열기'"
+        @click="toggleWorldDrawer"
+      >
+        <span class="world-drawer-grip" aria-hidden="true"></span>
+        <span>세계 날씨</span>
+        <svg viewBox="0 0 20 20" :class="{ 'is-open': isWorldDrawerOpen }" aria-hidden="true">
+          <path d="m5 12 5-5 5 5" />
+        </svg>
+      </button>
     </header>
 
     <main
@@ -74,6 +107,9 @@ const navigationStyle = computed(() => ({
 .app-shell {
   --floating-nav-height: 54px;
   --floating-nav-offset: 12px;
+  --world-drawer-gap: 10px;
+  --world-drawer-height: min(68svh, 620px);
+  --world-drawer-bottom: calc(var(--floating-nav-height) + var(--floating-nav-offset) + var(--world-drawer-gap) + env(safe-area-inset-bottom));
   --floating-nav-clearance: calc(var(--floating-nav-height) + var(--floating-nav-offset) + 160px + env(safe-area-inset-bottom));
 
   position: relative;
@@ -282,6 +318,65 @@ const navigationStyle = computed(() => ({
   font-size: 12px;
 }
 
+.world-drawer-handle {
+  position: absolute;
+  z-index: 2;
+  top: 0;
+  left: 50%;
+  display: inline-flex;
+  min-height: 34px;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 13px;
+  border: 1px solid rgba(255, 255, 255, 0.52);
+  border-radius: 999px;
+  background: rgba(242, 246, 245, 0.72);
+  box-shadow:
+    0 8px 24px rgba(20, 32, 36, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.52);
+  color: rgba(36, 49, 57, 0.76);
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 820;
+  transform: translate(-50%, -50%);
+  transition:
+    color 180ms ease,
+    background-color 180ms ease,
+    transform 440ms cubic-bezier(0.22, 1, 0.36, 1);
+  white-space: nowrap;
+  will-change: transform;
+}
+
+.app-navigation.is-world-drawer-open .world-drawer-handle {
+  background: color-mix(in srgb, var(--hero-end, #dde0da) 76%, rgba(245, 248, 247, 0.92));
+  color: var(--hero-text, #243139);
+  transform: translate(-50%, calc(-50% - var(--world-drawer-height) - var(--world-drawer-gap)));
+}
+
+.world-drawer-handle svg {
+  width: 15px;
+  height: 15px;
+  fill: none;
+  stroke: currentcolor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2;
+  transition: transform 320ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.world-drawer-handle svg.is-open {
+  transform: rotate(180deg);
+}
+
+.world-drawer-grip {
+  width: 18px;
+  height: 3px;
+  border-radius: 999px;
+  background: currentcolor;
+  opacity: 0.34;
+}
+
 .page-container {
   width: min(1120px, calc(100% - 32px));
   min-height: 100vh;
@@ -311,6 +406,7 @@ const navigationStyle = computed(() => ({
 @media (max-width: 420px) {
   .app-shell {
     --floating-nav-offset: 9px;
+    --world-drawer-height: min(72svh, 590px);
   }
 
   .app-navigation {
@@ -338,7 +434,9 @@ const navigationStyle = computed(() => ({
 
 @media (prefers-reduced-motion: reduce) {
   .navigation-slider,
-  .primary-navigation a {
+  .primary-navigation a,
+  .world-drawer-handle,
+  .world-drawer-handle svg {
     transition: none;
   }
 }

@@ -20,14 +20,14 @@ test('홈 날씨 cache는 데이터가 있고 5분 이내일 때만 fresh하다'
   assert.equal(store.hasFreshWeather(loadedAt - 1), false)
 })
 
-test('날씨 cache를 비워도 도시 목록의 펼침 상태는 유지한다', () => {
+test('날씨 cache를 비워도 세계 날씨 서랍의 펼침 상태는 유지한다', () => {
   setActivePinia(createPinia())
   const store = useHomeWeatherStore()
 
   store.weatherList = [{ id: 'city_02' }]
   store.selectedCityId = 'city_02'
   store.lastUpdated = '2026. 8. 4. 오전 10:00'
-  store.isCityListOpen = true
+  store.isWorldDrawerOpen = true
   store.markWeatherLoaded(2_000)
   store.clearWeatherData()
 
@@ -35,5 +35,5 @@ test('날씨 cache를 비워도 도시 목록의 펼침 상태는 유지한다',
   assert.equal(store.selectedCityId, '')
   assert.equal(store.lastUpdated, '')
   assert.equal(store.weatherLoadedAt, 0)
-  assert.equal(store.isCityListOpen, true)
+  assert.equal(store.isWorldDrawerOpen, true)
 })

@@ -4,7 +4,7 @@ import { computed } from 'vue'
 import TemperatureConditionLabel from '@/components/weather/TemperatureConditionLabel.vue'
 import WeatherConditionIcon from '@/components/weather/WeatherConditionIcon.vue'
 import { useTemperature } from '@/composables/useTemperature'
-import { getWeatherTheme } from '@/utils/weatherTheme'
+import { formatWeatherTime, getWeatherTheme } from '@/utils/weatherTheme'
 
 const props = defineProps({
   cityItem: {
@@ -32,6 +32,7 @@ const emit = defineEmits({
 const { displayTemp, unitSymbol } = useTemperature(() => props.cityItem.temp)
 const hasTemperature = computed(() => Number.isFinite(props.cityItem.temp))
 const weatherTheme = computed(() => getWeatherTheme(props.cityItem))
+const localTime = computed(() => formatWeatherTime(props.cityItem.observedAt, props.cityItem.timezoneOffset))
 
 const handleCardSelect = () => {
   emit('select-card', props.cityItem)
@@ -52,6 +53,7 @@ const handleDetailClick = () => {
 
         <span class="city-copy">
           <span class="city-name">{{ cityItem.name }}</span>
+          <span v-if="cityItem.countryCode" class="city-meta">{{ cityItem.countryCode }} · 현지 {{ localTime }}</span>
           <span class="condition">{{ cityItem.status || weatherTheme.label || '날씨 설명 없음' }}</span>
         </span>
 
@@ -167,6 +169,15 @@ const handleDetailClick = () => {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.city-meta {
+  display: block;
+  margin-bottom: 2px;
+  color: var(--hero-muted, var(--muted));
+  font-size: 9px;
+  font-weight: 780;
+  letter-spacing: 0.02em;
 }
 
 .temperature-stack {
