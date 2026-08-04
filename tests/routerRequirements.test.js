@@ -337,7 +337,7 @@ test('날씨별 배경 영상은 상태 코드를 세분화한 저용량 로컬 
   assert.ok(totalVideoBytes < 6 * 1024 * 1024)
 })
 
-test('현재 위치 진입 흐름은 서비스·composable·Hero 인라인 안내로 분리한다', () => {
+test('현재 위치 진입 흐름은 장식 없이 한 줄 제목을 쓰는 Hero 인라인 안내로 분리한다', () => {
   const homeSource = readSource('../src/views/WeatherHomeView.vue')
   const locationSource = readSource('../src/composables/useCurrentLocationWeather.js')
   const panelSource = readSource('../src/components/weather/LocationPermissionPanel.vue')
@@ -349,6 +349,9 @@ test('현재 위치 진입 흐름은 서비스·composable·Hero 인라인 안�
   assert.match(locationSource, /requestCurrentCoordinates/)
   assert.match(panelSource, /지금 있는 곳의 날씨부터 볼까요/)
   assert.match(panelSource, /class="location-permission-panel"/)
+  assert.match(homeSource, /'is-location-prompt': locationPromptState/)
+  assert.match(panelSource, /\.location-permission-panel h1\s*\{[^}]*white-space:\s*nowrap;/s)
+  assert.doesNotMatch(panelSource, /WeatherConditionIcon|location-consent-icon/)
   assert.doesNotMatch(panelSource, /role="dialog"|aria-modal|location-consent-backdrop|position:\s*fixed/)
 })
 

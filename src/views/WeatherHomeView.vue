@@ -315,7 +315,7 @@ if (import.meta.env.DEV) {
         <section
           ref="weatherHero"
           class="weather-hero"
-          :class="{ 'is-promoting': isHeroPromoting }"
+          :class="{ 'is-promoting': isHeroPromoting, 'is-location-prompt': locationPromptState }"
           :style="{ viewTransitionName: promotingCityId && heroWeather?.id === promotingCityId ? 'weather-promotion' : undefined }"
           :aria-busy="isLoading || locationPromptState === 'requesting'"
           :aria-labelledby="locationPromptState ? 'location-consent-title' : 'weather-hero-title'"
@@ -500,6 +500,10 @@ if (import.meta.env.DEV) {
   outline: none;
   perspective: 1600px;
   text-align: center;
+}
+
+.weather-hero.is-location-prompt {
+  width: min(1040px, 100%);
 }
 
 .hero-face,

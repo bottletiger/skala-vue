@@ -1,8 +1,6 @@
 <script setup>
 import { computed } from 'vue'
 
-import WeatherConditionIcon from '@/components/weather/WeatherConditionIcon.vue'
-
 const props = defineProps({
   state: {
     type: String,
@@ -58,11 +56,6 @@ const currentCopy = computed(() => copyByState[props.state])
 
 <template>
   <section class="location-permission-panel" aria-live="polite" aria-labelledby="location-consent-title" aria-describedby="location-consent-description">
-    <div class="location-consent-icon" aria-hidden="true">
-      <WeatherConditionIcon category="clouds" :is-night="false" />
-      <span></span>
-    </div>
-
     <p class="location-consent-eyebrow">{{ currentCopy.eyebrow }}</p>
     <h1 id="location-consent-title">{{ currentCopy.title }}</h1>
     <p id="location-consent-description">{{ message || currentCopy.description }}</p>
@@ -79,31 +72,11 @@ const currentCopy = computed(() => copyByState[props.state])
 
 <style scoped>
 .location-permission-panel {
-  width: min(700px, 100%);
+  width: min(1040px, 100%);
   margin: 0 auto;
   padding: clamp(24px, 4svh, 40px) 0;
   color: var(--hero-text);
   text-align: center;
-}
-
-.location-consent-icon {
-  position: relative;
-  width: 78px;
-  height: 78px;
-  margin: 0 auto 20px;
-  padding: 8px;
-  color: var(--weather-accent);
-}
-
-.location-consent-icon span {
-  position: absolute;
-  right: 4px;
-  bottom: 5px;
-  width: 15px;
-  height: 15px;
-  border: 4px solid color-mix(in srgb, var(--hero-end) 74%, white);
-  border-radius: 50%;
-  background: var(--hero-text);
 }
 
 .location-consent-eyebrow {
@@ -119,8 +92,7 @@ const currentCopy = computed(() => copyByState[props.state])
   font-size: clamp(30px, 4.5vw, 46px);
   line-height: 1.1;
   letter-spacing: -0.05em;
-  text-wrap: balance;
-  word-break: keep-all;
+  white-space: nowrap;
 }
 
 .location-permission-panel h1 + p {
@@ -196,17 +168,16 @@ const currentCopy = computed(() => copyByState[props.state])
   .location-consent-actions button {
     width: 100%;
   }
+
+  .location-permission-panel h1 {
+    font-size: clamp(19px, 5.6vw, 24px);
+    letter-spacing: -0.06em;
+  }
 }
 
 @media (max-height: 620px) {
   .location-permission-panel {
     padding: 12px 0;
-  }
-
-  .location-consent-icon {
-    width: 62px;
-    height: 62px;
-    margin-bottom: 12px;
   }
 
   .location-consent-actions {
