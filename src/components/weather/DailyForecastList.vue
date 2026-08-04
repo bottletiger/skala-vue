@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import { storeToRefs } from 'pinia'
 
+import ForecastListSection from '@/components/weather/ForecastListSection.vue'
 import WeatherConditionIcon from '@/components/weather/WeatherConditionIcon.vue'
 import { useConfigStore } from '@/stores/configStore'
 import { formatForecastDateParts, getForecastVisual } from '@/utils/forecastPresentation'
@@ -40,100 +41,46 @@ const displayItems = computed(() => {
 </script>
 
 <template>
-  <section class="daily-forecast" aria-labelledby="daily-forecast-title">
-    <header class="forecast-heading">
-      <div>
-        <p>이번 주 흐름</p>
-        <h3 id="daily-forecast-title">5일 예보</h3>
-      </div>
-      <span>3시간별 예상 최저 / 최고</span>
-    </header>
+  <ForecastListSection title-id="daily-forecast-title" title="5일 예보" summary="최저 / 최고">
+    <ol class="daily-list">
+      <li v-for="item in displayItems" :key="item.key" class="daily-item">
+        <div class="day-label">
+          <strong>{{ item.weekday }}</strong>
+          <time v-if="item.dateTime" :datetime="item.dateTime">{{ item.dateLabel }}</time>
+        </div>
 
-    <div class="daily-panel">
-      <ol class="daily-list">
-        <li v-for="item in displayItems" :key="item.key" class="daily-item">
-          <div class="day-label">
-            <strong>{{ item.weekday }}</strong>
-            <time v-if="item.dateTime" :datetime="item.dateTime">{{ item.dateLabel }}</time>
-          </div>
+        <WeatherConditionIcon class="forecast-icon" :category="item.category" :is-night="item.isNight" />
+        <span class="condition-text">{{ item.conditionLabel }}</span>
 
-          <WeatherConditionIcon class="forecast-icon" :category="item.category" :is-night="item.isNight" />
-          <span class="condition-text">{{ item.conditionLabel }}</span>
+        <span class="precipitation" :aria-label="`강수확률 ${item.precipitation === null ? '정보 없음' : `${item.precipitation}%`}`">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3S6.5 9.2 6.5 14a5.5 5.5 0 0 0 11 0C17.5 9.2 12 3 12 3Z" /></svg>
+          {{ item.precipitation === null ? '—' : `${item.precipitation}%` }}
+        </span>
 
-          <span class="precipitation" :aria-label="`강수확률 ${item.precipitation === null ? '정보 없음' : `${item.precipitation}%`}`">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3S6.5 9.2 6.5 14a5.5 5.5 0 0 0 11 0C17.5 9.2 12 3 12 3Z" /></svg>
-            {{ item.precipitation === null ? '—' : `${item.precipitation}%` }}
+        <div class="temperature-range">
+          <span :class="{ missing: item.minimum === null }">
+            <span class="sr-only">최저 기온 {{ item.minimum === null ? '정보 없음' : `${item.minimum}${unitSymbol}` }}</span>
+            <span aria-hidden="true"
+              >{{ item.minimum ?? '—' }}<small v-if="item.minimum !== null">{{ unitSymbol }}</small></span
+            >
           </span>
-
-          <div class="temperature-range">
-            <span :class="{ missing: item.minimum === null }">
-              <span class="sr-only">최저 기온 {{ item.minimum === null ? '정보 없음' : `${item.minimum}${unitSymbol}` }}</span>
-              <span aria-hidden="true"
-                >{{ item.minimum ?? '—' }}<small v-if="item.minimum !== null">{{ unitSymbol }}</small></span
-              >
-            </span>
-            <i aria-hidden="true"></i>
-            <strong :class="{ missing: item.maximum === null }">
-              <span class="sr-only">최고 기온 {{ item.maximum === null ? '정보 없음' : `${item.maximum}${unitSymbol}` }}</span>
-              <span aria-hidden="true"
-                >{{ item.maximum ?? '—' }}<small v-if="item.maximum !== null">{{ unitSymbol }}</small></span
-              >
-            </strong>
-          </div>
-        </li>
-      </ol>
-    </div>
-  </section>
+          <i aria-hidden="true"></i>
+          <strong :class="{ missing: item.maximum === null }">
+            <span class="sr-only">최고 기온 {{ item.maximum === null ? '정보 없음' : `${item.maximum}${unitSymbol}` }}</span>
+            <span aria-hidden="true"
+              >{{ item.maximum ?? '—' }}<small v-if="item.maximum !== null">{{ unitSymbol }}</small></span
+            >
+          </strong>
+        </div>
+      </li>
+    </ol>
+  </ForecastListSection>
 </template>
 
 <style scoped>
-.daily-forecast {
-  min-width: 0;
-}
-
-.forecast-heading {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 20px;
-  margin-bottom: 14px;
-  padding: 0 4px;
-}
-
-.forecast-heading p,
-.forecast-heading h3 {
-  margin: 0;
-}
-
-.forecast-heading p {
-  margin-bottom: 3px;
-  color: var(--hero-muted);
-  font-size: 11px;
-  font-weight: 750;
-}
-
-.forecast-heading h3 {
-  font-size: 18px;
-}
-
-.forecast-heading > span {
-  color: var(--hero-muted);
-  font-size: 12px;
-  font-weight: 700;
-}
-
-.daily-panel {
-  overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  border-radius: 24px;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.08));
-  box-shadow: 0 8px 26px rgba(28, 43, 48, 0.045);
-  backdrop-filter: blur(14px) saturate(108%);
-}
-
 .daily-list {
   margin: 0;
-  padding: 0 22px;
+  padding: 0 4px;
   list-style: none;
 }
 
@@ -147,7 +94,7 @@ const displayItems = computed(() => {
 }
 
 .daily-item + .daily-item {
-  border-top: 1px solid rgba(255, 255, 255, 0.19);
+  border-top: 1px solid color-mix(in srgb, var(--hero-text) 12%, transparent);
 }
 
 .day-label {
@@ -174,7 +121,6 @@ const displayItems = computed(() => {
   width: 42px;
   height: 42px;
   color: var(--weather-accent);
-  transition: transform 280ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .condition-text {
@@ -234,12 +180,6 @@ const displayItems = computed(() => {
   color: var(--hero-muted);
 }
 
-@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
-  .daily-item:hover .forecast-icon {
-    transform: translateY(-3px) scale(1.06);
-  }
-}
-
 @media (max-width: 700px) {
   .daily-list {
     padding-inline: 16px;
@@ -278,18 +218,8 @@ const displayItems = computed(() => {
 }
 
 @media (max-width: 560px) {
-  .forecast-heading {
-    align-items: flex-start;
-    flex-direction: column;
-    gap: 3px;
-  }
-
-  .daily-panel {
-    border-radius: 22px;
-  }
-
   .daily-list {
-    padding-inline: 13px;
+    padding-inline: 0;
   }
 
   .daily-item {
@@ -337,16 +267,6 @@ const displayItems = computed(() => {
     grid-template-columns: auto 14px auto;
     gap: 3px;
     font-size: 12px;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .forecast-icon {
-    transition: none;
-  }
-
-  .daily-item:hover .forecast-icon {
-    transform: none;
   }
 }
 </style>

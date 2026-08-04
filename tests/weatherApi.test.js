@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import axios from 'axios'
 
-import { fetchCityForecast, fetchWeatherList, mapForecastResponse, mapWeatherResponse } from '../src/services/weatherApi.js'
+import { fetchCityForecast, fetchWeatherList, mapForecastResponse, mapWeatherResponse, WEATHER_LIST_CONCURRENCY } from '../src/services/weatherApi.js'
 
 const cities = [
   { id: 'city_01', name: '서울' },
@@ -297,6 +297,39 @@ test('도시 목록 요청은 일부 실패가 있어도 성공한 도시를 입
     ['city_01', 'city_03'],
   )
   assert.deepEqual(requestSummary, { failedCount: 1, totalCount: 3 })
+})
+
+test('도시 목록 요청은 최대 동시 요청 수를 제한하면서 입력 순서를 유지한다', async () => {
+  assert.equal(WEATHER_LIST_CONCURRENCY, 6)
+
+  const expandedCities = Array.from({ length: WEATHER_LIST_CONCURRENCY * 2 + 1 }, (_, index) => ({ id: `city_${String(index + 1).padStart(2, '0')}` }))
+  let releaseRequests
+  const requestGate = new Promise((resolve) => {
+    releaseRequests = resolve
+  })
+  const startedCityIds = []
+  let activeRequestCount = 0
+  let maxActiveRequestCount = 0
+
+  const resultPromise = fetchWeatherList(expandedCities, async (city) => {
+    startedCityIds.push(city.id)
+    activeRequestCount += 1
+    maxActiveRequestCount = Math.max(maxActiveRequestCount, activeRequestCount)
+    await requestGate
+    activeRequestCount -= 1
+    return city
+  })
+
+  assert.equal(startedCityIds.length, WEATHER_LIST_CONCURRENCY)
+  releaseRequests()
+
+  const result = await resultPromise
+  assert.equal(maxActiveRequestCount, WEATHER_LIST_CONCURRENCY)
+  assert.ok(maxActiveRequestCount <= 6)
+  assert.deepEqual(
+    result.map((city) => city.id),
+    expandedCities.map((city) => city.id),
+  )
 })
 
 test('모든 도시 요청이 실패하면 첫 번째 요청 오류를 전달하고 빈 입력은 빈 배열을 반환한다', async () => {

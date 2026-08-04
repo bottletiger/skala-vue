@@ -14,31 +14,13 @@ function readStoredUser() {
   }
 }
 
-function decodeJwtPayload(token) {
-  if (!token) return null
-
-  try {
-    const encodedPayload = token.split('.')[1]
-    const base64 = encodedPayload.replaceAll('-', '+').replaceAll('_', '/')
-    const padded = base64.padEnd(Math.ceil(base64.length / 4) * 4, '=')
-    const bytes = Uint8Array.from(atob(padded), (character) => character.charCodeAt(0))
-
-    return JSON.parse(new TextDecoder().decode(bytes))
-  } catch {
-    return null
-  }
-}
-
 export const useAuthStore = defineStore('auth', () => {
   const accessToken = ref(sessionStorage.getItem(accessTokenKey))
   const user = ref(readStoredUser())
   const isLoading = ref(false)
   const errorMessage = ref('')
-  const protectedMessage = ref(null)
 
   const isLoggedIn = computed(() => Boolean(accessToken.value && user.value))
-  const authorizationHeader = computed(() => (accessToken.value ? `Bearer ${accessToken.value}` : ''))
-  const tokenPayload = computed(() => decodeJwtPayload(accessToken.value))
 
   function saveAuthentication(loginResponse) {
     accessToken.value = loginResponse.accessToken
@@ -51,8 +33,6 @@ export const useAuthStore = defineStore('auth', () => {
   function clearAuthentication() {
     accessToken.value = null
     user.value = null
-    protectedMessage.value = null
-
     sessionStorage.removeItem(accessTokenKey)
     sessionStorage.removeItem(userStorageKey)
   }
@@ -86,22 +66,6 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
-  async function fetchProtectedMessage() {
-    isLoading.value = true
-    errorMessage.value = ''
-
-    try {
-      protectedMessage.value = await authApi.getProtectedMessage()
-      return true
-    } catch (error) {
-      if (error.status === 401) clearAuthentication()
-      errorMessage.value = error.message
-      return false
-    } finally {
-      isLoading.value = false
-    }
-  }
-
   function logout() {
     clearAuthentication()
     errorMessage.value = ''
@@ -112,13 +76,9 @@ export const useAuthStore = defineStore('auth', () => {
     user,
     isLoading,
     errorMessage,
-    protectedMessage,
     isLoggedIn,
-    authorizationHeader,
-    tokenPayload,
     login,
     logout,
     fetchMyProfile,
-    fetchProtectedMessage,
   }
 })

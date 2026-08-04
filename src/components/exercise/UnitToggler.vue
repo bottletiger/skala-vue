@@ -36,36 +36,31 @@ const getUnitName = (value) => (value === 'celsius' ? '섭씨' : '화씨')
   position: relative;
   isolation: isolate;
   display: inline-grid;
-  min-width: 104px;
+  min-width: 80px;
   min-height: 44px;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   align-items: center;
-  padding: 4px;
-  border: 1px solid rgba(255, 255, 255, 0.42);
-  border-color: color-mix(in srgb, var(--hero-text, #1c292f) 24%, transparent);
+  padding: 3px;
+  border: 0;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.2);
-  box-shadow:
-    inset 0 0 0 1px rgba(28, 41, 47, 0.07),
-    0 10px 30px rgba(23, 35, 45, 0.1);
-  color: var(--hero-muted, #425159);
+  background: transparent;
+  box-shadow: none;
+  color: var(--unit-muted, var(--hero-muted, #425159));
   cursor: pointer;
   overflow: hidden;
-  backdrop-filter: blur(18px) saturate(120%);
-  -webkit-backdrop-filter: blur(18px) saturate(120%);
   transition: background-color 180ms ease;
 }
 
 .unit-indicator {
   position: absolute;
   z-index: 0;
-  top: 4px;
-  bottom: 4px;
-  left: 4px;
-  width: calc(50% - 4px);
+  top: 3px;
+  bottom: 3px;
+  left: 3px;
+  width: calc(50% - 3px);
   border-radius: 999px;
-  background: var(--hero-text, #1c292f);
-  box-shadow: 0 3px 12px rgba(23, 35, 45, 0.1);
+  background: color-mix(in srgb, var(--unit-ink, var(--hero-text, #1c292f)) 9%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--unit-ink, var(--hero-text, #1c292f)) 6%, transparent);
   transform: translateX(0);
   transition: transform 260ms cubic-bezier(0.22, 1, 0.36, 1);
   will-change: transform;
@@ -79,31 +74,25 @@ const getUnitName = (value) => (value === 'celsius' ? '섭씨' : '화씨')
   position: relative;
   z-index: 1;
   display: grid;
-  min-width: 38px;
-  min-height: 34px;
+  min-width: 32px;
+  min-height: 36px;
   place-items: center;
   border-radius: 999px;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 750;
   transition: color 180ms ease;
 }
 
 .unit-option.active {
-  color: var(--hero-start, #e4e9e7);
+  color: var(--unit-ink, var(--hero-text, #1c292f));
 }
 
 .unit-control:hover {
-  background: rgba(255, 255, 255, 0.3);
+  background: color-mix(in srgb, var(--unit-ink, var(--hero-text, #1c292f)) 5%, transparent);
 }
 
 .unit-control:active {
   transform: translateY(1px);
-}
-
-@supports not (backdrop-filter: blur(1px)) {
-  .unit-control {
-    background: rgba(244, 247, 246, 0.82);
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {

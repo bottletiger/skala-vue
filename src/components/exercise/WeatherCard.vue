@@ -4,6 +4,7 @@ import { computed } from 'vue'
 import TemperatureConditionLabel from '@/components/weather/TemperatureConditionLabel.vue'
 import WeatherConditionIcon from '@/components/weather/WeatherConditionIcon.vue'
 import { useTemperature } from '@/composables/useTemperature'
+import { getCountryFlagEmoji } from '@/utils/countryFlag'
 import { formatWeatherTime, getWeatherTheme } from '@/utils/weatherTheme'
 
 const props = defineProps({
@@ -34,6 +35,7 @@ const hasTemperature = computed(() => Number.isFinite(props.cityItem.temp))
 const weatherTheme = computed(() => getWeatherTheme(props.cityItem))
 const localTime = computed(() => formatWeatherTime(props.cityItem.observedAt, props.cityItem.timezoneOffset))
 const cityDisplayName = computed(() => props.cityItem.displayName || props.cityItem.name)
+const countryFlag = computed(() => getCountryFlagEmoji(props.cityItem.countryCode))
 
 const handleCardSelect = () => {
   emit('select-card', props.cityItem)
@@ -49,8 +51,13 @@ const handleDetailClick = () => {
     <article class="weather-card dashboard-surface dashboard-surface--weather" :class="{ 'is-selected': selected, 'is-promoting': promoting }">
       <button class="card-select" type="button" :aria-label="`${cityDisplayName} 날씨를 메인 화면으로 보기`" @click="handleCardSelect">
         <span class="city-copy">
-          <span class="city-name">{{ cityDisplayName }}</span>
-          <span v-if="cityItem.countryCode" class="city-meta">{{ cityItem.countryCode }} · 현지 {{ localTime }}</span>
+          <span class="city-name">
+            <span v-if="countryFlag" class="country-flag" aria-hidden="true">
+              <span class="country-flag-glyph">{{ countryFlag }}</span>
+            </span>
+            <span class="city-name-text">{{ cityDisplayName }}</span>
+          </span>
+          <span v-if="cityItem.name" class="city-meta">{{ cityItem.name }} · 현지 {{ localTime }}</span>
           <span class="condition">{{ cityItem.status || weatherTheme.label || '날씨 설명 없음' }}</span>
         </span>
 
@@ -163,11 +170,41 @@ const handleDetailClick = () => {
 }
 
 .city-name {
-  display: block;
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 6px;
   margin: 0 0 3px;
   color: inherit;
   font-size: clamp(14px, 2.4vw, 17px);
   font-weight: 850;
+}
+
+.country-flag {
+  display: grid;
+  width: 18px;
+  height: 18px;
+  flex: 0 0 auto;
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--hero-text, currentcolor) 16%, transparent);
+  border-radius: 50%;
+  background: color-mix(in srgb, white 12%, transparent);
+  box-shadow: inset 0 0 0 0.5px color-mix(in srgb, white 26%, transparent);
+}
+
+.country-flag-glyph {
+  display: block;
+  font-size: 16px;
+  line-height: 1;
+  transform: scale(1.38);
+}
+
+.city-name-text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .condition {

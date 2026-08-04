@@ -32,44 +32,6 @@
   line-height: 1.35;
 }
 
-:is(.login-scene, .dashboard-scene, .about-scene) {
-  transition:
-    --hero-start 500ms ease,
-    --hero-end 500ms ease,
-    --weather-accent 500ms ease,
-    --hero-text 500ms ease,
-    --hero-muted 500ms ease,
-    color 500ms ease;
-}
-
-:is(.login-scene, .dashboard-scene, .about-scene)[data-theme='clouds'] :is(.login-atmosphere, .dashboard-atmosphere, .about-atmosphere) {
-  background:
-    radial-gradient(ellipse at 14% 20%, rgba(255, 255, 255, 0.31) 0 7%, transparent 26%), radial-gradient(ellipse at 43% 11%, rgba(255, 255, 255, 0.19) 0 9%, transparent 30%),
-    radial-gradient(ellipse at 82% 31%, rgba(255, 255, 255, 0.24) 0 8%, transparent 28%);
-  filter: blur(18px);
-}
-
-:is(.login-scene, .dashboard-scene, .about-scene)[data-theme='rain'] :is(.login-atmosphere, .dashboard-atmosphere, .about-atmosphere),
-:is(.login-scene, .dashboard-scene, .about-scene)[data-theme='thunderstorm'] :is(.login-atmosphere, .dashboard-atmosphere, .about-atmosphere) {
-  background: repeating-linear-gradient(105deg, transparent 0 18px, rgba(255, 255, 255, 0.09) 19px, transparent 21px 34px);
-  opacity: 0.48;
-}
-
-:is(.login-scene, .dashboard-scene, .about-scene)[data-theme='snow'] :is(.login-atmosphere, .dashboard-atmosphere, .about-atmosphere) {
-  background:
-    radial-gradient(circle at 20% 18%, rgba(255, 255, 255, 0.72) 0 2px, transparent 3px), radial-gradient(circle at 70% 34%, rgba(255, 255, 255, 0.62) 0 3px, transparent 4px),
-    radial-gradient(circle at 43% 55%, rgba(255, 255, 255, 0.58) 0 2px, transparent 3px);
-  background-size:
-    88px 88px,
-    122px 122px,
-    148px 148px;
-}
-
-:is(.login-scene, .dashboard-scene, .about-scene)[data-theme='mist'] :is(.login-atmosphere, .dashboard-atmosphere, .about-atmosphere) {
-  background: radial-gradient(ellipse at 18% 30%, rgba(255, 255, 255, 0.28), transparent 48%), radial-gradient(ellipse at 78% 58%, rgba(255, 255, 255, 0.22), transparent 52%);
-  filter: blur(28px);
-}
-
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

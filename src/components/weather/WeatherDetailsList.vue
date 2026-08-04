@@ -29,7 +29,6 @@ const sunsetTime = computed(() => formatWeatherTime(props.weather?.sunset, props
   <section class="details-section" aria-labelledby="details-list-title">
     <div class="details-heading">
       <h2 id="details-list-title">상세 정보</h2>
-      <span>현재 관측값</span>
     </div>
 
     <dl class="details-list">
@@ -41,7 +40,7 @@ const sunsetTime = computed(() => formatWeatherTime(props.weather?.sunset, props
               <path d="M12 9v7" />
             </svg>
           </span>
-          <span class="detail-copy"><strong>체감 온도</strong><small>몸이 느끼는 온도</small></span>
+          <strong>체감 온도</strong>
         </dt>
         <dd class="detail-value" :class="{ missing: feelsLikeTemperature === null }">
           <strong>{{ feelsLikeTemperature ?? '정보 없음' }}</strong
@@ -57,7 +56,7 @@ const sunsetTime = computed(() => formatWeatherTime(props.weather?.sunset, props
               <path d="M9.5 15.5a3 3 0 0 0 5 1.5" />
             </svg>
           </span>
-          <span class="detail-copy"><strong>습도</strong><small>공기 중 수증기 비율</small></span>
+          <strong>습도</strong>
         </dt>
         <dd class="detail-value" :class="{ missing: humidity === null }">
           <strong>{{ humidity ?? '정보 없음' }}</strong
@@ -70,7 +69,7 @@ const sunsetTime = computed(() => formatWeatherTime(props.weather?.sunset, props
           <span class="detail-icon" aria-hidden="true"
             ><svg viewBox="0 0 24 24"><path d="M3 8h11a2.5 2.5 0 1 0-2.3-3.5M3 12h16a2 2 0 1 1-1.8 2.8M3 16h8" /></svg
           ></span>
-          <span class="detail-copy"><strong>풍속</strong><small>지상 바람 속도</small></span>
+          <strong>풍속</strong>
         </dt>
         <dd class="detail-value" :class="{ missing: windSpeed === null }">
           <strong>{{ windSpeed ?? '정보 없음' }}</strong
@@ -85,7 +84,7 @@ const sunsetTime = computed(() => formatWeatherTime(props.weather?.sunset, props
               <circle cx="12" cy="12" r="8" />
               <path d="m12 12 3.5-3.5M8 17h8" /></svg
           ></span>
-          <span class="detail-copy"><strong>기압</strong><small>현재 대기압</small></span>
+          <strong>기압</strong>
         </dt>
         <dd class="detail-value" :class="{ missing: pressure === null }">
           <strong>{{ pressure ?? '정보 없음' }}</strong
@@ -100,7 +99,7 @@ const sunsetTime = computed(() => formatWeatherTime(props.weather?.sunset, props
               <path d="M2.5 12s3.5-5 9.5-5 9.5 5 9.5 5-3.5 5-9.5 5-9.5-5-9.5-5Z" />
               <circle cx="12" cy="12" r="2.5" /></svg
           ></span>
-          <span class="detail-copy"><strong>시정거리</strong><small>육안으로 볼 수 있는 거리</small></span>
+          <strong>시정거리</strong>
         </dt>
         <dd class="detail-value" :class="{ missing: visibilityKm === null }">
           <strong>{{ visibilityKm ?? '정보 없음' }}</strong
@@ -108,12 +107,12 @@ const sunsetTime = computed(() => formatWeatherTime(props.weather?.sunset, props
         </dd>
       </div>
 
-      <div class="detail-row detail-row--solar">
+      <div class="detail-row">
         <dt class="detail-label">
           <span class="detail-icon" aria-hidden="true"
             ><svg viewBox="0 0 24 24"><path d="M4 18h16M6 14a6 6 0 0 1 12 0M12 3v3M4.9 6.9 7 9M19.1 6.9 17 9" /></svg
           ></span>
-          <span class="detail-copy"><strong>일출 · 일몰</strong><small>도시 현지 시각</small></span>
+          <strong>일출 · 일몰</strong>
         </dt>
         <dd class="detail-value detail-value--pair">
           <span
@@ -130,16 +129,11 @@ const sunsetTime = computed(() => formatWeatherTime(props.weather?.sunset, props
 
 <style scoped>
 .details-section {
-  width: min(980px, 100%);
-  margin: 18px auto 0;
+  margin: 28px auto 0;
 }
 
 .details-heading {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 20px;
-  margin-bottom: 15px;
+  margin-bottom: 12px;
   padding: 0 4px;
 }
 
@@ -148,57 +142,48 @@ const sunsetTime = computed(() => formatWeatherTime(props.weather?.sunset, props
   font-size: 18px;
 }
 
-.details-heading span {
-  color: var(--hero-muted);
-  font-size: 12px;
-  font-weight: 700;
-}
-
 .details-list {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr)) minmax(190px, 1.45fr);
   margin: 0;
-  padding: 0 22px;
-  overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  border-radius: 24px;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.08));
-  box-shadow: 0 8px 26px rgba(28, 43, 48, 0.045);
-  backdrop-filter: blur(14px) saturate(108%);
+  padding: 0 4px;
+  border-top: 1px solid color-mix(in srgb, var(--hero-text) 16%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--hero-text) 16%, transparent);
 }
 
 .detail-row {
   display: grid;
-  min-height: 72px;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 24px;
-  padding: 12px 2px;
+  min-width: 0;
+  min-height: 112px;
+  align-content: center;
+  gap: 10px;
+  padding: 16px 14px;
   transition: background-color 180ms ease;
 }
 
 .detail-row + .detail-row {
-  border-top: 1px solid rgba(255, 255, 255, 0.19);
+  border-left: 1px solid color-mix(in srgb, var(--hero-text) 12%, transparent);
 }
 
 .detail-label {
   display: flex;
   min-width: 0;
   align-items: center;
-  gap: 14px;
+  gap: 7px;
 }
 
 .detail-icon {
   display: grid;
-  width: 38px;
-  height: 38px;
+  width: 25px;
+  height: 25px;
   flex: 0 0 auto;
   place-items: center;
   color: var(--weather-accent);
-  transition: transform 280ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .detail-icon svg {
-  width: 27px;
-  height: 27px;
+  width: 21px;
+  height: 21px;
   fill: none;
   stroke: currentcolor;
   stroke-linecap: round;
@@ -206,23 +191,12 @@ const sunsetTime = computed(() => formatWeatherTime(props.weather?.sunset, props
   stroke-width: 1.75;
 }
 
-.detail-copy {
-  display: grid;
+.detail-label > strong {
   min-width: 0;
-  gap: 2px;
-}
-
-.detail-copy strong {
+  overflow: hidden;
   color: var(--hero-text);
   font-size: 13px;
   font-weight: 800;
-}
-
-.detail-copy small {
-  overflow: hidden;
-  color: var(--hero-muted);
-  font-size: 11px;
-  font-weight: 650;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -230,12 +204,12 @@ const sunsetTime = computed(() => formatWeatherTime(props.weather?.sunset, props
 .detail-value {
   display: flex;
   align-items: baseline;
-  justify-content: flex-end;
+  justify-content: flex-start;
   gap: 5px;
   margin: 0;
   color: var(--hero-text);
   font-variant-numeric: tabular-nums;
-  text-align: right;
+  text-align: left;
 }
 
 .detail-value > strong {
@@ -258,12 +232,11 @@ const sunsetTime = computed(() => formatWeatherTime(props.weather?.sunset, props
 
 .detail-value--pair {
   align-items: center;
-  gap: 14px;
+  gap: 10px;
 }
 
 .detail-value--pair > span {
-  display: grid;
-  grid-template-columns: auto auto;
+  display: flex;
   align-items: baseline;
   gap: 6px;
 }
@@ -282,57 +255,69 @@ const sunsetTime = computed(() => formatWeatherTime(props.weather?.sunset, props
 .detail-value--pair > i {
   width: 1px;
   height: 22px;
-  background: rgba(255, 255, 255, 0.24);
+  background: color-mix(in srgb, var(--hero-text) 18%, transparent);
+}
+
+@media (max-width: 840px) {
+  .details-list {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .detail-row:nth-child(3n + 1) {
+    border-left: 0;
+  }
+
+  .detail-row:nth-child(n + 4) {
+    border-top: 1px solid color-mix(in srgb, var(--hero-text) 12%, transparent);
+  }
 }
 
 @media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
   .detail-row:hover {
-    background: rgba(255, 255, 255, 0.06);
-  }
-
-  .detail-row:hover .detail-icon {
-    transform: translateY(-2px) scale(1.05);
+    background: color-mix(in srgb, var(--hero-text) 5%, transparent);
   }
 }
 
 @media (max-width: 560px) {
-  .details-heading {
-    align-items: flex-start;
-    flex-direction: column;
-    gap: 3px;
-  }
-
   .details-list {
-    padding: 0 14px;
-    border-radius: 22px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    padding: 0;
   }
 
   .detail-row {
-    min-height: 66px;
-    gap: 12px;
-    padding-block: 10px;
+    min-height: 104px;
+    gap: 8px;
+    padding: 14px 10px;
+  }
+
+  .detail-row:nth-child(even) {
+    border-left: 1px solid color-mix(in srgb, var(--hero-text) 12%, transparent);
+  }
+
+  .detail-row:nth-child(odd) {
+    border-left: 0;
+  }
+
+  .detail-row:nth-child(n + 3) {
+    border-top: 1px solid color-mix(in srgb, var(--hero-text) 12%, transparent);
   }
 
   .detail-label {
-    gap: 10px;
+    gap: 6px;
   }
 
   .detail-icon {
-    width: 34px;
-    height: 34px;
+    width: 23px;
+    height: 23px;
   }
 
   .detail-icon svg {
-    width: 24px;
-    height: 24px;
+    width: 20px;
+    height: 20px;
   }
 
-  .detail-copy strong {
+  .detail-label > strong {
     font-size: 12px;
-  }
-
-  .detail-copy small {
-    font-size: 10px;
   }
 
   .detail-value > strong {
@@ -353,25 +338,20 @@ const sunsetTime = computed(() => formatWeatherTime(props.weather?.sunset, props
 }
 
 @media (max-width: 360px) {
-  .detail-copy small {
-    display: none;
+  .detail-value--pair {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 2px;
   }
 
-  .detail-value--pair > span {
-    grid-template-columns: 1fr;
-    justify-items: end;
-    gap: 0;
+  .detail-value--pair > i {
+    display: none;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .detail-row,
-  .detail-icon {
+  .detail-row {
     transition: none;
-  }
-
-  .detail-row:hover .detail-icon {
-    transform: none;
   }
 }
 </style>

@@ -1,0 +1,380 @@
+.collection-workspace {
+  padding-top: clamp(24px, 4svh, 42px);
+}
+
+.workspace-intro {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 0 2px;
+}
+
+.workspace-intro h2 {
+  margin: 0;
+  font-size: clamp(23px, 3vw, 32px);
+  line-height: 1.1;
+  letter-spacing: -0.045em;
+}
+
+.collection-count {
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+}
+
+.collection-count strong {
+  font-size: 29px;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.045em;
+  line-height: 1;
+}
+
+.collection-count span {
+  color: var(--hero-muted);
+  font-size: 10px;
+  font-weight: 780;
+}
+
+.filter-strip {
+  display: grid;
+  align-items: end;
+  gap: 12px;
+  margin-top: 18px;
+  padding: 13px 2px 15px;
+  border-top: 1px solid color-mix(in srgb, var(--hero-text) 13%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--hero-text) 13%, transparent);
+}
+
+.filter-primary {
+  min-width: 0;
+}
+
+.filter-strip label > span,
+.editor-form label > span {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--hero-muted);
+  font-size: 10px;
+  font-weight: 780;
+}
+
+.filter-strip input:not([type='checkbox']),
+.filter-strip select,
+.editor-form input,
+.editor-form select,
+.editor-form textarea {
+  width: 100%;
+  border: 1px solid color-mix(in srgb, var(--hero-text) 12%, transparent);
+  border-radius: 9px;
+  outline: none;
+  background: color-mix(in srgb, white 14%, transparent);
+  color: var(--hero-text);
+  font: inherit;
+  font-size: 12px;
+  transition:
+    border-color 180ms ease,
+    background-color 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.filter-strip select,
+.editor-form select {
+  appearance: none;
+  padding-right: 34px;
+  background-image: linear-gradient(45deg, transparent 50%, var(--hero-muted) 50%), linear-gradient(135deg, var(--hero-muted) 50%, transparent 50%);
+  background-position:
+    calc(100% - 16px) calc(50% - 2px),
+    calc(100% - 11px) calc(50% - 2px);
+  background-repeat: no-repeat;
+  background-size: 5px 5px;
+  cursor: pointer;
+  -webkit-appearance: none;
+}
+
+.filter-strip input:not([type='checkbox']),
+.filter-strip select,
+.editor-form input,
+.editor-form select {
+  height: 40px;
+  padding: 0 12px;
+}
+
+.editor-form textarea {
+  padding: 10px 11px;
+  resize: vertical;
+}
+
+.filter-strip input:focus,
+.filter-strip select:focus,
+.editor-form input:focus,
+.editor-form select:focus,
+.editor-form textarea:focus {
+  border-color: color-mix(in srgb, var(--weather-accent) 58%, transparent);
+  background-color: color-mix(in srgb, white 30%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--weather-accent) 10%, transparent);
+}
+
+.filter-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(72px, 1fr));
+  gap: 6px;
+}
+
+.filter-actions button {
+  min-height: 40px;
+  padding: 0 14px;
+  border: 1px solid color-mix(in srgb, var(--hero-text) 13%, transparent);
+  border-radius: 9px;
+  background: color-mix(in srgb, white 8%, transparent);
+  color: var(--hero-muted);
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 800;
+  transition:
+    background-color 180ms ease,
+    color 180ms ease;
+}
+
+.filter-actions button:first-child {
+  background: var(--hero-text);
+  border-color: var(--hero-text);
+  color: var(--hero-start);
+}
+
+.workspace-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(286px, 320px);
+  align-items: start;
+  gap: clamp(18px, 2.4vw, 28px);
+  margin-top: 22px;
+}
+
+.editor-panel {
+  position: sticky;
+  top: 24px;
+  grid-column: 2;
+  grid-row: 1;
+  scroll-margin-top: 24px;
+  padding: 18px;
+  border: 1px solid color-mix(in srgb, var(--hero-text) 15%, transparent);
+  border-radius: 14px;
+  background: color-mix(in srgb, white 12%, transparent);
+  box-shadow: 0 14px 34px rgba(20, 33, 37, 0.055);
+  backdrop-filter: blur(18px) saturate(108%);
+  -webkit-backdrop-filter: blur(18px) saturate(108%);
+}
+
+.editor-panel header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid color-mix(in srgb, var(--hero-text) 12%, transparent);
+}
+
+.editor-heading > span {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--weather-accent);
+  font-size: 9px;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+}
+
+.editor-panel h3 {
+  margin: 0;
+  font-size: 18px;
+  letter-spacing: -0.025em;
+}
+
+.editor-panel header button,
+.row-actions button {
+  min-height: 30px;
+  padding: 0 9px;
+  border: 1px solid color-mix(in srgb, var(--hero-text) 12%, transparent);
+  border-radius: 8px;
+  background: color-mix(in srgb, white 7%, transparent);
+  color: var(--hero-muted);
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.editor-panel header button {
+  min-height: 30px;
+  padding: 0 7px;
+  border-color: transparent;
+  background: transparent;
+}
+
+.editor-form {
+  display: grid;
+  gap: 13px;
+  margin-top: 17px;
+}
+
+.save-button {
+  display: flex;
+  min-height: 46px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 2px;
+  border: 0;
+  border-radius: 9px;
+  background: var(--hero-text);
+  color: var(--hero-start);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 820;
+}
+
+.save-button:disabled,
+.row-actions button:disabled {
+  cursor: wait;
+  opacity: 0.58;
+}
+
+.save-button i {
+  width: 7px;
+  height: 7px;
+  border-top: 1.5px solid currentcolor;
+  border-right: 1.5px solid currentcolor;
+  transform: rotate(45deg);
+}
+
+.collection-panel {
+  grid-column: 1;
+  grid-row: 1;
+  min-width: 0;
+}
+
+.list-column-head {
+  display: grid;
+  min-height: 31px;
+  align-items: center;
+  gap: 16px;
+  padding: 0 6px;
+  border-bottom: 1px solid color-mix(in srgb, var(--hero-text) 17%, transparent);
+  color: var(--hero-muted);
+  font-size: 9px;
+  font-weight: 780;
+  letter-spacing: 0.03em;
+}
+
+.collection-state {
+  display: flex;
+  min-height: 220px;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  border-top: 1px solid color-mix(in srgb, var(--hero-text) 15%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--hero-text) 15%, transparent);
+  color: var(--hero-muted);
+  font-size: 12px;
+  font-weight: 720;
+}
+
+.loading-ring {
+  width: 15px;
+  height: 15px;
+  border: 2px solid color-mix(in srgb, var(--hero-text) 18%, transparent);
+  border-top-color: var(--hero-text);
+  border-radius: 50%;
+  animation: collection-spin 720ms linear infinite;
+}
+
+@keyframes collection-spin {
+  to {
+    transform: rotate(1turn);
+  }
+}
+
+.row-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 5px;
+}
+
+.row-actions button:last-child {
+  border-color: color-mix(in srgb, #a96861 35%, transparent);
+  background: color-mix(in srgb, #a96861 8%, transparent);
+  color: color-mix(in srgb, #9e5c55 86%, var(--hero-text));
+}
+
+.row-actions button:focus-visible,
+.filter-actions button:focus-visible,
+.editor-panel header button:focus-visible,
+.save-button:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--weather-accent) 72%, white);
+  outline-offset: 2px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .filter-actions button:last-child:hover,
+  .editor-panel header button:hover,
+  .row-actions button:first-child:hover {
+    border-color: color-mix(in srgb, var(--hero-text) 24%, transparent);
+    background: color-mix(in srgb, white 15%, transparent);
+    color: var(--hero-text);
+  }
+
+  .filter-actions button:last-child:hover {
+    background: color-mix(in srgb, white 18%, transparent);
+  }
+
+  .row-actions button:last-child:hover {
+    border-color: color-mix(in srgb, #a96861 58%, transparent);
+    background: color-mix(in srgb, #a96861 15%, transparent);
+    color: color-mix(in srgb, #914a44 90%, var(--hero-text));
+  }
+}
+
+@media (max-width: 840px) {
+  .workspace-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .editor-panel {
+    position: static;
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .collection-panel {
+    grid-column: 1;
+    grid-row: 2;
+  }
+}
+
+@media (max-width: 560px) {
+  .workspace-intro {
+    align-items: flex-start;
+  }
+
+  .filter-strip {
+    grid-template-columns: 1fr;
+  }
+
+  .filter-actions {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .loading-ring {
+    animation: none;
+  }
+
+  .filter-strip input,
+  .filter-strip select,
+  .editor-form input,
+  .editor-form select,
+  .editor-form textarea,
+  .filter-actions button {
+    transition: none;
+  }
+}

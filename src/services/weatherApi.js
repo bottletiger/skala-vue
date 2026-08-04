@@ -33,6 +33,7 @@ const FORECAST_ITEM_LIMIT = 8
 const DAILY_FORECAST_LIMIT = 5
 const SECONDS_PER_DAY = 24 * 60 * 60
 const LOCAL_NOON_SECONDS = 12 * 60 * 60
+export const WEATHER_LIST_CONCURRENCY = 6
 
 const formatLocalDate = (timestamp, timezoneOffset) => {
   if (!Number.isFinite(timestamp) || !Number.isFinite(timezoneOffset)) return null
@@ -224,7 +225,24 @@ export const fetchCityForecast = async (city, apiKey = getWeatherApiKey()) => {
 }
 
 export const fetchWeatherList = async (cities, fetchWeather = fetchCityWeather, onComplete) => {
-  const results = await Promise.allSettled(cities.map(fetchWeather))
+  const results = Array.from({ length: cities.length })
+  let nextCityIndex = 0
+
+  const runWorker = async () => {
+    while (nextCityIndex < cities.length) {
+      const cityIndex = nextCityIndex
+      nextCityIndex += 1
+
+      try {
+        results[cityIndex] = { status: 'fulfilled', value: await fetchWeather(cities[cityIndex]) }
+      } catch (reason) {
+        results[cityIndex] = { status: 'rejected', reason }
+      }
+    }
+  }
+
+  const workerCount = Math.min(WEATHER_LIST_CONCURRENCY, cities.length)
+  await Promise.all(Array.from({ length: workerCount }, runWorker))
   const successfulCities = results.filter((result) => result.status === 'fulfilled').map((result) => result.value)
   const failedCount = results.length - successfulCities.length
 

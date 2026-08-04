@@ -70,49 +70,70 @@ test('대시보드는 인증 보호 경로이며 로그인 후 상품·게시글
   assert.doesNotMatch(dashboardSource, /Decoded payload|Raw access token|Authorization header|보호 API 확인/)
 })
 
-test('하단 내비게이션은 날씨·대시보드·로그인·소개 순서다', () => {
+test('하단 내비게이션은 인증 상태에 따라 로그인과 대시보드를 한 자리에서 전환한다', () => {
   const appSource = readSource('../src/App.vue')
-  const labels = ['<span>날씨</span>', '<span>대시보드</span>', '<span>로그인</span>', '<span>소개</span>']
-  const indexes = labels.map((label) => appSource.indexOf(label))
 
-  assert.ok(indexes.every((index) => index >= 0))
-  assert.deepEqual(
-    indexes,
-    [...indexes].sort((first, second) => first - second),
-  )
+  assert.match(appSource, /const \{ isLoggedIn \} = storeToRefs\(authStore\)/)
+  assert.match(appSource, /const accountNavigation = computed/)
+  assert.match(appSource, /\? \{ name: 'Dashboard', label: '대시보드', icon: 'dashboard' \}/)
+  assert.match(appSource, /: \{ name: 'Login', label: '로그인', icon: 'login' \}/)
+  assert.equal((appSource.match(/<RouterLink/g) ?? []).length, 3)
+  assert.match(appSource, /grid-template-columns:\s*repeat\(3, minmax\(0, 1fr\)\)/)
+  assert.match(appSource, /width:\s*calc\(\(100% - 6px\) \/ 3\)/)
 })
 
 test('내비게이션 화면은 선택한 날씨의 동적 테마와 장면 규칙을 공유한다', () => {
   const loginSource = readSource('../src/views/LoginView.vue')
   const dashboardSource = readSource('../src/views/DashboardView.vue')
   const aboutSource = readSource('../src/views/WeatherAboutView.vue')
+  const sceneSource = readSource('../src/components/common/WeatherScene.vue')
   const sharedThemeSource = readSource('../src/composables/useSharedWeatherTheme.js')
-  const mainCssSource = readSource('../src/assets/main.css')
 
   for (const source of [loginSource, dashboardSource, aboutSource]) {
-    assert.match(source, /useSharedWeatherTheme/)
-    assert.match(source, /:data-theme="\w+Theme\.name"/)
-    assert.match(source, /var\(--hero-start\)/)
-    assert.match(source, /var\(--hero-end\)/)
-    assert.match(source, /var\(--weather-accent\)/)
-    assert.match(source, /linear-gradient\(158deg/)
+    assert.match(source, /import WeatherScene/)
+    assert.match(source, /<WeatherScene/)
     assert.match(source, /letter-spacing:\s*-0\.0(?:5|6)/)
     assert.match(source, /backdrop-filter:\s*blur\(/)
     assert.doesNotMatch(source, /#102f2b|#1b7765|#11322c|#1a5548/)
   }
 
+  assert.match(sceneSource, /useSharedWeatherTheme/)
+  assert.match(sceneSource, /:style="activeTheme\.cssVariables"/)
+  assert.match(sceneSource, /:data-theme="activeTheme\.name"/)
+  assert.match(sceneSource, /linear-gradient\(158deg, var\(--hero-start\)/)
+  assert.match(sceneSource, /backdrop-filter|filter:\s*blur\(/)
   assert.match(sharedThemeSource, /weatherList\.value\.find/)
   assert.match(sharedThemeSource, /weather\.id === selectedCityId\.value/)
-  assert.match(sharedThemeSource, /getWeatherTheme\(selectedWeather\.value\)/)
+  assert.match(sharedThemeSource, /activeSceneTheme\.value \?\? getWeatherTheme\(selectedWeather\.value\)/)
+  assert.match(sharedThemeSource, /setActiveSceneWeatherTheme/)
 
   for (const state of ['clouds', 'rain', 'thunderstorm', 'snow', 'mist']) {
-    assert.match(mainCssSource, new RegExp(`data-theme='${state}'`))
+    assert.match(sceneSource, new RegExp(`data-theme='${state}'`))
   }
+})
+
+test('로그인과 대시보드는 설명용 랜딩 없이 실제 조작 화면을 바로 제공한다', () => {
+  const loginSource = readSource('../src/views/LoginView.vue')
+  const dashboardSource = readSource('../src/views/DashboardView.vue')
+
+  assert.match(loginSource, /return null/)
+  assert.match(loginSource, /name="email"/)
+  assert.match(loginSource, /name="password"/)
+  assert.match(loginSource, /:aria-busy="authStore\.isLoading"/)
+  assert.match(loginSource, /<span>콘텐츠 운영<\/span>\s*<h1 id="login-title">로그인<\/h1>/)
+  assert.doesNotMatch(loginSource, /FlowSteps|JWT 로그인 처리 흐름|실습을 시작합니다|login-mark|관리 계정으로 계속하세요/)
+
+  assert.match(dashboardSource, /const healthState = ref\('checking'\)/)
+  assert.match(dashboardSource, /'API 연결됨'/)
+  assert.match(dashboardSource, /'API 연결 실패'/)
+  assert.match(dashboardSource, /<section class="api-section"/)
+  assert.doesNotMatch(dashboardSource, /labEntry|moveToLab|API 실습을 시작해 볼까요/)
 })
 
 test('상품과 게시글 탭은 기존 샘플 패널 대신 같은 컬렉션형 화면을 사용한다', () => {
   const productSource = readSource('../src/components/mock/ProductManager.vue')
   const postSource = readSource('../src/components/mock/PostManager.vue')
+  const collectionStyles = readSource('../src/assets/collection-manager.css')
 
   for (const source of [productSource, postSource]) {
     assert.match(source, /workspace-intro/)
@@ -122,6 +143,9 @@ test('상품과 게시글 탭은 기존 샘플 패널 대신 같은 컬렉션형
     assert.match(source, /var\(--hero-muted\)/)
     assert.doesNotMatch(source, /method-badge|panel--form|panel--content/)
   }
+
+  assert.match(collectionStyles, /\.filter-strip select,\s*\.editor-form select\s*\{[^}]*appearance:\s*none;[^}]*background-image:/s)
+  assert.match(collectionStyles, /background-position:[^;]*calc\(100% - 16px\)[^;]*calc\(100% - 11px\)/s)
 })
 
 test('삭제와 전체 초기화는 브라우저 기본 confirm 대신 공통 날씨 테마 확인창을 사용한다', () => {
@@ -129,6 +153,7 @@ test('삭제와 전체 초기화는 브라우저 기본 confirm 대신 공통 �
   const productSource = readSource('../src/components/mock/ProductManager.vue')
   const postSource = readSource('../src/components/mock/PostManager.vue')
   const dialogSource = readSource('../src/components/common/ConfirmDialog.vue')
+  const collectionStyles = readSource('../src/assets/collection-manager.css')
 
   for (const source of [dashboardSource, productSource, postSource]) {
     assert.match(source, /<ConfirmDialog/)
@@ -140,4 +165,6 @@ test('삭제와 전체 초기화는 브라우저 기본 confirm 대신 공통 �
   assert.match(dialogSource, /aria-modal="true"/)
   assert.match(dialogSource, /event\.key === 'Escape'/)
   assert.match(dialogSource, /previouslyFocusedElement/)
+  assert.match(dashboardSource, /\.reset-button\s*\{[^}]*border:[^;]*#98524b[^;]*;[^}]*background:[^;]*#98524b[^;]*;[^}]*color:/s)
+  assert.match(collectionStyles, /\.row-actions button:last-child\s*\{[^}]*border-color:[^;]*#a96861[^;]*;[^}]*background:[^;]*#a96861[^;]*;[^}]*color:/s)
 })

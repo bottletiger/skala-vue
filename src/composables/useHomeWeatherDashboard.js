@@ -6,6 +6,7 @@ import { CURRENT_LOCATION_ID } from '@/services/geolocation'
 import { fetchCityWeather, fetchWeatherList, hasWeatherApiKey, MissingWeatherApiKeyError } from '@/services/weatherApi'
 import { getWeatherRequestErrorMessage, HOME_MISSING_WEATHER_API_KEY_MESSAGE } from '@/services/weatherErrors'
 import { useHomeWeatherStore } from '@/stores/homeWeatherStore'
+import { formatKoreanSelectionMessage } from '@/utils/koreanGrammar'
 
 export const useHomeWeatherDashboard = (getRouteSelectedCityId) => {
   const apiReady = hasWeatherApiKey()
@@ -130,7 +131,7 @@ export const useHomeWeatherDashboard = (getRouteSelectedCityId) => {
 
   const selectCity = (city) => {
     selectedCityId.value = city.id
-    selectedCityInfo.value = `${city.displayName || city.name}이 선택되었습니다.`
+    selectedCityInfo.value = formatKoreanSelectionMessage(city.displayName || city.name, city.name)
   }
 
   onBeforeUnmount(() => {

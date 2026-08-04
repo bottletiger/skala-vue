@@ -2,10 +2,12 @@
 import { computed, nextTick, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
+import WeatherScene from '@/components/common/WeatherScene.vue'
 import CurrentWeatherSummary from '@/components/weather/CurrentWeatherSummary.vue'
 import DailyForecastList from '@/components/weather/DailyForecastList.vue'
 import HourlyForecastStrip from '@/components/weather/HourlyForecastStrip.vue'
 import LoadingSpinner from '@/components/weather/LoadingSpinner.vue'
+import WeatherBackgroundVideo from '@/components/weather/WeatherBackgroundVideo.vue'
 import WeatherDetailsList from '@/components/weather/WeatherDetailsList.vue'
 import { useCityWeatherDetail } from '@/composables/useCityWeatherDetail'
 import { useDocumentTitle } from '@/composables/useDocumentTitle'
@@ -54,8 +56,10 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="detail-scene" :style="weatherTheme.cssVariables" :data-theme="weatherTheme.name">
-    <div class="scene-horizon" aria-hidden="true"></div>
+  <WeatherScene :theme="weatherTheme">
+    <template #backdrop>
+      <WeatherBackgroundVideo :weather="cityData" />
+    </template>
 
     <div class="detail-shell">
       <header class="detail-topbar">
@@ -65,10 +69,7 @@ onMounted(async () => {
           </svg>
         </button>
 
-        <div class="topbar-title">
-          <span>현재 날씨</span>
-          <h1 id="detail-page-title" ref="detailPageHeading" tabindex="-1">{{ detailCityName || '도시 확인 중' }}</h1>
-        </div>
+        <h1 id="detail-page-title" ref="detailPageHeading" class="topbar-title" tabindex="-1">{{ detailCityName || '도시 확인 중' }}</h1>
 
         <button
           type="button"
@@ -106,7 +107,7 @@ onMounted(async () => {
 
         <div v-if="isForecastLoading" class="forecast-state">
           <LoadingSpinner class="forecast-loading-spinner" />
-          <p>시간대별 및 5일 예보를 불러오고 있습니다.</p>
+          <p>예보를 불러오는 중입니다.</p>
         </div>
 
         <div v-else-if="forecastErrorMessage" class="forecast-state forecast-state--error">
@@ -130,80 +131,16 @@ onMounted(async () => {
         </div>
       </section>
     </div>
-  </div>
+  </WeatherScene>
 </template>
 
 <style scoped>
-.detail-scene {
-  position: relative;
-  min-height: 100svh;
-  overflow: clip;
-  background:
-    radial-gradient(circle at 78% 12%, color-mix(in srgb, var(--weather-accent) 24%, transparent) 0%, transparent 31%),
-    radial-gradient(ellipse at 14% 88%, color-mix(in srgb, var(--hero-end) 72%, transparent) 0%, transparent 52%),
-    linear-gradient(158deg, var(--hero-start) 0%, color-mix(in srgb, var(--hero-start) 54%, var(--hero-end)) 52%, var(--hero-end) 100%);
-  color: var(--hero-text);
-  isolation: isolate;
-  transition:
-    --hero-start 500ms ease,
-    --hero-end 500ms ease,
-    --weather-accent 500ms ease,
-    --hero-text 500ms ease,
-    --hero-muted 500ms ease;
-}
-
-.detail-scene::before {
-  position: absolute;
-  z-index: -2;
-  inset: -18% -14% -8%;
-  background:
-    radial-gradient(ellipse at 12% 28%, rgba(255, 255, 255, 0.34) 0 6%, transparent 28%), radial-gradient(ellipse at 52% 20%, rgba(255, 255, 255, 0.2) 0 8%, transparent 31%),
-    radial-gradient(ellipse at 88% 34%, color-mix(in srgb, var(--weather-accent) 22%, transparent) 0 7%, transparent 30%);
-  content: '';
-  filter: blur(34px);
-  opacity: 0.82;
-  animation: detail-atmosphere-drift 22s ease-in-out infinite alternate;
-}
-
-.detail-scene::after {
-  position: absolute;
-  z-index: -1;
-  right: -22%;
-  bottom: -20%;
-  left: -22%;
-  height: 62%;
-  background: radial-gradient(ellipse at 50% 100%, color-mix(in srgb, var(--weather-accent) 26%, transparent) 0%, transparent 62%), linear-gradient(to top, rgba(255, 255, 255, 0.13), transparent 72%);
-  content: '';
-  filter: blur(58px);
-  opacity: 0.72;
-}
-
-.scene-horizon {
-  position: absolute;
-  z-index: -1;
-  inset: 0;
-  background: radial-gradient(ellipse at 50% -8%, rgba(255, 255, 255, 0.22), transparent 48%), linear-gradient(180deg, rgba(255, 255, 255, 0.08), transparent 48%, rgba(255, 255, 255, 0.07));
-  opacity: 0.78;
-}
-
-@keyframes detail-atmosphere-drift {
-  from {
-    transform: translate3d(-1.4%, -0.4%, 0) scale(1);
-  }
-
-  to {
-    transform: translate3d(1.4%, 0.8%, 0) scale(1.035);
-  }
-}
-
 .detail-shell {
   position: relative;
   z-index: 1;
   width: min(980px, calc(100% - 40px));
   margin: 0 auto;
-  padding: clamp(24px, 5vh, 58px) 0 calc(116px + env(safe-area-inset-bottom));
-  perspective: 1800px;
-  perspective-origin: 50% 28%;
+  padding: clamp(24px, 5vh, 58px) 0 calc(var(--floating-nav-height, 62px) + var(--floating-nav-offset, 12px) + 64px + env(safe-area-inset-bottom));
 }
 
 .detail-topbar {
@@ -265,27 +202,19 @@ onMounted(async () => {
   }
 }
 
-.topbar-title span,
-.topbar-title h1 {
-  display: block;
-}
-
-.topbar-title span {
-  color: var(--hero-muted);
-  font-size: 11px;
-  font-weight: 750;
-}
-
-.topbar-title h1 {
+.topbar-title {
   margin: 0;
-  font-size: 16px;
+  color: var(--hero-text);
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  outline: none;
 }
 
 .current-panel {
   min-height: 0;
-  width: min(980px, 100%);
   margin: 12px auto 0;
-  padding: 16px 4px 20px;
+  padding: 12px 4px 18px;
   border: 0;
   background: transparent;
   box-shadow: none;
@@ -316,13 +245,12 @@ onMounted(async () => {
 }
 
 .forecast-section {
-  width: min(980px, 100%);
-  margin: 28px auto 0;
+  margin: 34px auto 0;
 }
 
 .forecast-content {
   display: grid;
-  gap: 28px;
+  gap: 34px;
 }
 
 .forecast-state {
@@ -331,13 +259,12 @@ onMounted(async () => {
   align-items: center;
   justify-content: center;
   gap: 16px;
-  padding: 24px;
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  border-radius: 24px;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.08));
+  padding: 24px 4px;
+  border-top: 1px solid color-mix(in srgb, var(--hero-text) 16%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--hero-text) 16%, transparent);
+  background: transparent;
   color: var(--hero-muted);
   text-align: center;
-  backdrop-filter: blur(14px) saturate(108%);
 }
 
 .forecast-state p {
@@ -380,19 +307,11 @@ onMounted(async () => {
     color: var(--hero-text);
     transform: translateY(-1px);
   }
-
-  .current-panel:hover :deep(.current-visual) {
-    transform: translateY(-3px) scale(1.04);
-  }
 }
 
 @media (max-width: 560px) {
   .detail-shell {
     width: min(100% - 28px, 980px);
-  }
-
-  .topbar-title span {
-    display: none;
   }
 
   .current-panel {
@@ -402,20 +321,13 @@ onMounted(async () => {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .detail-scene,
-  .detail-scene::before {
-    animation: none;
-    transition: none;
-  }
-
   .back-button,
   .detail-refresh-button {
     transition: none;
   }
 
   .back-button:hover,
-  .detail-refresh-button:hover:not(:disabled),
-  .current-panel:hover :deep(.current-visual) {
+  .detail-refresh-button:hover:not(:disabled) {
     transform: none;
   }
 

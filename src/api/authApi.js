@@ -10,9 +10,4 @@ export const authApi = {
     const response = await http.get('/auth/me')
     return response.data
   },
-
-  async getProtectedMessage() {
-    const response = await http.get('/auth/protected-message')
-    return response.data
-  },
 }

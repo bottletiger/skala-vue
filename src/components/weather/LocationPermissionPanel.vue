@@ -79,9 +79,9 @@ const currentCopy = computed(() => copyByState[props.state])
 
 <style scoped>
 .location-permission-panel {
-  width: min(520px, 100%);
+  width: min(700px, 100%);
   margin: 0 auto;
-  padding: clamp(24px, 4vw, 40px) 0;
+  padding: clamp(24px, 4svh, 40px) 0;
   color: var(--hero-text);
   text-align: center;
 }
@@ -116,9 +116,11 @@ const currentCopy = computed(() => copyByState[props.state])
 
 .location-permission-panel h1 {
   margin: 0;
-  font-size: clamp(30px, 5.5vw, 48px);
+  font-size: clamp(30px, 4.5vw, 46px);
   line-height: 1.1;
   letter-spacing: -0.05em;
+  text-wrap: balance;
+  word-break: keep-all;
 }
 
 .location-permission-panel h1 + p {
@@ -193,6 +195,22 @@ const currentCopy = computed(() => copyByState[props.state])
 
   .location-consent-actions button {
     width: 100%;
+  }
+}
+
+@media (max-height: 620px) {
+  .location-permission-panel {
+    padding: 12px 0;
+  }
+
+  .location-consent-icon {
+    width: 62px;
+    height: 62px;
+    margin-bottom: 12px;
+  }
+
+  .location-consent-actions {
+    margin-top: 16px;
   }
 }
 

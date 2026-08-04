@@ -24,21 +24,18 @@ const observedAt = computed(() => formatWeatherDateTime(props.weather?.observedA
 
 <template>
   <div class="current-content">
-    <div class="current-visual">
-      <WeatherConditionIcon class="condition-icon" :category="theme.category" :is-night="theme.isNight" />
-    </div>
-
-    <div class="current-location">
-      <p>{{ weather.displayName || weather.name }}</p>
+    <div class="current-condition">
       <strong>{{ weather.status || theme.label || '날씨 설명 없음' }}</strong>
       <span>관측 {{ observedAt }}</span>
     </div>
 
-    <div class="current-reading">
-      <div id="detail-weather-title" class="current-temperature" :class="{ missing: currentTemperature === null }" role="heading" aria-level="2">
-        <span>{{ currentTemperature ?? '정보 없음' }}</span>
-        <small v-if="currentTemperature !== null">{{ unitSymbol }}</small>
-      </div>
+    <div id="detail-weather-title" class="current-temperature" :class="{ missing: currentTemperature === null }" role="heading" aria-level="2">
+      <span>{{ currentTemperature ?? '정보 없음' }}</span>
+      <small v-if="currentTemperature !== null">{{ unitSymbol }}</small>
+    </div>
+
+    <div class="current-visual">
+      <WeatherConditionIcon class="condition-icon" :category="theme.category" :is-night="theme.isNight" />
     </div>
   </div>
 </template>
@@ -46,51 +43,38 @@ const observedAt = computed(() => formatWeatherDateTime(props.weather?.observedA
 <style scoped>
 .current-content {
   display: grid;
-  min-height: 110px;
-  grid-template-columns: 82px minmax(0, 1fr) auto;
+  min-height: 124px;
+  grid-template-columns: minmax(0, 1fr) auto 74px;
   align-items: center;
-  gap: 20px;
-  padding: 0 8px;
+  gap: clamp(12px, 2.5vw, 28px);
+  padding: 22px 4px 24px;
+  border-bottom: 1px solid color-mix(in srgb, var(--hero-text) 16%, transparent);
 }
 
-.current-location {
+.current-condition {
   display: grid;
   min-width: 0;
   justify-items: start;
+  gap: 7px;
 }
 
-.current-location > p {
-  margin: 0;
-  color: var(--hero-text);
-  font-size: clamp(20px, 2.6vw, 28px);
-  font-weight: 800;
-  letter-spacing: -0.035em;
-  line-height: 1.1;
-}
-
-.current-location > strong {
+.current-condition > strong {
   display: block;
   width: 100%;
-  margin-top: 4px;
   overflow: hidden;
-  color: var(--hero-muted);
-  font-size: 12px;
-  font-weight: 800;
+  color: var(--hero-text);
+  font-size: clamp(16px, 2.2vw, 22px);
+  font-weight: 820;
+  letter-spacing: -0.025em;
+  line-height: 1.2;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.current-location > span {
-  margin-top: 6px;
+.current-condition > span {
   color: color-mix(in srgb, var(--hero-muted) 82%, transparent);
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 700;
-}
-
-.current-reading {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
 }
 
 .current-temperature {
@@ -121,12 +105,11 @@ const observedAt = computed(() => formatWeatherDateTime(props.weather?.observedA
 
 .current-visual {
   display: grid;
-  width: 82px;
-  height: 82px;
-  padding: 7px;
+  width: 74px;
+  height: 74px;
+  padding: 5px;
   justify-items: center;
   color: var(--weather-accent);
-  transition: transform 280ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .condition-icon {
@@ -136,21 +119,21 @@ const observedAt = computed(() => formatWeatherDateTime(props.weather?.observedA
 
 @media (max-width: 560px) {
   .current-content {
-    min-height: 92px;
-    grid-template-columns: 60px minmax(0, 1fr) auto;
-    gap: 11px;
-    padding: 0 2px;
+    min-height: 104px;
+    grid-template-columns: minmax(0, 1fr) auto 56px;
+    gap: 9px;
+    padding: 16px 0 20px;
   }
 
-  .current-location > p {
-    font-size: 19px;
+  .current-condition {
+    gap: 4px;
   }
 
-  .current-location > strong {
-    font-size: 11px;
+  .current-condition > strong {
+    font-size: 14px;
   }
 
-  .current-location > span {
+  .current-condition > span {
     width: 100%;
     overflow: hidden;
     font-size: 9px;
@@ -169,31 +152,25 @@ const observedAt = computed(() => formatWeatherDateTime(props.weather?.observedA
   }
 
   .current-visual {
-    width: 60px;
-    height: 60px;
-    padding: 5px;
+    width: 56px;
+    height: 56px;
+    padding: 4px;
   }
 }
 
 @media (max-width: 360px) {
   .current-content {
-    grid-template-columns: 54px minmax(0, 1fr) auto;
-    gap: 8px;
+    grid-template-columns: minmax(0, 1fr) auto 48px;
+    gap: 6px;
   }
 
   .current-visual {
-    width: 54px;
-    height: 54px;
+    width: 48px;
+    height: 48px;
   }
 
   .current-temperature {
     font-size: 34px;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .current-visual {
-    transition: none;
   }
 }
 </style>

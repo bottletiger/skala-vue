@@ -41,13 +41,13 @@ const routes = [
     path: '/404',
     name: 'NotFound',
     component: () => import('@/views/NotFoundView.vue'),
-    meta: { title: '페이지를 찾을 수 없음' },
+    meta: { title: '페이지를 찾을 수 없음', layout: 'weather-scene' },
   },
   {
     path: '/:pathMatch(.*)*',
     name: 'CatchAll',
     component: () => import('@/views/NotFoundView.vue'),
-    meta: { title: '페이지를 찾을 수 없음' },
+    meta: { title: '페이지를 찾을 수 없음', layout: 'weather-scene' },
   },
 ]
 
