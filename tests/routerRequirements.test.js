@@ -30,7 +30,7 @@ test('화면별 동적 문서 제목은 공통 composable을 통해 기존 문�
   const detailSource = readSource('../src/views/WeatherDetailView.vue')
   const titleSource = readSource('../src/composables/useDocumentTitle.js')
 
-  assert.match(homeSource, /useDocumentTitle\(\(\) => \(selectedWeather\.value \? `\$\{selectedWeather\.value\.name\} 현재 날씨` : '오늘의 날씨'\)\)/)
+  assert.match(homeSource, /useDocumentTitle\(\(\) => \(selectedWeather\.value \? `\$\{getCityDisplayName\(selectedWeather\.value\)\} 현재 날씨` : '오늘의 날씨'\)\)/)
   assert.match(detailSource, /useDocumentTitle\(\(\) => \{[\s\S]*`\$\{detailCityName\.value\} 상세 날씨`[\s\S]*'도시 날씨'/)
   assert.match(titleSource, /document\.title = pageTitle \? `\$\{pageTitle\} \| Weather` : 'Weather'/)
 })
@@ -70,7 +70,10 @@ test('세계 도시 선택 토스트와 지역·검색 필터를 조용한 피�
   const drawerSource = readSource('../src/components/weather/WorldWeatherDrawer.vue')
   const mainCssSource = readSource('../src/assets/main.css')
 
-  assert.match(homeSource, /const showCitySelectionMessage = \(city\) => \{[\s\S]*message: `\$\{city\.name\}이 선택되었습니다\.`[\s\S]*duration: 1500[\s\S]*customClass: 'weather-selection-message'/)
+  assert.match(
+    homeSource,
+    /const showCitySelectionMessage = \(city\) => \{[\s\S]*message: `\$\{getCityDisplayName\(city\)\}이 선택되었습니다\.`[\s\S]*duration: 1500[\s\S]*customClass: 'weather-selection-message'/,
+  )
   assert.match(homeSource, /const handleSelect = async \(city\) => \{[\s\S]*if \(city\.id === selectedCityId\.value\) return[\s\S]*showCitySelectionMessage\(city\)/)
   assert.match(homeSource, /matchesSearchQuery\(\[item\.name, item\.displayName, item\.countryName, item\.countryCode\]/)
   assert.match(drawerSource, /class="region-filters"[\s\S]*aria-pressed="activeRegion === region\.id"/)
@@ -171,7 +174,8 @@ test('로딩 중 회전 아이콘을 표시하고 Hero를 도시·국가·날씨
   const spinnerSource = readSource('../src/components/weather/LoadingSpinner.vue')
   const locationStart = homeSource.indexOf('class="hero-location"')
   const cityName = homeSource.indexOf('id="weather-hero-title"', locationStart)
-  const countryName = homeSource.indexOf('class="hero-country-line"', locationStart)
+  const countryName = homeSource.indexOf('class="hero-country-name"', locationStart)
+  const locationAction = homeSource.indexOf('class="hero-location-action"', locationStart)
   const weatherLockup = homeSource.indexOf('class="hero-weather-lockup"', locationStart)
   const condition = homeSource.indexOf('class="hero-condition-summary"', weatherLockup)
   const temperature = homeSource.indexOf('class="hero-temperature"', weatherLockup)
@@ -181,7 +185,7 @@ test('로딩 중 회전 아이콘을 표시하고 Hero를 도시·국가·날씨
   assert.match(detailSource, /<LoadingSpinner class="detail-loading-spinner"/)
   assert.match(spinnerSource, /@keyframes loading-spin/)
   assert.match(spinnerSource, /animation:\s*loading-spin 820ms linear infinite/)
-  assert.ok(cityName >= 0 && countryName > cityName && weatherLockup > countryName)
+  assert.ok(cityName >= 0 && countryName > cityName && locationAction > countryName && weatherLockup > locationAction)
   assert.ok(condition > weatherLockup && temperature > condition && weatherIcon > temperature)
   assert.match(homeSource, /font-size:\s*clamp\(58px, 10\.5vw, 112px\)/)
   assert.match(homeSource, /grid-template-columns:\s*minmax\(0, 1fr\) auto minmax\(0, 1fr\)/)
@@ -190,13 +194,14 @@ test('로딩 중 회전 아이콘을 표시하고 Hero를 도시·국가·날씨
   assert.doesNotMatch(homeSource, /condition-separator/)
 })
 
-test('세계 도시 카드는 검색·지역 필터 결과를 가로 레일에 모두 표시한다', () => {
+test('세계 도시 카드는 검색·지역 필터 결과를 세로 목록에 모두 표시한다', () => {
   const homeSource = readSource('../src/views/WeatherHomeView.vue')
   const drawerSource = readSource('../src/components/weather/WorldWeatherDrawer.vue')
 
   assert.match(homeSource, /activeRegion\.value === 'all' \|\| item\.region === activeRegion\.value/)
   assert.match(drawerSource, /v-for="item in items"/)
-  assert.match(drawerSource, /scroll-snap-type:\s*x mandatory/)
+  assert.match(drawerSource, /\.world-weather-rail\s*\{[^}]*display:\s*grid;[^}]*grid-template-columns:\s*minmax\(0, 1fr\);[^}]*overflow-y:\s*auto;/s)
+  assert.doesNotMatch(drawerSource, /scroll-snap-type:\s*x mandatory/)
   assert.doesNotMatch(homeSource, /INITIAL_VISIBLE_CITY_COUNT|otherWeatherList|weather-list/)
 })
 
@@ -221,6 +226,7 @@ test('내비게이션과 서랍은 폭 변수를 공유하고 손잡이는 겹�
   assert.match(appSource, /\.app-navigation\s*\{[^}]*width:\s*var\(--floating-nav-width\);/s)
   assert.match(appSource, /\.world-drawer-handle\s*\{[^}]*bottom:\s*calc\(100% - 1px\);[^}]*background:\s*transparent;/s)
   assert.match(appSource, /class="drawer-chevron-small"[\s\S]*class="drawer-chevron-large"/)
+  assert.match(appSource, /class="world-drawer-handle-label">세계 날씨<\/span>/)
   assert.match(
     appSource,
     /\.app-navigation\.is-world-drawer-open \.world-drawer-handle\s*\{[^}]*transform:\s*translate\(-50%, calc\(-1 \* \(var\(--world-drawer-height\) \+ var\(--world-drawer-gap\)\)\)\);/s,
@@ -263,15 +269,21 @@ test('히스토리로 홈에 돌아오면 최근 날씨와 세계 서랍 상태�
   assert.match(dashboardSource, /homeWeatherStore\.clearWeatherData\(\)/)
 })
 
-test('날씨별 배경 영상은 테마 전환을 유지하며 저용량 로컬 루프로 제공한다', () => {
+test('날씨별 배경 영상은 상태 코드를 세분화한 저용량 로컬 루프로 제공한다', () => {
   const homeSource = readSource('../src/views/WeatherHomeView.vue')
   const videoSource = readSource('../src/components/weather/WeatherBackgroundVideo.vue')
-  const videoFiles = ['clear.mp4', 'clouds.mp4', 'rain.mp4', 'snow.mp4', 'night.mp4']
+  const videoMappingSource = readSource('../src/utils/weatherVideo.js')
+  const videoFiles = ['clear.mp4', 'night.mp4', 'few-clouds.mp4', 'clouds.mp4', 'drizzle.mp4', 'rain.mp4', 'heavy-rain.mp4', 'thunderstorm.mp4', 'snow.mp4', 'fog.mp4']
 
-  assert.match(homeSource, /<WeatherBackgroundVideo :category="heroTheme\.category" :theme-name="heroTheme\.name"/)
-  assert.match(videoSource, /mist:\s*'clouds\.mp4'/)
-  assert.match(videoSource, /thunderstorm:\s*'rain\.mp4'/)
-  assert.match(videoSource, /props\.themeName === 'night' \? 'night' : props\.category/)
+  assert.match(homeSource, /<WeatherBackgroundVideo :weather="heroWeather"/)
+  assert.match(videoSource, /'few-clouds':\s*'few-clouds\.mp4'/)
+  assert.match(videoSource, /drizzle:\s*'drizzle\.mp4'/)
+  assert.match(videoSource, /'heavy-rain':\s*'heavy-rain\.mp4'/)
+  assert.match(videoSource, /thunderstorm:\s*'thunderstorm\.mp4'/)
+  assert.match(videoSource, /fog:\s*'fog\.mp4'/)
+  assert.match(videoMappingSource, /conditionId >= 200 && conditionId <= 232/)
+  assert.match(videoMappingSource, /conditionId === 801 \|\| conditionId === 802/)
+  assert.match(videoMappingSource, /conditionId === 803 \|\| conditionId === 804/)
   assert.match(videoSource, /autoplay[\s\S]*loop[\s\S]*muted[\s\S]*playsinline/)
   assert.match(videoSource, /prefers-reduced-motion: reduce/)
   assert.match(videoSource, /networkConnection\?\.saveData/)
@@ -282,7 +294,7 @@ test('날씨별 배경 영상은 테마 전환을 유지하며 저용량 로컬 
     return sum + statSync(filePath).size
   }, 0)
 
-  assert.ok(totalVideoBytes < 4 * 1024 * 1024)
+  assert.ok(totalVideoBytes < 6 * 1024 * 1024)
 })
 
 test('현재 위치 진입 흐름은 서비스·composable·Hero 인라인 안내로 분리한다', () => {
@@ -306,7 +318,8 @@ test('세계 날씨 서랍은 내부 스크롤을 사용하고 열린 동안 배
 
   assert.match(homeSource, /\.weather-scene\s*\{[^}]*overflow:\s*clip;/s)
   assert.match(drawerSource, /:global\(html\.world-drawer-open body\)[\s\S]*overflow:\s*hidden;/)
-  assert.match(drawerSource, /\.world-weather-drawer\s*\{[^}]*overflow-y:\s*auto;[^}]*overscroll-behavior:\s*contain;/s)
+  assert.match(drawerSource, /\.world-weather-drawer\s*\{[^}]*overflow:\s*hidden;[^}]*overscroll-behavior:\s*contain;/s)
+  assert.match(drawerSource, /\.world-weather-rail\s*\{[^}]*overflow-y:\s*auto;[^}]*overscroll-behavior-y:\s*contain;/s)
 })
 
 test('리스트 카드와 Hero 액션을 경계가 옅은 compact·quiet 스타일로 표시한다', () => {
@@ -317,7 +330,9 @@ test('리스트 카드와 Hero 액션을 경계가 옅은 compact·quiet 스타�
   assert.match(appSource, /--floating-nav-clearance:\s*calc\(/)
   assert.match(homeSource, /\.refresh-button\s*\{[^}]*width:\s*44px;[^}]*height:\s*44px;[^}]*border:\s*0;[^}]*background:\s*transparent;/s)
   assert.match(homeSource, /\.hero-detail-button\s*\{[^}]*min-height:\s*44px;[^}]*border:\s*0;[^}]*background:\s*transparent;/s)
-  assert.match(cardSource, /grid-template-columns:\s*52px minmax\(0, 1fr\) auto/)
+  assert.match(cardSource, /\.weather-card\s*\{[^}]*grid-template-columns:\s*minmax\(0, 1fr\) 44px;/s)
+  assert.match(cardSource, /\.card-select\s*\{[^}]*grid-template-columns:\s*minmax\(0, 1fr\) 38px auto;/s)
+  assert.match(cardSource, /\.city-copy > span\s*\{[^}]*text-overflow:\s*ellipsis;[^}]*white-space:\s*nowrap;/s)
   assert.match(cardSource, /\.weather-mark\s*\{[^}]*border:\s*0;[^}]*background:\s*transparent;/s)
   assert.match(cardSource, /transform:\s*translateY\(-4px\) scale\(1\.006\)/)
   assert.doesNotMatch(cardSource, /promote-cue|>상세 정보</)

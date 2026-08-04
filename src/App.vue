@@ -81,11 +81,11 @@ watch(
         :aria-label="isWorldDrawerOpen ? '세계 날씨 서랍 닫기' : '세계 날씨 서랍 열기'"
         @click="toggleWorldDrawer"
       >
-        <span class="sr-only">{{ isWorldDrawerOpen ? '세계 날씨 닫기' : '세계 날씨 열기' }}</span>
         <svg viewBox="0 0 64 32" :class="{ 'is-open': isWorldDrawerOpen }" aria-hidden="true">
           <path class="drawer-chevron-small" d="m24 11 8-7 8 7" />
           <path class="drawer-chevron-large" d="m10 28 22-16 22 16" />
         </svg>
+        <span class="world-drawer-handle-label">세계 날씨</span>
       </button>
     </header>
 
@@ -109,7 +109,7 @@ watch(
   --floating-nav-offset: 12px;
   --floating-nav-width: min(650px, calc(100vw - 24px));
   --world-drawer-gap: 10px;
-  --world-drawer-height: min(320px, calc(100svh - 104px));
+  --world-drawer-height: min(78svh, 820px);
   --world-drawer-bottom: calc(var(--floating-nav-height) + var(--floating-nav-offset) + var(--world-drawer-gap) + env(safe-area-inset-bottom));
   --floating-nav-clearance: calc(var(--floating-nav-height) + var(--floating-nav-offset) + 160px + env(safe-area-inset-bottom));
 
@@ -325,10 +325,12 @@ watch(
   bottom: calc(100% - 1px);
   left: 50%;
   display: inline-flex;
-  width: 88px;
-  height: 42px;
+  width: 112px;
+  height: 58px;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: 0;
   padding: 0;
   border: 0;
   border-radius: 0;
@@ -349,8 +351,8 @@ watch(
 }
 
 .world-drawer-handle svg {
-  width: 64px;
-  height: 32px;
+  width: 54px;
+  height: 27px;
   fill: none;
   stroke: currentcolor;
   stroke-linecap: round;
@@ -358,6 +360,14 @@ watch(
   stroke-width: 2.2;
   filter: drop-shadow(0 1px 0 rgba(255, 255, 255, 0.9)) drop-shadow(0 0 4px rgba(255, 255, 255, 0.48));
   transition: transform 320ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.world-drawer-handle-label {
+  margin-top: -1px;
+  font-size: 10px;
+  font-weight: 850;
+  letter-spacing: 0.04em;
+  line-height: 1;
 }
 
 .drawer-chevron-small {

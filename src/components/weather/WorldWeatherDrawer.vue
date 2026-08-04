@@ -152,11 +152,13 @@ const getWeatherCardStyle = (item) => ({
   --hero-muted: #53646a;
 
   position: absolute;
+  display: flex;
   right: 0;
   bottom: var(--world-drawer-bottom);
   left: 0;
   width: var(--floating-nav-width);
   height: var(--world-drawer-height);
+  flex-direction: column;
   margin: 0 auto;
   padding: 18px 14px 12px;
   border: 1px solid rgba(255, 255, 255, 0.72);
@@ -168,7 +170,7 @@ const getWeatherCardStyle = (item) => ({
     0 -12px 50px rgba(23, 35, 45, 0.16),
     inset 0 1px 0 rgba(255, 255, 255, 0.58);
   color: #213238;
-  overflow-y: auto;
+  overflow: hidden;
   overscroll-behavior: contain;
   pointer-events: auto;
   scrollbar-width: thin;
@@ -226,28 +228,31 @@ const getWeatherCardStyle = (item) => ({
 }
 
 .world-weather-content {
+  min-height: 0;
+  flex: 1 1 auto;
   margin-top: 10px;
+  overflow: hidden;
 }
 
 .world-weather-rail {
-  display: flex;
-  gap: 12px;
-  padding: 2px 2px 0;
-  overflow-x: auto;
-  overscroll-behavior-x: contain;
-  scroll-padding: 2px;
-  scroll-snap-type: x mandatory;
+  display: grid;
+  height: 100%;
+  grid-template-columns: minmax(0, 1fr);
+  align-content: start;
+  gap: 8px;
+  padding: 2px 4px 2px 2px;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  scroll-padding: 2px 0;
   scrollbar-width: thin;
 }
 
 .world-weather-rail :deep(.weather-card-hover-zone) {
-  width: clamp(250px, 30vw, 292px);
-  flex: 0 0 auto;
-  scroll-snap-align: start;
+  width: 100%;
 }
 
 .drawer-state {
-  min-height: 190px;
+  min-height: 100%;
   padding: 22px;
 }
 
@@ -281,10 +286,6 @@ const getWeatherCardStyle = (item) => ({
   .world-weather-drawer {
     padding: 16px 12px 10px;
     border-radius: 26px;
-  }
-
-  .world-weather-rail :deep(.weather-card-hover-zone) {
-    width: min(82vw, 286px);
   }
 }
 

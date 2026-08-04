@@ -83,7 +83,7 @@ test('누락되거나 잘못된 OpenWeather 필드는 임의 값 없이 null로 
   })
 })
 
-test('국내 현재 위치 응답은 행정구역 접미사를 제거한 한국어 도시명으로 보강한다', () => {
+test('국내 현재 위치 응답은 행정구역 접미사를 제거한 영어 도시명으로 보강한다', () => {
   const result = mapWeatherResponse(
     {
       id: 'current-location',
@@ -99,11 +99,11 @@ test('국내 현재 위치 응답은 행정구역 접미사를 제거한 한국�
     },
   )
 
-  assert.equal(result.name, '성남')
-  assert.equal(result.displayName, '성남')
+  assert.equal(result.name, 'Seongnam')
+  assert.equal(result.displayName, 'SEONGNAM')
   assert.equal(result.countryCode, 'KR')
   assert.equal(result.countryName, '대한민국')
-  assert.equal(result.fullName, '내 위치 · 성남')
+  assert.equal(result.fullName, '내 위치 · Seongnam')
 })
 
 test('해외 현재 위치 응답은 역지오코딩의 영어 도시명을 사용한다', () => {
@@ -125,7 +125,7 @@ test('해외 현재 위치 응답은 역지오코딩의 영어 도시명을 사�
   )
 
   assert.equal(result.name, 'Munich')
-  assert.equal(result.displayName, 'Munich')
+  assert.equal(result.displayName, 'MUNICH')
   assert.equal(result.countryCode, 'DE')
   assert.equal(result.countryName, '독일')
 })

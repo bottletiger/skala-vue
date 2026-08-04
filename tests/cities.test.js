@@ -35,8 +35,7 @@ test('각 세계 도시의 식별자·국가·좌표가 고유하고 필터 지�
   for (const city of CITY_CONFIG) {
     assert.match(city.id, /^city_\d{2}$/)
     assert.match(city.countryCode, /^[A-Z]{2}$/)
-    if (city.countryCode === 'KR') assert.match(city.displayName, /^[가-힣 ]+$/)
-    else assert.match(city.displayName, /^[A-Z ]+$/)
+    assert.match(city.displayName, /^[A-Z ]+$/)
     assert.ok(city.fullName.includes(city.name))
     assert.ok(regionIds.has(city.region))
     assert.ok(Number.isFinite(city.latitude) && city.latitude >= -90 && city.latitude <= 90)

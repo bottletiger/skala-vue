@@ -130,7 +130,7 @@ export const useHomeWeatherDashboard = (getRouteSelectedCityId) => {
 
   const selectCity = (city) => {
     selectedCityId.value = city.id
-    selectedCityInfo.value = `${city.name}이 선택되었습니다.`
+    selectedCityInfo.value = `${city.displayName || city.name}이 선택되었습니다.`
   }
 
   onBeforeUnmount(() => {

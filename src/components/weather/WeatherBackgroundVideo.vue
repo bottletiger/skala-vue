@@ -1,25 +1,26 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
+import { getWeatherVideoKey } from '@/utils/weatherVideo'
+
 const props = defineProps({
-  category: {
-    type: String,
-    default: 'neutral',
-  },
-  themeName: {
-    type: String,
-    default: 'neutral',
+  weather: {
+    type: Object,
+    default: null,
   },
 })
 
-const VIDEO_FILE_BY_THEME = Object.freeze({
-  clear: 'clear.mp4',
-  clouds: 'clouds.mp4',
-  mist: 'clouds.mp4',
+const VIDEO_FILE_BY_KEY = Object.freeze({
+  'clear-day': 'clear.mp4',
+  'clear-night': 'night.mp4',
+  'few-clouds': 'few-clouds.mp4',
+  overcast: 'clouds.mp4',
+  drizzle: 'drizzle.mp4',
   rain: 'rain.mp4',
-  thunderstorm: 'rain.mp4',
+  'heavy-rain': 'heavy-rain.mp4',
+  thunderstorm: 'thunderstorm.mp4',
   snow: 'snow.mp4',
-  night: 'night.mp4',
+  fog: 'fog.mp4',
 })
 
 const prefersReducedMotion = ref(false)
@@ -29,8 +30,8 @@ const hasError = ref(false)
 let motionQuery
 let networkConnection
 
-const activeTheme = computed(() => (props.themeName === 'night' ? 'night' : props.category))
-const videoFile = computed(() => VIDEO_FILE_BY_THEME[activeTheme.value] ?? '')
+const activeVideoKey = computed(() => getWeatherVideoKey(props.weather))
+const videoFile = computed(() => VIDEO_FILE_BY_KEY[activeVideoKey.value] ?? '')
 const videoSource = computed(() => (videoFile.value ? `${import.meta.env.BASE_URL}weather-videos/${videoFile.value}` : ''))
 const shouldPlayVideo = computed(() => Boolean(videoSource.value) && !prefersReducedMotion.value && !prefersDataSaving.value && !hasError.value)
 

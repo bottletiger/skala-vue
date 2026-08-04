@@ -12,7 +12,7 @@ export const CITY_CONFIG = Object.freeze([
   {
     id: 'city_01',
     name: '서울',
-    displayName: '서울',
+    displayName: 'SEOUL',
     fullName: '대한민국 서울특별시',
     countryCode: 'KR',
     countryName: '대한민국',

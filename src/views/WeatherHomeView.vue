@@ -72,6 +72,7 @@ const normalizedSearchQuery = computed(() => normalizeSearchQuery(searchQuery.va
 
 const worldWeatherList = computed(() => weatherList.value.filter((item) => !item.isCurrentLocation))
 const currentLocationWeather = computed(() => weatherList.value.find((item) => item.isCurrentLocation) ?? null)
+const getCityDisplayName = (city) => city?.displayName || city?.name || '도시'
 
 const filteredWeatherList = computed(() => {
   const query = normalizedSearchQuery.value
@@ -129,7 +130,7 @@ const heroObservedMeta = computed(() => {
 
 const heroAnnouncement = computed(() => {
   if (!heroWeather.value) return heroStateTitle.value
-  return `${heroWeather.value.fullName}, ${heroWeather.value.status || '날씨 설명 없음'}, ${heroTemperatureText.value}`
+  return `${heroCityName.value}, ${heroCountryName.value}, ${heroWeather.value.status || '날씨 설명 없음'}, ${heroTemperatureText.value}`
 })
 
 const emptyStateDescription = computed(() => {
@@ -143,7 +144,7 @@ const emptyStateDescription = computed(() => {
   return worldWeatherList.value.length ? '표시할 도시가 없습니다.' : '수신된 세계 날씨 데이터가 없습니다.'
 })
 
-useDocumentTitle(() => (selectedWeather.value ? `${selectedWeather.value.name} 현재 날씨` : '오늘의 날씨'))
+useDocumentTitle(() => (selectedWeather.value ? `${getCityDisplayName(selectedWeather.value)} 현재 날씨` : '오늘의 날씨'))
 
 const refreshWeather = () => {
   void loadWeather({
@@ -159,7 +160,7 @@ const applySelection = (city) => {
 
 const showCitySelectionMessage = (city) => {
   ElMessage({
-    message: `${city.name}이 선택되었습니다.`,
+    message: `${getCityDisplayName(city)}이 선택되었습니다.`,
     type: 'primary',
     plain: true,
     duration: 1500,
@@ -216,7 +217,7 @@ const openWeatherDetail = (cityId) => {
   const city = weatherList.value.find((item) => item.id === cityId)
   if (!city) return
 
-  selectedCityInfo.value = `${city.name} 상세 날씨 페이지로 이동합니다.`
+  selectedCityInfo.value = `${getCityDisplayName(city)} 상세 날씨 페이지로 이동합니다.`
   void router.push({
     name: 'WeatherDetail',
     params: { cityId },
@@ -268,7 +269,7 @@ watch(searchQuery, (newQuery, oldQuery) => {
   const normalizedQuery = normalizeSearchQuery(newQuery)
 
   if (newQuery !== oldQuery && !isLoading.value && !errorMessage.value) {
-    selectedCityInfo.value = selectedWeather.value ? `${selectedWeather.value.name} 선택을 유지하며 검색 결과를 필터링했습니다.` : '검색 결과에서 도시 카드를 선택해 보세요.'
+    selectedCityInfo.value = selectedWeather.value ? `${getCityDisplayName(selectedWeather.value)} 선택을 유지하며 검색 결과를 필터링했습니다.` : '검색 결과에서 도시 카드를 선택해 보세요.'
   }
 
   const routeSearch = normalizeSearchQuery(route.query.search)
@@ -303,7 +304,7 @@ if (import.meta.env.DEV) {
 
 <template>
   <div class="weather-scene" :class="`hero-state-${heroState}`" :style="heroTheme.cssVariables" :data-theme="heroTheme.name">
-    <WeatherBackgroundVideo :category="heroTheme.category" :theme-name="heroTheme.name" />
+    <WeatherBackgroundVideo :weather="heroWeather" />
     <div class="scene-atmosphere" aria-hidden="true"></div>
 
     <div class="weather-shell">
@@ -331,8 +332,8 @@ if (import.meta.env.DEV) {
             <div v-if="heroWeather" class="hero-face hero-face-front">
               <div class="hero-location">
                 <h1 id="weather-hero-title">{{ heroCityName }}</h1>
-                <div class="hero-country-line">
-                  <span>{{ heroCountryName }}</span>
+                <p class="hero-country-name">{{ heroCountryName }}</p>
+                <div v-if="heroWeather.isCurrentLocation || currentLocationWeather" class="hero-location-action">
                   <span v-if="heroWeather.isCurrentLocation" class="current-location-label">내 위치</span>
                   <button v-else-if="currentLocationWeather" class="return-location-button" type="button" @click="handleSelect(currentLocationWeather)">내 위치로</button>
                 </div>
@@ -640,16 +641,19 @@ if (import.meta.env.DEV) {
   gap: 9px;
 }
 
-.hero-country-line {
-  display: flex;
-  min-height: 28px;
-  align-items: center;
-  justify-content: center;
-  gap: 9px;
+.hero-country-name {
+  margin: 0;
   color: var(--hero-muted);
   font-size: clamp(12px, 1.4vw, 15px);
   font-weight: 780;
   letter-spacing: 0.08em;
+}
+
+.hero-location-action {
+  display: flex;
+  min-height: 24px;
+  align-items: center;
+  justify-content: center;
 }
 
 .current-location-label,
