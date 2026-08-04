@@ -57,65 +57,39 @@ const currentCopy = computed(() => copyByState[props.state])
 </script>
 
 <template>
-  <div class="location-consent-layer" role="presentation">
-    <div class="location-consent-backdrop" aria-hidden="true"></div>
-    <section class="location-consent" role="dialog" aria-modal="true" aria-labelledby="location-consent-title" aria-describedby="location-consent-description">
-      <div class="location-consent-icon" aria-hidden="true">
-        <WeatherConditionIcon category="clouds" :is-night="false" />
-        <span></span>
-      </div>
+  <section class="location-permission-panel" aria-live="polite" aria-labelledby="location-consent-title" aria-describedby="location-consent-description">
+    <div class="location-consent-icon" aria-hidden="true">
+      <WeatherConditionIcon category="clouds" :is-night="false" />
+      <span></span>
+    </div>
 
-      <p class="location-consent-eyebrow">{{ currentCopy.eyebrow }}</p>
-      <h2 id="location-consent-title">{{ currentCopy.title }}</h2>
-      <p id="location-consent-description">{{ message || currentCopy.description }}</p>
+    <p class="location-consent-eyebrow">{{ currentCopy.eyebrow }}</p>
+    <h1 id="location-consent-title">{{ currentCopy.title }}</h1>
+    <p id="location-consent-description">{{ message || currentCopy.description }}</p>
 
-      <div class="location-consent-actions">
-        <button class="location-primary" type="button" :disabled="state === 'requesting'" @click="$emit('accept')">
-          <span v-if="state === 'requesting'" class="location-spinner" aria-hidden="true"></span>
-          {{ currentCopy.action }}
-        </button>
-        <button v-if="state !== 'unsupported'" class="location-secondary" type="button" :disabled="state === 'requesting'" @click="$emit('dismiss')">서울 날씨로 둘러보기</button>
-      </div>
-    </section>
-  </div>
+    <div class="location-consent-actions">
+      <button class="location-primary" type="button" :disabled="state === 'requesting'" @click="$emit('accept')">
+        <span v-if="state === 'requesting'" class="location-spinner" aria-hidden="true"></span>
+        {{ currentCopy.action }}
+      </button>
+      <button v-if="state !== 'unsupported'" class="location-secondary" type="button" :disabled="state === 'requesting'" @click="$emit('dismiss')">서울 날씨로 둘러보기</button>
+    </div>
+  </section>
 </template>
 
 <style scoped>
-.location-consent-layer {
-  position: fixed;
-  z-index: 100;
-  inset: 0;
-  display: grid;
-  place-items: center;
-  padding: 20px;
-}
-
-.location-consent-backdrop {
-  position: absolute;
-  inset: 0;
-  background: rgba(28, 41, 47, 0.28);
-  backdrop-filter: blur(18px) saturate(112%);
-  -webkit-backdrop-filter: blur(18px) saturate(112%);
-}
-
-.location-consent {
-  position: relative;
-  width: min(430px, 100%);
-  padding: 34px;
-  border: 1px solid rgba(255, 255, 255, 0.52);
-  border-radius: 30px;
-  background: color-mix(in srgb, var(--hero-end) 76%, rgba(255, 255, 255, 0.86));
-  box-shadow:
-    0 28px 80px rgba(21, 34, 39, 0.22),
-    inset 0 1px 0 rgba(255, 255, 255, 0.58);
+.location-permission-panel {
+  width: min(520px, 100%);
+  margin: 0 auto;
+  padding: clamp(24px, 4vw, 40px) 0;
   color: var(--hero-text);
   text-align: center;
 }
 
 .location-consent-icon {
   position: relative;
-  width: 72px;
-  height: 72px;
+  width: 78px;
+  height: 78px;
   margin: 0 auto 20px;
   padding: 8px;
   color: var(--weather-accent);
@@ -140,15 +114,15 @@ const currentCopy = computed(() => copyByState[props.state])
   letter-spacing: 0.1em;
 }
 
-.location-consent h2 {
+.location-permission-panel h1 {
   margin: 0;
-  font-size: clamp(26px, 6vw, 34px);
-  line-height: 1.15;
-  letter-spacing: -0.045em;
+  font-size: clamp(30px, 5.5vw, 48px);
+  line-height: 1.1;
+  letter-spacing: -0.05em;
 }
 
-.location-consent h2 + p {
-  max-width: 330px;
+.location-permission-panel h1 + p {
+  max-width: 390px;
   margin: 14px auto 0;
   color: var(--hero-muted);
   font-size: 13px;
@@ -156,13 +130,16 @@ const currentCopy = computed(() => copyByState[props.state])
 }
 
 .location-consent-actions {
-  display: grid;
+  display: flex;
+  width: min(410px, 100%);
+  justify-content: center;
   gap: 8px;
-  margin-top: 26px;
+  margin: 26px auto 0;
 }
 
 .location-consent-actions button {
-  min-height: 48px;
+  min-height: 46px;
+  padding: 0 18px;
   border-radius: 14px;
   cursor: pointer;
   font-size: 13px;
@@ -185,8 +162,8 @@ const currentCopy = computed(() => copyByState[props.state])
 }
 
 .location-secondary {
-  border: 1px solid color-mix(in srgb, var(--hero-text) 13%, transparent);
-  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid color-mix(in srgb, var(--hero-text) 16%, transparent);
+  background: color-mix(in srgb, white 18%, transparent);
   color: var(--hero-muted);
 }
 
@@ -206,14 +183,16 @@ const currentCopy = computed(() => copyByState[props.state])
 }
 
 @media (max-width: 560px) {
-  .location-consent-layer {
-    align-items: end;
-    padding: 12px;
+  .location-permission-panel {
+    padding: 20px 0;
   }
 
-  .location-consent {
-    padding: 28px 22px calc(24px + env(safe-area-inset-bottom));
-    border-radius: 28px;
+  .location-consent-actions {
+    display: grid;
+  }
+
+  .location-consent-actions button {
+    width: 100%;
   }
 }
 

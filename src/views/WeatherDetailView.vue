@@ -37,10 +37,10 @@ const {
 } = useCityWeatherDetail(cityId, redirectUnknownCity)
 
 const isRefreshing = computed(() => isLoading.value || isForecastLoading.value)
+const detailCityName = computed(() => cityData.value?.displayName ?? cityConfig.value?.displayName ?? cityData.value?.name ?? cityConfig.value?.name)
 
 useDocumentTitle(() => {
-  const cityName = cityData.value?.name ?? cityConfig.value?.name
-  return cityName ? `${cityName} 상세 날씨` : '도시 날씨'
+  return detailCityName.value ? `${detailCityName.value} 상세 날씨` : '도시 날씨'
 })
 
 const returnToWeatherList = () => {
@@ -67,14 +67,14 @@ onMounted(async () => {
 
         <div class="topbar-title">
           <span>현재 날씨</span>
-          <h1 id="detail-page-title" ref="detailPageHeading" tabindex="-1">{{ cityConfig?.name || '도시 확인 중' }}</h1>
+          <h1 id="detail-page-title" ref="detailPageHeading" tabindex="-1">{{ detailCityName || '도시 확인 중' }}</h1>
         </div>
 
         <button
           type="button"
           class="detail-refresh-button"
           :disabled="!cityConfig || !apiReady || isRefreshing"
-          :aria-label="isRefreshing ? '상세 날씨 갱신 중' : `${cityConfig?.name ?? '도시'} 상세 날씨 새로고침`"
+          :aria-label="isRefreshing ? '상세 날씨 갱신 중' : `${detailCityName ?? '도시'} 상세 날씨 새로고침`"
           @click="refreshDetail"
         >
           <svg viewBox="0 0 24 24" :class="{ 'is-spinning': isRefreshing }" aria-hidden="true">

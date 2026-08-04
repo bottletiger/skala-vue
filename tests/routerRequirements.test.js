@@ -31,7 +31,7 @@ test('화면별 동적 문서 제목은 공통 composable을 통해 기존 문�
   const titleSource = readSource('../src/composables/useDocumentTitle.js')
 
   assert.match(homeSource, /useDocumentTitle\(\(\) => \(selectedWeather\.value \? `\$\{selectedWeather\.value\.name\} 현재 날씨` : '오늘의 날씨'\)\)/)
-  assert.match(detailSource, /useDocumentTitle\(\(\) => \{[\s\S]*`\$\{cityName\} 상세 날씨`[\s\S]*'도시 날씨'/)
+  assert.match(detailSource, /useDocumentTitle\(\(\) => \{[\s\S]*`\$\{detailCityName\.value\} 상세 날씨`[\s\S]*'도시 날씨'/)
   assert.match(titleSource, /document\.title = pageTitle \? `\$\{pageTitle\} \| Weather` : 'Weather'/)
 })
 
@@ -159,7 +159,9 @@ test('도시 목록 제목과 개수를 숨기고 구체적인 날씨 설명을 
   assert.doesNotMatch(homeSource, /city-section-heading|>다른 도시</)
   assert.match(homeSource, /heroWeather\.status \|\| heroTheme\.label/)
   assert.match(cardSource, /cityItem\.status \|\| weatherTheme\.label/)
+  assert.match(cardSource, /cityDisplayName = computed\(\(\) => props\.cityItem\.displayName \|\| props\.cityItem\.name\)/)
   assert.match(currentSummarySource, /weather\.status \|\| theme\.label/)
+  assert.match(currentSummarySource, /weather\.displayName \|\| weather\.name/)
   assert.doesNotMatch(currentSummarySource, /<span>\{\{ theme\.label \}\}<\/span>/)
 })
 
@@ -182,7 +184,10 @@ test('로딩 중 회전 아이콘을 표시하고 Hero를 도시·국가·날씨
   assert.ok(cityName >= 0 && countryName > cityName && weatherLockup > countryName)
   assert.ok(condition > weatherLockup && temperature > condition && weatherIcon > temperature)
   assert.match(homeSource, /font-size:\s*clamp\(58px, 10\.5vw, 112px\)/)
-  assert.match(homeSource, /grid-template-columns:\s*auto auto auto/)
+  assert.match(homeSource, /grid-template-columns:\s*minmax\(0, 1fr\) auto minmax\(0, 1fr\)/)
+  assert.match(homeSource, /\.hero-condition-summary\s*\{[^}]*display:\s*grid;[^}]*justify-items:\s*end;/s)
+  assert.match(homeSource, /\.hero-temperature span\s*\{[^}]*position:\s*absolute;[^}]*left:\s*100%;/s)
+  assert.doesNotMatch(homeSource, /condition-separator/)
 })
 
 test('세계 도시 카드는 검색·지역 필터 결과를 가로 레일에 모두 표시한다', () => {
@@ -203,7 +208,7 @@ test('검색창은 기본 취소 아이콘을 숨기고 사용자 정의 지우�
   assert.match(searchSource, /input::-ms-clear/)
 })
 
-test('내비게이션 손잡이가 세계 날씨 서랍과 함께 올라가 열린 영역 맨 위에 머문다', () => {
+test('내비게이션과 서랍은 폭 변수를 공유하고 손잡이는 겹치지 않은 채 열린 영역 맨 위로 이동한다', () => {
   const appSource = readSource('../src/App.vue')
   const drawerSource = readSource('../src/components/weather/WorldWeatherDrawer.vue')
   const dashboardSource = readSource('../src/composables/useHomeWeatherDashboard.js')
@@ -212,9 +217,20 @@ test('내비게이션 손잡이가 세계 날씨 서랍과 함께 올라가 열�
   assert.match(storeSource, /const isWorldDrawerOpen = ref\(false\)/)
   assert.match(dashboardSource, /const \{ weatherList, selectedCityId, lastUpdated, isWorldDrawerOpen \} = storeToRefs\(homeWeatherStore\)/)
   assert.match(appSource, /class="world-drawer-handle"[\s\S]*aria-controls="world-weather-drawer"[\s\S]*:aria-expanded="isWorldDrawerOpen"/)
-  assert.match(appSource, /\.app-navigation\.is-world-drawer-open \.world-drawer-handle\s*\{[^}]*transform:\s*translate\(-50%, calc\(-50% - var\(--world-drawer-height\) - var\(--world-drawer-gap\)\)\);/s)
+  assert.match(appSource, /--floating-nav-width:\s*min\(650px, calc\(100vw - 24px\)\)/)
+  assert.match(appSource, /\.app-navigation\s*\{[^}]*width:\s*var\(--floating-nav-width\);/s)
+  assert.match(appSource, /\.world-drawer-handle\s*\{[^}]*bottom:\s*calc\(100% - 1px\);[^}]*background:\s*transparent;/s)
+  assert.match(appSource, /class="drawer-chevron-small"[\s\S]*class="drawer-chevron-large"/)
+  assert.match(
+    appSource,
+    /\.app-navigation\.is-world-drawer-open \.world-drawer-handle\s*\{[^}]*transform:\s*translate\(-50%, calc\(-1 \* \(var\(--world-drawer-height\) \+ var\(--world-drawer-gap\)\)\)\);/s,
+  )
   assert.match(drawerSource, /id="world-weather-drawer" class="world-weather-drawer"/)
-  assert.match(drawerSource, /\.world-weather-drawer\s*\{[^}]*position:\s*absolute;[^}]*bottom:\s*var\(--world-drawer-bottom\);[^}]*height:\s*var\(--world-drawer-height\);/s)
+  assert.match(
+    drawerSource,
+    /\.world-weather-drawer\s*\{[^}]*position:\s*absolute;[^}]*bottom:\s*var\(--world-drawer-bottom\);[^}]*width:\s*var\(--floating-nav-width\);[^}]*height:\s*var\(--world-drawer-height\);/s,
+  )
+  assert.doesNotMatch(drawerSource, /WORLD WEATHER|세계의 지금|items\.length \}\}개 도시/)
 })
 
 test('검색과 지역 필터는 메인이 아니라 세계 날씨 서랍 안에만 배치한다', () => {
@@ -269,17 +285,19 @@ test('날씨별 배경 영상은 테마 전환을 유지하며 저용량 로컬 
   assert.ok(totalVideoBytes < 4 * 1024 * 1024)
 })
 
-test('현재 위치 진입 흐름은 서비스·composable·사이트 안내창으로 분리한다', () => {
+test('현재 위치 진입 흐름은 서비스·composable·Hero 인라인 안내로 분리한다', () => {
   const homeSource = readSource('../src/views/WeatherHomeView.vue')
   const locationSource = readSource('../src/composables/useCurrentLocationWeather.js')
-  const dialogSource = readSource('../src/components/weather/LocationPermissionDialog.vue')
+  const panelSource = readSource('../src/components/weather/LocationPermissionPanel.vue')
 
   assert.match(homeSource, /useCurrentLocationWeather\(\{/)
-  assert.match(homeSource, /<LocationPermissionDialog/)
+  assert.match(homeSource, /<LocationPermissionPanel/)
   assert.doesNotMatch(homeSource, /navigator\.geolocation|getCurrentPosition/)
   assert.match(locationSource, /getGeolocationPermissionState/)
   assert.match(locationSource, /requestCurrentCoordinates/)
-  assert.match(dialogSource, /지금 있는 곳의 날씨부터 볼까요/)
+  assert.match(panelSource, /지금 있는 곳의 날씨부터 볼까요/)
+  assert.match(panelSource, /class="location-permission-panel"/)
+  assert.doesNotMatch(panelSource, /role="dialog"|aria-modal|location-consent-backdrop|position:\s*fixed/)
 })
 
 test('세계 날씨 서랍은 내부 스크롤을 사용하고 열린 동안 배경 스크롤을 잠근다', () => {
@@ -305,7 +323,7 @@ test('리스트 카드와 Hero 액션을 경계가 옅은 compact·quiet 스타�
   assert.doesNotMatch(cardSource, /promote-cue|>상세 정보</)
 })
 
-test('Hero 지표는 세로선으로 구분하고 카드와 아이콘에 포인터 플로팅 모션을 적용한다', () => {
+test('Hero 지표는 세로선으로 구분하고 메인 아이콘의 포인터 플로팅 모션은 제거한다', () => {
   const homeSource = readSource('../src/views/WeatherHomeView.vue')
   const cardSource = readSource('../src/components/exercise/WeatherCard.vue')
   const detailSource = readSource('../src/views/WeatherDetailView.vue')
@@ -318,7 +336,8 @@ test('Hero 지표는 세로선으로 구분하고 카드와 아이콘에 포인�
   assert.match(cardSource, /\.weather-card-hover-zone:hover \.weather-card:not\(\.is-promoting\) \.weather-mark/)
   assert.match(detailsListSource, /\.detail-row:hover \.detail-icon/)
   assert.match(cardSource, /prefers-reduced-motion:\s*no-preference/)
-  assert.match(homeSource, /\.weather-hero:not\(\.is-promoting\):hover \.hero-icon/)
+  assert.doesNotMatch(homeSource, /\.weather-hero:not\(\.is-promoting\):hover \.hero-icon/)
+  assert.match(homeSource, /\.refresh-button svg\.is-spinning\s*\{[^}]*animation:\s*refresh-spin 900ms linear infinite;/s)
   assert.match(detailSource, /\.current-panel:hover :deep\(\.current-visual\)/)
 })
 

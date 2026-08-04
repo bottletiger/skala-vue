@@ -33,6 +33,7 @@ const { displayTemp, unitSymbol } = useTemperature(() => props.cityItem.temp)
 const hasTemperature = computed(() => Number.isFinite(props.cityItem.temp))
 const weatherTheme = computed(() => getWeatherTheme(props.cityItem))
 const localTime = computed(() => formatWeatherTime(props.cityItem.observedAt, props.cityItem.timezoneOffset))
+const cityDisplayName = computed(() => props.cityItem.displayName || props.cityItem.name)
 
 const handleCardSelect = () => {
   emit('select-card', props.cityItem)
@@ -46,13 +47,13 @@ const handleDetailClick = () => {
 <template>
   <div class="weather-card-hover-zone" :style="{ viewTransitionName: promoting ? 'weather-promotion' : undefined }">
     <article class="weather-card dashboard-surface dashboard-surface--weather" :class="{ 'is-selected': selected, 'is-promoting': promoting }">
-      <button class="card-select" type="button" :aria-label="`${cityItem.name} 날씨를 메인 화면으로 보기`" @click="handleCardSelect">
+      <button class="card-select" type="button" :aria-label="`${cityDisplayName} 날씨를 메인 화면으로 보기`" @click="handleCardSelect">
         <span class="weather-mark" aria-hidden="true">
           <WeatherConditionIcon :category="weatherTheme.category" :is-night="weatherTheme.isNight" />
         </span>
 
         <span class="city-copy">
-          <span class="city-name">{{ cityItem.name }}</span>
+          <span class="city-name">{{ cityDisplayName }}</span>
           <span v-if="cityItem.countryCode" class="city-meta">{{ cityItem.countryCode }} · 현지 {{ localTime }}</span>
           <span class="condition">{{ cityItem.status || weatherTheme.label || '날씨 설명 없음' }}</span>
         </span>
@@ -66,7 +67,7 @@ const handleDetailClick = () => {
         </span>
       </button>
 
-      <button class="detail-button" type="button" :aria-label="`${cityItem.name} 상세 날씨 페이지로 이동`" @click.stop="handleDetailClick">
+      <button class="detail-button" type="button" :aria-label="`${cityDisplayName} 상세 날씨 페이지로 이동`" @click.stop="handleDetailClick">
         <span>상세 보기</span>
         <svg viewBox="0 0 20 20" aria-hidden="true">
           <path d="m7 4 6 6-6 6" />

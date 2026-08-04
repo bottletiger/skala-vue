@@ -83,7 +83,7 @@ test('누락되거나 잘못된 OpenWeather 필드는 임의 값 없이 null로 
   })
 })
 
-test('현재 위치 응답은 실제 도시명과 국가명을 같은 Hero 형식으로 보강한다', () => {
+test('국내 현재 위치 응답은 행정구역 접미사를 제거한 한국어 도시명으로 보강한다', () => {
   const result = mapWeatherResponse(
     {
       id: 'current-location',
@@ -93,17 +93,41 @@ test('현재 위치 응답은 실제 도시명과 국가명을 같은 Hero 형�
       isCurrentLocation: true,
     },
     {
-      name: 'Seoul',
+      name: 'Seongnam-si',
       sys: { country: 'KR' },
       weather: [{ description: '구름조금' }],
     },
   )
 
-  assert.equal(result.name, 'Seoul')
-  assert.equal(result.displayName, 'SEOUL')
+  assert.equal(result.name, '성남')
+  assert.equal(result.displayName, '성남')
   assert.equal(result.countryCode, 'KR')
   assert.equal(result.countryName, '대한민국')
-  assert.equal(result.fullName, '내 위치 · Seoul')
+  assert.equal(result.fullName, '내 위치 · 성남')
+})
+
+test('해외 현재 위치 응답은 역지오코딩의 영어 도시명을 사용한다', () => {
+  const result = mapWeatherResponse(
+    {
+      id: 'current-location',
+      name: '현재 위치',
+      isCurrentLocation: true,
+    },
+    {
+      name: 'München',
+      sys: { country: 'DE' },
+    },
+    {
+      country: 'DE',
+      name: 'Munich',
+      local_names: { en: 'Munich', ko: '뮌헨' },
+    },
+  )
+
+  assert.equal(result.name, 'Munich')
+  assert.equal(result.displayName, 'Munich')
+  assert.equal(result.countryCode, 'DE')
+  assert.equal(result.countryName, '독일')
 })
 
 test('OpenWeather 3시간 예보를 첫 8개 시간대와 현지 날짜별 일간 예보로 매핑한다', () => {

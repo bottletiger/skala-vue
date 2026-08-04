@@ -81,10 +81,10 @@ watch(
         :aria-label="isWorldDrawerOpen ? '세계 날씨 서랍 닫기' : '세계 날씨 서랍 열기'"
         @click="toggleWorldDrawer"
       >
-        <span class="world-drawer-grip" aria-hidden="true"></span>
-        <span>세계 날씨</span>
-        <svg viewBox="0 0 20 20" :class="{ 'is-open': isWorldDrawerOpen }" aria-hidden="true">
-          <path d="m5 12 5-5 5 5" />
+        <span class="sr-only">{{ isWorldDrawerOpen ? '세계 날씨 닫기' : '세계 날씨 열기' }}</span>
+        <svg viewBox="0 0 64 32" :class="{ 'is-open': isWorldDrawerOpen }" aria-hidden="true">
+          <path class="drawer-chevron-small" d="m24 11 8-7 8 7" />
+          <path class="drawer-chevron-large" d="m10 28 22-16 22 16" />
         </svg>
       </button>
     </header>
@@ -107,8 +107,9 @@ watch(
 .app-shell {
   --floating-nav-height: 54px;
   --floating-nav-offset: 12px;
+  --floating-nav-width: min(650px, calc(100vw - 24px));
   --world-drawer-gap: 10px;
-  --world-drawer-height: min(68svh, 620px);
+  --world-drawer-height: min(320px, calc(100svh - 104px));
   --world-drawer-bottom: calc(var(--floating-nav-height) + var(--floating-nav-offset) + var(--world-drawer-gap) + env(safe-area-inset-bottom));
   --floating-nav-clearance: calc(var(--floating-nav-height) + var(--floating-nav-offset) + 160px + env(safe-area-inset-bottom));
 
@@ -140,7 +141,7 @@ watch(
   bottom: calc(12px + env(safe-area-inset-bottom));
   left: 50%;
   display: flex;
-  width: min(650px, calc(100% - 24px));
+  width: var(--floating-nav-width);
   min-height: 54px;
   align-items: center;
   gap: 6px;
@@ -321,60 +322,51 @@ watch(
 .world-drawer-handle {
   position: absolute;
   z-index: 2;
-  top: 0;
+  bottom: calc(100% - 1px);
   left: 50%;
   display: inline-flex;
-  min-height: 34px;
+  width: 88px;
+  height: 42px;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  padding: 0 13px;
-  border: 1px solid rgba(255, 255, 255, 0.52);
-  border-radius: 999px;
-  background: rgba(242, 246, 245, 0.72);
-  box-shadow:
-    0 8px 24px rgba(20, 32, 36, 0.12),
-    inset 0 1px 0 rgba(255, 255, 255, 0.52);
-  color: rgba(36, 49, 57, 0.76);
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  color: #243139;
   cursor: pointer;
-  font-size: 11px;
-  font-weight: 820;
-  transform: translate(-50%, -50%);
+  transform: translateX(-50%);
   transition:
     color 180ms ease,
-    background-color 180ms ease,
     transform 440ms cubic-bezier(0.22, 1, 0.36, 1);
-  white-space: nowrap;
   will-change: transform;
 }
 
 .app-navigation.is-world-drawer-open .world-drawer-handle {
-  background: color-mix(in srgb, var(--hero-end, #dde0da) 76%, rgba(245, 248, 247, 0.92));
-  color: var(--hero-text, #243139);
-  transform: translate(-50%, calc(-50% - var(--world-drawer-height) - var(--world-drawer-gap)));
+  color: #243139;
+  transform: translate(-50%, calc(-1 * (var(--world-drawer-height) + var(--world-drawer-gap))));
 }
 
 .world-drawer-handle svg {
-  width: 15px;
-  height: 15px;
+  width: 64px;
+  height: 32px;
   fill: none;
   stroke: currentcolor;
   stroke-linecap: round;
   stroke-linejoin: round;
-  stroke-width: 2;
+  stroke-width: 2.2;
+  filter: drop-shadow(0 1px 0 rgba(255, 255, 255, 0.9)) drop-shadow(0 0 4px rgba(255, 255, 255, 0.48));
   transition: transform 320ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.drawer-chevron-small {
+  opacity: 0.62;
+  stroke-width: 1.8;
 }
 
 .world-drawer-handle svg.is-open {
   transform: rotate(180deg);
-}
-
-.world-drawer-grip {
-  width: 18px;
-  height: 3px;
-  border-radius: 999px;
-  background: currentcolor;
-  opacity: 0.34;
 }
 
 .page-container {
@@ -406,12 +398,11 @@ watch(
 @media (max-width: 420px) {
   .app-shell {
     --floating-nav-offset: 9px;
-    --world-drawer-height: min(72svh, 590px);
+    --floating-nav-width: min(340px, calc(100vw - 18px));
   }
 
   .app-navigation {
     bottom: calc(9px + env(safe-area-inset-bottom));
-    width: min(340px, calc(100% - 18px));
   }
 
   .primary-navigation a {

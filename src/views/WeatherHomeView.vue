@@ -4,7 +4,7 @@ import { ElMessage } from 'element-plus'
 import { useRoute, useRouter } from 'vue-router'
 
 import LoadingSpinner from '@/components/weather/LoadingSpinner.vue'
-import LocationPermissionDialog from '@/components/weather/LocationPermissionDialog.vue'
+import LocationPermissionPanel from '@/components/weather/LocationPermissionPanel.vue'
 import TemperatureConditionLabel from '@/components/weather/TemperatureConditionLabel.vue'
 import WeatherBackgroundVideo from '@/components/weather/WeatherBackgroundVideo.vue'
 import WeatherConditionIcon from '@/components/weather/WeatherConditionIcon.vue'
@@ -313,91 +313,86 @@ if (import.meta.env.DEV) {
           class="weather-hero"
           :class="{ 'is-promoting': isHeroPromoting }"
           :style="{ viewTransitionName: promotingCityId && heroWeather?.id === promotingCityId ? 'weather-promotion' : undefined }"
-          :aria-busy="isLoading"
-          aria-labelledby="weather-hero-title"
+          :aria-busy="isLoading || locationPromptState === 'requesting'"
+          :aria-labelledby="locationPromptState ? 'location-consent-title' : 'weather-hero-title'"
           tabindex="-1"
         >
           <p class="sr-only" aria-live="polite">{{ heroAnnouncement }}</p>
-          <button class="refresh-button" type="button" :disabled="!apiReady || isLoading" :aria-label="isLoading ? '날씨 갱신 중' : '날씨 새로고침'" @click="refreshWeather">
-            <svg viewBox="0 0 24 24" :class="{ 'is-spinning': isLoading }" aria-hidden="true">
-              <path d="M20 6v5h-5" />
-              <path d="M18.2 15a7 7 0 1 1-.7-7.1L20 11" />
-            </svg>
-          </button>
+          <LocationPermissionPanel v-if="locationPromptState" :state="locationPromptState" :message="locationPromptMessage" @accept="requestLocationWeather" @dismiss="dismissLocationPrompt" />
 
-          <div v-if="heroWeather" class="hero-face hero-face-front">
-            <div class="hero-location">
-              <h1 id="weather-hero-title">{{ heroCityName }}</h1>
-              <div class="hero-country-line">
-                <span>{{ heroCountryName }}</span>
-                <span v-if="heroWeather.isCurrentLocation" class="current-location-label">내 위치</span>
-                <button v-else-if="currentLocationWeather" class="return-location-button" type="button" @click="handleSelect(currentLocationWeather)">내 위치로</button>
-              </div>
-            </div>
-
-            <div class="hero-weather-lockup" role="group" :aria-label="`현재 기온 ${heroTemperatureText}`">
-              <div class="hero-condition-summary">
-                <span>{{ heroWeather.status || heroTheme.label || '날씨 설명 없음' }}</span>
-                <span v-if="hasHeroTemperature" class="condition-separator" aria-hidden="true">/</span>
-                <TemperatureConditionLabel v-if="hasHeroTemperature" class="hero-temperature-condition" :temperature="heroWeather.temp" />
-              </div>
-              <div class="hero-temperature" :class="{ missing: !hasHeroTemperature }">
-                <strong>{{ hasHeroTemperature ? heroTemp : '정보 없음' }}</strong>
-                <span v-if="hasHeroTemperature">{{ unitSymbol }}</span>
-              </div>
-              <div class="hero-icon">
-                <WeatherConditionIcon :category="heroTheme.category" :is-night="heroTheme.isNight" />
-              </div>
-            </div>
-
-            <dl class="hero-metrics">
-              <div>
-                <dt>체감</dt>
-                <dd>{{ heroFeelsLikeText }}</dd>
-              </div>
-              <div>
-                <dt>습도</dt>
-                <dd>{{ heroHumidityText }}</dd>
-              </div>
-              <div>
-                <dt>풍속</dt>
-                <dd>{{ heroWindText }}</dd>
-              </div>
-              <div>
-                <dt>{{ heroObservedMeta.label }}</dt>
-                <dd>{{ heroObservedMeta.value }}</dd>
-              </div>
-            </dl>
-
-            <button class="hero-detail-button" type="button" :disabled="isHeroPromoting" :aria-label="`${heroWeather.name} 상세 날씨 페이지로 이동`" @click="openWeatherDetail(heroWeather.id)">
-              <span>상세 보기</span>
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M5 12h14M14 7l5 5-5 5" />
+          <template v-else>
+            <button class="refresh-button" type="button" :disabled="!apiReady || isLoading" :aria-label="isLoading ? '날씨 갱신 중' : '날씨 새로고침'" @click="refreshWeather">
+              <svg viewBox="0 0 24 24" :class="{ 'is-spinning': isLoading }" aria-hidden="true">
+                <path d="M20 6v5h-5" />
+                <path d="M18.2 15a7 7 0 1 1-.7-7.1L20 11" />
               </svg>
             </button>
-          </div>
 
-          <div v-else class="hero-placeholder">
-            <LoadingSpinner v-if="heroState === 'loading'" class="hero-loading-spinner" />
-            <div v-else class="hero-placeholder-icon">
-              <WeatherConditionIcon category="neutral" :is-night="false" />
+            <div v-if="heroWeather" class="hero-face hero-face-front">
+              <div class="hero-location">
+                <h1 id="weather-hero-title">{{ heroCityName }}</h1>
+                <div class="hero-country-line">
+                  <span>{{ heroCountryName }}</span>
+                  <span v-if="heroWeather.isCurrentLocation" class="current-location-label">내 위치</span>
+                  <button v-else-if="currentLocationWeather" class="return-location-button" type="button" @click="handleSelect(currentLocationWeather)">내 위치로</button>
+                </div>
+              </div>
+
+              <div class="hero-weather-lockup" role="group" :aria-label="`현재 기온 ${heroTemperatureText}`">
+                <div class="hero-condition-summary">
+                  <span>{{ heroWeather.status || heroTheme.label || '날씨 설명 없음' }}</span>
+                  <TemperatureConditionLabel v-if="hasHeroTemperature" class="hero-temperature-condition" :temperature="heroWeather.temp" />
+                </div>
+                <div class="hero-temperature" :class="{ missing: !hasHeroTemperature }">
+                  <strong>{{ hasHeroTemperature ? heroTemp : '정보 없음' }}</strong>
+                  <span v-if="hasHeroTemperature">{{ unitSymbol }}</span>
+                </div>
+                <div class="hero-icon">
+                  <WeatherConditionIcon :category="heroTheme.category" :is-night="heroTheme.isNight" />
+                </div>
+              </div>
+
+              <dl class="hero-metrics">
+                <div>
+                  <dt>체감</dt>
+                  <dd>{{ heroFeelsLikeText }}</dd>
+                </div>
+                <div>
+                  <dt>습도</dt>
+                  <dd>{{ heroHumidityText }}</dd>
+                </div>
+                <div>
+                  <dt>풍속</dt>
+                  <dd>{{ heroWindText }}</dd>
+                </div>
+                <div>
+                  <dt>{{ heroObservedMeta.label }}</dt>
+                  <dd>{{ heroObservedMeta.value }}</dd>
+                </div>
+              </dl>
+
+              <button class="hero-detail-button" type="button" :disabled="isHeroPromoting" :aria-label="`${heroWeather.name} 상세 날씨 페이지로 이동`" @click="openWeatherDetail(heroWeather.id)">
+                <span>상세 보기</span>
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M5 12h14M14 7l5 5-5 5" />
+                </svg>
+              </button>
             </div>
-            <h1 id="weather-hero-title">{{ heroStateTitle }}</h1>
-            <p>{{ heroStateCopy }}</p>
-          </div>
+
+            <div v-else class="hero-placeholder">
+              <LoadingSpinner v-if="heroState === 'loading'" class="hero-loading-spinner" />
+              <div v-else class="hero-placeholder-icon">
+                <WeatherConditionIcon category="neutral" :is-night="false" />
+              </div>
+              <h1 id="weather-hero-title">{{ heroStateTitle }}</h1>
+              <p>{{ heroStateCopy }}</p>
+            </div>
+          </template>
         </section>
       </div>
 
       <p class="sr-only" aria-live="polite">{{ selectedCityInfo }}</p>
     </div>
-
-    <LocationPermissionDialog
-      v-if="locationPromptState"
-      :state="locationPromptState"
-      :message="locationPromptMessage"
-      @accept="requestLocationWeather"
-      @dismiss="dismissLocationPrompt"
-    />
 
     <WorldWeatherDrawer
       :open="isWorldDrawerOpen"
@@ -710,22 +705,18 @@ if (import.meta.env.DEV) {
 
 .hero-weather-lockup {
   display: grid;
-  width: fit-content;
-  max-width: 100%;
-  grid-template-columns: auto auto auto;
+  width: min(620px, 100%);
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
-  justify-content: center;
   gap: clamp(10px, 1.9vw, 22px);
   margin: clamp(25px, 4.5vw, 42px) auto clamp(30px, 4.8vw, 44px);
 }
 
 .hero-condition-summary {
-  display: flex;
-  max-width: 152px;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 6px;
+  display: grid;
+  width: 100%;
+  justify-items: end;
+  gap: 8px;
   color: var(--hero-muted);
   font-size: clamp(11px, 1.25vw, 14px);
   font-weight: 820;
@@ -733,22 +724,18 @@ if (import.meta.env.DEV) {
   text-align: right;
 }
 
-.condition-separator {
-  opacity: 0.55;
-}
-
 .hero-icon {
   width: clamp(94px, 13vw, 142px);
   height: clamp(94px, 13vw, 142px);
+  justify-self: start;
   padding: 8px;
   color: var(--weather-accent);
-  transition: transform 340ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .hero-temperature {
-  display: flex;
-  align-items: flex-start;
-  gap: clamp(8px, 1vw, 14px);
+  position: relative;
+  display: block;
+  justify-self: center;
   min-width: 0;
   white-space: nowrap;
 }
@@ -759,6 +746,7 @@ if (import.meta.env.DEV) {
 }
 
 .hero-temperature strong {
+  display: block;
   font-size: clamp(78px, 11.5vw, 122px);
   font-weight: 720;
   font-variant-numeric: tabular-nums;
@@ -767,7 +755,10 @@ if (import.meta.env.DEV) {
 }
 
 .hero-temperature span {
-  margin-top: 4px;
+  position: absolute;
+  top: 4px;
+  left: 100%;
+  margin-left: clamp(8px, 1vw, 14px);
   font-size: 21px;
   font-weight: 800;
   line-height: 1;
@@ -851,7 +842,6 @@ if (import.meta.env.DEV) {
   stroke-linecap: round;
   stroke-linejoin: round;
   stroke-width: 2;
-  transition: transform 180ms ease;
 }
 
 .hero-detail-button:focus-visible {
@@ -872,7 +862,6 @@ if (import.meta.env.DEV) {
   margin-bottom: 18px;
   padding: 12px;
   color: var(--weather-accent);
-  transition: transform 340ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .hero-loading-spinner {
@@ -882,21 +871,11 @@ if (import.meta.env.DEV) {
 }
 
 @media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
-  .weather-hero:not(.is-promoting):hover .hero-icon,
-  .weather-hero:not(.is-promoting):hover .hero-placeholder-icon {
-    transform: translateY(-8px) scale(1.045);
-  }
-
   .refresh-button:hover:not(:disabled) {
     background: rgba(255, 255, 255, 0.14);
     color: inherit;
     transform: translateY(-1px);
   }
-
-  .hero-detail-button:hover:not(:disabled) svg {
-    transform: translateX(3px);
-  }
-
 }
 
 @media (max-width: 560px) {
@@ -919,7 +898,6 @@ if (import.meta.env.DEV) {
   }
 
   .hero-condition-summary {
-    max-width: 90px;
     gap: 4px;
     font-size: 10px;
   }
@@ -930,16 +908,13 @@ if (import.meta.env.DEV) {
     padding: 5px;
   }
 
-  .hero-temperature {
-    gap: 7px;
-  }
-
   .hero-temperature strong {
     font-size: clamp(58px, 19vw, 82px);
     letter-spacing: -0.045em;
   }
 
   .hero-temperature span {
+    margin-left: 7px;
     font-size: 17px;
   }
 
@@ -967,7 +942,6 @@ if (import.meta.env.DEV) {
   .hero-detail-button {
     width: auto;
   }
-
 }
 
 @media (max-width: 360px) {
@@ -992,11 +966,6 @@ if (import.meta.env.DEV) {
     transition: none;
   }
 
-  .hero-icon,
-  .hero-placeholder-icon {
-    transition: none;
-  }
-
   .refresh-button svg.is-spinning {
     animation: none;
   }
@@ -1005,17 +974,7 @@ if (import.meta.env.DEV) {
     transition: none;
   }
 
-  .hero-detail-button svg {
-    transition: none;
-  }
-
-  .hero-detail-button:hover:not(:disabled) svg,
   .refresh-button:hover:not(:disabled) {
-    transform: none;
-  }
-
-  .weather-hero:hover .hero-icon,
-  .weather-hero:hover .hero-placeholder-icon {
     transform: none;
   }
 }

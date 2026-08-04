@@ -6,6 +6,40 @@ export { MissingWeatherApiKeyError } from './weatherErrors.js'
 
 const API_URL = 'https://api.openweathermap.org/data/2.5/weather'
 const FORECAST_API_URL = 'https://api.openweathermap.org/data/2.5/forecast'
+const REVERSE_GEOCODING_API_URL = 'https://api.openweathermap.org/geo/1.0/reverse'
+
+const KOREAN_CITY_NAMES = Object.freeze({
+  anyang: '안양',
+  ansan: '안산',
+  busan: '부산',
+  bucheon: '부천',
+  changwon: '창원',
+  cheongju: '청주',
+  chuncheon: '춘천',
+  daegu: '대구',
+  daejeon: '대전',
+  gangneung: '강릉',
+  gimhae: '김해',
+  gimpo: '김포',
+  goyang: '고양',
+  gwangju: '광주',
+  hanam: '하남',
+  hwaseong: '화성',
+  incheon: '인천',
+  jeju: '제주',
+  jeonju: '전주',
+  namyangju: '남양주',
+  pohang: '포항',
+  pyeongtaek: '평택',
+  sejong: '세종',
+  seongnam: '성남',
+  seoul: '서울',
+  suwon: '수원',
+  uijeongbu: '의정부',
+  ulsan: '울산',
+  wonju: '원주',
+  yongin: '용인',
+})
 
 const finiteNumberOrNull = (value) => (Number.isFinite(value) ? value : null)
 const nonEmptyStringOrNull = (value) => {
@@ -21,6 +55,22 @@ const getCountryName = (countryCode) => {
   } catch {
     return countryCode
   }
+}
+const stripKoreanAdministrativeSuffix = (value) => value.replace(/(?:특별자치시|특별시|광역시|특별자치도|시|군|구)$/u, '').trim()
+const stripRomanizedKoreanSuffix = (value) => value.replace(/(?:[-\s](?:si|gun|gu|do))$/i, '').trim()
+const resolveCurrentLocationName = (payload, locationPayload, countryCode) => {
+  if (countryCode !== 'KR') {
+    return nonEmptyStringOrNull(locationPayload?.local_names?.en) || nonEmptyStringOrNull(locationPayload?.name) || nonEmptyStringOrNull(payload?.name)
+  }
+
+  const koreanName = nonEmptyStringOrNull(locationPayload?.local_names?.ko)
+  if (koreanName) return stripKoreanAdministrativeSuffix(koreanName)
+
+  const apiName = nonEmptyStringOrNull(payload?.name) || nonEmptyStringOrNull(locationPayload?.name)
+  if (!apiName) return null
+
+  const normalizedName = stripRomanizedKoreanSuffix(apiName)
+  return KOREAN_CITY_NAMES[normalizedName.toLocaleLowerCase('en-US')] || stripKoreanAdministrativeSuffix(normalizedName)
 }
 const FORECAST_ITEM_LIMIT = 8
 const DAILY_FORECAST_LIMIT = 5
@@ -114,10 +164,10 @@ export const hasWeatherApiKey = () => {
   return Boolean(key && key !== 'replace_with_your_key')
 }
 
-export const mapWeatherResponse = (city, payload = {}) => {
+export const mapWeatherResponse = (city, payload = {}, locationPayload = {}) => {
   const currentCondition = payload?.weather?.[0]
-  const resolvedLocationName = city?.isCurrentLocation ? nonEmptyStringOrNull(payload?.name) : null
-  const resolvedCountryCode = city?.isCurrentLocation ? nonEmptyStringOrNull(payload?.sys?.country) : null
+  const resolvedCountryCode = city?.isCurrentLocation ? nonEmptyStringOrNull(locationPayload?.country) || nonEmptyStringOrNull(payload?.sys?.country) : null
+  const resolvedLocationName = city?.isCurrentLocation ? resolveCurrentLocationName(payload, locationPayload, resolvedCountryCode) : null
   const resolvedCountryName = getCountryName(resolvedCountryCode)
 
   return {
@@ -125,7 +175,7 @@ export const mapWeatherResponse = (city, payload = {}) => {
     ...(resolvedLocationName
       ? {
           name: resolvedLocationName,
-          displayName: resolvedLocationName.toLocaleUpperCase('en-US'),
+          displayName: resolvedLocationName,
           fullName: `내 위치 · ${resolvedLocationName}`,
         }
       : {}),
@@ -167,7 +217,7 @@ export const fetchCityWeather = async (city) => {
     throw new MissingWeatherApiKeyError()
   }
 
-  const response = await axios.get(API_URL, {
+  const requestOptions = {
     params: {
       lat: city.latitude,
       lon: city.longitude,
@@ -176,9 +226,25 @@ export const fetchCityWeather = async (city) => {
       lang: 'kr',
     },
     timeout: 8000,
-  })
+  }
+  const weatherRequest = axios.get(API_URL, requestOptions)
+  const locationRequest = city?.isCurrentLocation
+    ? axios
+        .get(REVERSE_GEOCODING_API_URL, {
+          params: {
+            lat: city.latitude,
+            lon: city.longitude,
+            limit: 1,
+            appid: getWeatherApiKey(),
+          },
+          timeout: 8000,
+        })
+        .catch(() => null)
+    : Promise.resolve(null)
 
-  return mapWeatherResponse(city, response.data)
+  const [response, locationResponse] = await Promise.all([weatherRequest, locationRequest])
+
+  return mapWeatherResponse(city, response.data, locationResponse?.data?.[0])
 }
 
 export const fetchCityForecast = async (city, apiKey = getWeatherApiKey()) => {

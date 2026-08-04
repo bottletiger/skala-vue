@@ -29,7 +29,7 @@ const observedAt = computed(() => formatWeatherDateTime(props.weather?.observedA
     </div>
 
     <div class="current-location">
-      <p>{{ weather.name }}</p>
+      <p>{{ weather.displayName || weather.name }}</p>
       <strong>{{ weather.status || theme.label || '날씨 설명 없음' }}</strong>
       <span>관측 {{ observedAt }}</span>
     </div>
