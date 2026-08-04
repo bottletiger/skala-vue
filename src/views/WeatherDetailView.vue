@@ -2,12 +2,13 @@
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch, watchEffect } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
+import DailyForecastList from '@/components/weather/DailyForecastList.vue'
+import HourlyForecastStrip from '@/components/weather/HourlyForecastStrip.vue'
 import LoadingSpinner from '@/components/weather/LoadingSpinner.vue'
-import MetricCard from '@/components/weather/MetricCard.vue'
 import WeatherConditionIcon from '@/components/weather/WeatherConditionIcon.vue'
 import { useTemperature } from '@/composables/useTemperature'
 import { findCityConfig } from '@/data/cities'
-import { fetchCityWeather, hasWeatherApiKey, MissingWeatherApiKeyError } from '@/services/weatherApi'
+import { fetchCityForecast, fetchCityWeather, hasWeatherApiKey, MissingWeatherApiKeyError } from '@/services/weatherApi'
 import { formatWeatherDateTime, formatWeatherTime, getWeatherTheme } from '@/utils/weatherTheme'
 
 const route = useRoute()
@@ -16,8 +17,11 @@ const router = useRouter()
 const MISSING_API_KEY_MESSAGE = 'VITE_OPENWEATHER_API_KEY를 설정해 주세요.'
 const apiReady = hasWeatherApiKey()
 const cityData = ref(null)
+const forecastData = ref(null)
 const isLoading = ref(apiReady)
+const isForecastLoading = ref(apiReady)
 const errorMessage = ref(apiReady ? '' : MISSING_API_KEY_MESSAGE)
+const forecastErrorMessage = ref('')
 const detailPageHeading = ref(null)
 const cityConfig = computed(() => findCityConfig(route.params.cityId))
 const { displayTemp, unitSymbol } = useTemperature(() => cityData.value?.temp)
@@ -30,7 +34,16 @@ const toFiniteMetric = (value) => {
   return Number.isFinite(numericValue) ? numericValue : null
 }
 
-const weatherTheme = computed(() => getWeatherTheme(cityData.value))
+const weatherTheme = computed(() => {
+  const firstForecast = forecastData.value?.hourly?.[0]
+  return getWeatherTheme(
+    cityData.value ?? {
+      condition: firstForecast?.weatherMain,
+      conditionId: firstForecast?.weatherId,
+      iconCode: firstForecast?.icon,
+    },
+  )
+})
 const currentTemperature = computed(() => {
   return toFiniteMetric(cityData.value?.temp) === null ? null : displayTemp.value
 })
@@ -54,6 +67,9 @@ const sunriseTime = computed(() => {
 const sunsetTime = computed(() => {
   return formatWeatherTime(cityData.value?.sunset, cityData.value?.timezoneOffset)
 })
+const forecastTimezoneOffset = computed(() => {
+  return forecastData.value?.timezoneOffset ?? cityData.value?.timezoneOffset ?? 0
+})
 
 const returnToWeatherList = () => {
   void router.push({ name: 'WeatherHome', query: route.query })
@@ -66,6 +82,15 @@ const detailStatusMessage = computed(() => {
   return '수신된 상세 날씨 데이터가 없습니다.'
 })
 
+const forecastStatusMessage = computed(() => {
+  if (isForecastLoading.value) return '시간대별 및 5일 예보를 불러오는 중입니다.'
+  if (forecastErrorMessage.value) return forecastErrorMessage.value
+  if (forecastData.value?.hourly?.length || forecastData.value?.daily?.length) {
+    return '시간대별 및 5일 예보를 표시했습니다.'
+  }
+  return '수신된 예보 데이터가 없습니다.'
+})
+
 const formatApiError = (error) => {
   if (error instanceof MissingWeatherApiKeyError) {
     return MISSING_API_KEY_MESSAGE
@@ -76,15 +101,28 @@ const formatApiError = (error) => {
   return '상세 날씨를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.'
 }
 
+const formatForecastError = (error) => {
+  if (error instanceof MissingWeatherApiKeyError) {
+    return MISSING_API_KEY_MESSAGE
+  }
+  if (error.response?.status === 401) {
+    return 'API 키가 유효하지 않거나 아직 활성화되지 않았습니다.'
+  }
+  return '예보를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.'
+}
+
 const loadDetail = async (cityId) => {
   const requestId = ++detailRequestId
   const requestedCity = findCityConfig(cityId)
 
   cityData.value = null
+  forecastData.value = null
   errorMessage.value = ''
+  forecastErrorMessage.value = ''
 
   if (!requestedCity) {
     isLoading.value = true
+    isForecastLoading.value = false
     try {
       await router.replace({
         name: 'NotFound',
@@ -101,23 +139,36 @@ const loadDetail = async (cityId) => {
   if (!apiReady) {
     errorMessage.value = MISSING_API_KEY_MESSAGE
     isLoading.value = false
+    isForecastLoading.value = false
     return
   }
 
   isLoading.value = true
+  isForecastLoading.value = true
 
-  try {
-    const nextCityData = await fetchCityWeather(requestedCity)
-    if (requestId !== detailRequestId) return
+  const currentWeatherRequest = fetchCityWeather(requestedCity)
+    .then((nextCityData) => {
+      if (requestId === detailRequestId) cityData.value = nextCityData
+    })
+    .catch((error) => {
+      if (requestId === detailRequestId) errorMessage.value = formatApiError(error)
+    })
+    .finally(() => {
+      if (requestId === detailRequestId) isLoading.value = false
+    })
 
-    cityData.value = nextCityData
-  } catch (error) {
-    if (requestId !== detailRequestId) return
+  const forecastRequest = fetchCityForecast(requestedCity)
+    .then((nextForecastData) => {
+      if (requestId === detailRequestId) forecastData.value = nextForecastData
+    })
+    .catch((error) => {
+      if (requestId === detailRequestId) forecastErrorMessage.value = formatForecastError(error)
+    })
+    .finally(() => {
+      if (requestId === detailRequestId) isForecastLoading.value = false
+    })
 
-    errorMessage.value = formatApiError(error)
-  } finally {
-    if (requestId === detailRequestId) isLoading.value = false
-  }
+  await Promise.allSettled([currentWeatherRequest, forecastRequest])
 }
 
 watch(
@@ -166,21 +217,22 @@ onBeforeUnmount(() => {
 
         <div v-if="isLoading" class="detail-loading-state">
           <LoadingSpinner class="detail-loading-spinner" />
-          <el-skeleton :rows="4" animated />
+          <el-skeleton :rows="2" animated />
         </div>
         <el-result v-else-if="errorMessage" :icon="apiReady ? 'error' : 'warning'" title="날씨를 불러올 수 없습니다" :sub-title="errorMessage" />
 
         <div v-else-if="cityData" class="current-content">
-          <div class="current-location">
-            <p>{{ cityData.fullName }}</p>
-            <strong>{{ cityData.status || weatherTheme.label || '날씨 설명 없음' }}</strong>
+          <div class="current-visual">
+            <WeatherConditionIcon class="condition-icon" :category="weatherTheme.category" :is-night="weatherTheme.isNight" />
           </div>
 
-          <div class="current-reading" role="group" :aria-label="`현재 기온 ${currentTemperature === null ? '정보 없음' : `${currentTemperature}${unitSymbol}`}`">
-            <div class="current-visual">
-              <WeatherConditionIcon class="condition-icon" :category="weatherTheme.category" :is-night="weatherTheme.isNight" />
-            </div>
+          <div class="current-location">
+            <p>{{ cityData.name }}</p>
+            <strong>{{ cityData.status || weatherTheme.label || '날씨 설명 없음' }}</strong>
+            <span>관측 {{ observedAt }}</span>
+          </div>
 
+          <div class="current-reading">
             <div id="detail-weather-title" class="current-temperature" :class="{ missing: currentTemperature === null }" role="heading" aria-level="2">
               <span>{{ currentTemperature ?? '정보 없음' }}</span>
               <small v-if="currentTemperature !== null">{{ unitSymbol }}</small>
@@ -191,75 +243,139 @@ onBeforeUnmount(() => {
         <el-empty v-else description="표시할 날씨 정보가 없습니다." />
       </section>
 
-      <section v-if="cityData" class="details-section" aria-labelledby="metric-grid-title">
+      <section v-if="cityData" class="details-section" aria-labelledby="details-list-title">
         <div class="details-heading">
-          <h2 id="metric-grid-title">상세 정보</h2>
-          <span>{{ observedAt }}</span>
+          <h2 id="details-list-title">상세 정보</h2>
+          <span>현재 관측값</span>
         </div>
 
-        <div class="metric-grid">
-          <MetricCard label="체감 온도" :value="feelsLikeTemperature" :unit="feelsLikeTemperature === null ? '' : unitSymbol">
-            <template #icon>
-              <svg viewBox="0 0 24 24">
-                <path d="M14 14.8V5a2 2 0 0 0-4 0v9.8a4 4 0 1 0 4 0Z" />
-                <path d="M12 9v7" />
-              </svg>
-            </template>
-          </MetricCard>
+        <dl class="details-list">
+          <div class="detail-row">
+            <dt class="detail-label">
+              <span class="detail-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24">
+                  <path d="M14 14.8V5a2 2 0 0 0-4 0v9.8a4 4 0 1 0 4 0Z" />
+                  <path d="M12 9v7" />
+                </svg>
+              </span>
+              <span class="detail-copy"><strong>체감 온도</strong><small>몸이 느끼는 온도</small></span>
+            </dt>
+            <dd class="detail-value" :class="{ missing: feelsLikeTemperature === null }">
+              <strong>{{ feelsLikeTemperature ?? '정보 없음' }}</strong>
+              <small v-if="feelsLikeTemperature !== null">{{ unitSymbol }}</small>
+            </dd>
+          </div>
 
-          <MetricCard label="습도" :value="humidity" unit="%">
-            <template #icon>
-              <svg viewBox="0 0 24 24">
-                <path d="M12 3S6 9.3 6 14a6 6 0 0 0 12 0c0-4.7-6-11-6-11Z" />
-                <path d="M9.5 15.5a3 3 0 0 0 5 1.5" />
-              </svg>
-            </template>
-          </MetricCard>
+          <div class="detail-row">
+            <dt class="detail-label">
+              <span class="detail-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24">
+                  <path d="M12 3S6 9.3 6 14a6 6 0 0 0 12 0c0-4.7-6-11-6-11Z" />
+                  <path d="M9.5 15.5a3 3 0 0 0 5 1.5" />
+                </svg>
+              </span>
+              <span class="detail-copy"><strong>습도</strong><small>공기 중 수증기 비율</small></span>
+            </dt>
+            <dd class="detail-value" :class="{ missing: humidity === null }">
+              <strong>{{ humidity ?? '정보 없음' }}</strong>
+              <small v-if="humidity !== null">%</small>
+            </dd>
+          </div>
 
-          <MetricCard label="기압" :value="pressure" unit="hPa">
-            <template #icon>
-              <svg viewBox="0 0 24 24">
-                <circle cx="12" cy="12" r="8" />
-                <path d="m12 12 3.5-3.5M8 17h8" />
-              </svg>
-            </template>
-          </MetricCard>
+          <div class="detail-row">
+            <dt class="detail-label">
+              <span class="detail-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M3 8h11a2.5 2.5 0 1 0-2.3-3.5M3 12h16a2 2 0 1 1-1.8 2.8M3 16h8" /></svg>
+              </span>
+              <span class="detail-copy"><strong>풍속</strong><small>지상 바람 속도</small></span>
+            </dt>
+            <dd class="detail-value" :class="{ missing: windSpeed === null }">
+              <strong>{{ windSpeed ?? '정보 없음' }}</strong>
+              <small v-if="windSpeed !== null">m/s</small>
+            </dd>
+          </div>
 
-          <MetricCard label="시정거리" :value="visibilityKm" unit="km">
-            <template #icon>
-              <svg viewBox="0 0 24 24">
-                <path d="M2.5 12s3.5-5 9.5-5 9.5 5 9.5 5-3.5 5-9.5 5-9.5-5-9.5-5Z" />
-                <circle cx="12" cy="12" r="2.5" />
-              </svg>
-            </template>
-          </MetricCard>
+          <div class="detail-row">
+            <dt class="detail-label">
+              <span class="detail-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24">
+                  <circle cx="12" cy="12" r="8" />
+                  <path d="m12 12 3.5-3.5M8 17h8" />
+                </svg>
+              </span>
+              <span class="detail-copy"><strong>기압</strong><small>현재 대기압</small></span>
+            </dt>
+            <dd class="detail-value" :class="{ missing: pressure === null }">
+              <strong>{{ pressure ?? '정보 없음' }}</strong>
+              <small v-if="pressure !== null">hPa</small>
+            </dd>
+          </div>
 
-          <MetricCard label="풍속" :value="windSpeed" unit="m/s">
-            <template #icon>
-              <svg viewBox="0 0 24 24"><path d="M3 8h11a2.5 2.5 0 1 0-2.3-3.5M3 12h16a2 2 0 1 1-1.8 2.8M3 16h8" /></svg>
-            </template>
-          </MetricCard>
+          <div class="detail-row">
+            <dt class="detail-label">
+              <span class="detail-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24">
+                  <path d="M2.5 12s3.5-5 9.5-5 9.5 5 9.5 5-3.5 5-9.5 5-9.5-5-9.5-5Z" />
+                  <circle cx="12" cy="12" r="2.5" />
+                </svg>
+              </span>
+              <span class="detail-copy"><strong>시정거리</strong><small>육안으로 볼 수 있는 거리</small></span>
+            </dt>
+            <dd class="detail-value" :class="{ missing: visibilityKm === null }">
+              <strong>{{ visibilityKm ?? '정보 없음' }}</strong>
+              <small v-if="visibilityKm !== null">km</small>
+            </dd>
+          </div>
 
-          <MetricCard label="일출" :value="sunriseTime" description="현지 시각">
-            <template #icon>
-              <svg viewBox="0 0 24 24"><path d="M4 18h16M6 14a6 6 0 0 1 12 0M12 3v3M4.9 6.9 7 9M19.1 6.9 17 9" /></svg>
-            </template>
-          </MetricCard>
+          <div class="detail-row detail-row--solar">
+            <dt class="detail-label">
+              <span class="detail-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24">
+                  <path d="M4 18h16M6 14a6 6 0 0 1 12 0M12 3v3M4.9 6.9 7 9M19.1 6.9 17 9" />
+                </svg>
+              </span>
+              <span class="detail-copy"><strong>일출 · 일몰</strong><small>도시 현지 시각</small></span>
+            </dt>
+            <dd class="detail-value detail-value--pair">
+              <span
+                ><small>일출</small><strong>{{ sunriseTime }}</strong></span
+              >
+              <i aria-hidden="true"></i>
+              <span
+                ><small>일몰</small><strong>{{ sunsetTime }}</strong></span
+              >
+            </dd>
+          </div>
+        </dl>
+      </section>
 
-          <MetricCard label="일몰" :value="sunsetTime" description="현지 시각">
-            <template #icon>
-              <svg viewBox="0 0 24 24"><path d="M4 18h16M6 14a6 6 0 0 1 12 0M12 6V3M9.5 4.5 12 7l2.5-2.5" /></svg>
-            </template>
-          </MetricCard>
+      <section v-if="cityConfig && apiReady" class="forecast-section" aria-labelledby="forecast-overview-title" :aria-busy="isForecastLoading">
+        <h2 id="forecast-overview-title" class="sr-only">날씨 예보</h2>
+        <p class="sr-only" aria-live="polite">{{ forecastStatusMessage }}</p>
 
-          <MetricCard label="관측 시각" :value="observedAt" description="현지 날짜 및 시각">
-            <template #icon>
-              <svg viewBox="0 0 24 24">
-                <circle cx="12" cy="12" r="8" />
-                <path d="M12 7v5l3 2" />
-              </svg>
-            </template>
-          </MetricCard>
+        <div v-if="isForecastLoading" class="forecast-state">
+          <LoadingSpinner class="forecast-loading-spinner" />
+          <p>시간대별 및 5일 예보를 불러오고 있습니다.</p>
+        </div>
+
+        <div v-else-if="forecastErrorMessage" class="forecast-state forecast-state--error">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="12" cy="12" r="9" />
+            <path d="M12 7v6M12 17h.01" />
+          </svg>
+          <div>
+            <strong>예보를 표시하지 못했습니다.</strong>
+            <p>{{ forecastErrorMessage }}</p>
+          </div>
+        </div>
+
+        <div v-else-if="forecastData?.hourly?.length || forecastData?.daily?.length" class="forecast-content">
+          <HourlyForecastStrip v-if="forecastData.hourly.length" :items="forecastData.hourly" :timezone-offset="forecastTimezoneOffset" />
+          <DailyForecastList v-if="forecastData.daily.length" :items="forecastData.daily" :timezone-offset="forecastTimezoneOffset" />
+        </div>
+
+        <div v-else class="forecast-state">
+          <p>표시할 예보 정보가 없습니다.</p>
         </div>
       </section>
     </div>
@@ -397,10 +513,10 @@ onBeforeUnmount(() => {
 }
 
 .current-panel {
-  min-height: 300px;
-  width: min(820px, 100%);
-  margin: clamp(18px, 3svh, 30px) auto 0;
-  padding: clamp(24px, 4.8vw, 48px) 0;
+  min-height: 0;
+  width: min(980px, 100%);
+  margin: 12px auto 0;
+  padding: 16px 4px 20px;
   border: 0;
   background: transparent;
   box-shadow: none;
@@ -412,92 +528,107 @@ onBeforeUnmount(() => {
 
 .detail-loading-state {
   display: grid;
-  gap: 22px;
+  min-height: 110px;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 20px;
+  padding: 0 18px;
 }
 
 .detail-loading-spinner {
-  --loading-spinner-size: 58px;
-
-  margin: 0 auto;
+  --loading-spinner-size: 38px;
 }
 
 .current-panel :deep(.el-result) {
   --el-text-color-primary: var(--hero-text);
   --el-text-color-regular: var(--hero-muted);
+
+  padding: 16px 0;
 }
 
 .current-content {
   display: grid;
-  min-height: 196px;
-  align-content: center;
-  justify-items: center;
-  gap: 26px;
-  text-align: center;
+  min-height: 110px;
+  grid-template-columns: 82px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 20px;
+  padding: 0 8px;
 }
 
 .current-location {
   display: grid;
-  justify-items: center;
+  min-width: 0;
+  justify-items: start;
 }
 
 .current-location > p {
   margin: 0;
   color: var(--hero-text);
-  font-size: clamp(24px, 4.2vw, 42px);
-  font-weight: 750;
-  letter-spacing: -0.045em;
-  line-height: 1.14;
+  font-size: clamp(20px, 2.6vw, 28px);
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  line-height: 1.1;
 }
 
 .current-location > strong {
   display: block;
-  margin-top: 8px;
+  width: 100%;
+  margin-top: 4px;
+  overflow: hidden;
   color: var(--hero-muted);
   font-size: 12px;
   font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.current-location > span {
+  margin-top: 6px;
+  color: color-mix(in srgb, var(--hero-muted) 82%, transparent);
+  font-size: 10px;
+  font-weight: 700;
 }
 
 .current-reading {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: clamp(14px, 2.4vw, 26px);
+  justify-content: flex-end;
 }
 
 .current-temperature {
   display: flex;
   align-items: flex-start;
-  gap: clamp(8px, 1.2vw, 14px);
+  gap: 6px;
   margin: 0;
-  font-size: clamp(72px, 11vw, 112px);
-  font-weight: 720;
+  font-size: clamp(44px, 6.4vw, 64px);
+  font-weight: 760;
   font-variant-numeric: tabular-nums;
-  letter-spacing: -0.05em;
-  line-height: 0.86;
+  letter-spacing: -0.045em;
+  line-height: 0.92;
   white-space: nowrap;
 }
 
 .current-temperature small {
-  margin-top: 2px;
-  font-size: 24px;
+  margin-top: 1px;
+  font-size: 17px;
   font-weight: 750;
   letter-spacing: -0.02em;
   vertical-align: top;
 }
 
 .current-temperature.missing {
-  font-size: clamp(28px, 5vw, 42px);
+  font-size: clamp(18px, 3vw, 24px);
   letter-spacing: -0.03em;
 }
 
 .current-visual {
   display: grid;
-  width: clamp(118px, 16vw, 172px);
-  height: clamp(118px, 16vw, 172px);
-  padding: 12px;
+  width: 82px;
+  height: 82px;
+  padding: 7px;
   justify-items: center;
   color: var(--weather-accent);
-  transition: transform 340ms cubic-bezier(0.22, 1, 0.36, 1);
+  transition: transform 280ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .condition-icon {
@@ -507,7 +638,65 @@ onBeforeUnmount(() => {
 
 .details-section {
   width: min(980px, 100%);
-  margin: 24px auto 0;
+  margin: 18px auto 0;
+}
+
+.forecast-section {
+  width: min(980px, 100%);
+  margin: 28px auto 0;
+}
+
+.forecast-content {
+  display: grid;
+  gap: 28px;
+}
+
+.forecast-state {
+  display: flex;
+  min-height: 136px;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 24px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.08));
+  color: var(--hero-muted);
+  text-align: center;
+  backdrop-filter: blur(14px) saturate(108%);
+}
+
+.forecast-state p {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.forecast-state--error {
+  justify-content: flex-start;
+  text-align: left;
+}
+
+.forecast-state--error > svg {
+  width: 34px;
+  height: 34px;
+  flex: 0 0 auto;
+  fill: none;
+  stroke: var(--weather-accent);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.7;
+}
+
+.forecast-state--error strong {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--hero-text);
+  font-size: 14px;
+}
+
+.forecast-loading-spinner {
+  --loading-spinner-size: 34px;
 }
 
 .details-heading {
@@ -530,10 +719,135 @@ onBeforeUnmount(() => {
   font-weight: 700;
 }
 
-.metric-grid {
+.details-list {
+  margin: 0;
+  padding: 0 22px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 24px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.08));
+  box-shadow: 0 8px 26px rgba(28, 43, 48, 0.045);
+  backdrop-filter: blur(14px) saturate(108%);
+}
+
+.detail-row {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  min-height: 72px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 24px;
+  padding: 12px 2px;
+  transition: background-color 180ms ease;
+}
+
+.detail-row + .detail-row {
+  border-top: 1px solid rgba(255, 255, 255, 0.19);
+}
+
+.detail-label {
+  display: flex;
+  min-width: 0;
+  align-items: center;
   gap: 14px;
+}
+
+.detail-icon {
+  display: grid;
+  width: 38px;
+  height: 38px;
+  flex: 0 0 auto;
+  place-items: center;
+  color: var(--weather-accent);
+  transition: transform 280ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.detail-icon svg {
+  width: 27px;
+  height: 27px;
+  fill: none;
+  stroke: currentcolor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.75;
+}
+
+.detail-copy {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+}
+
+.detail-copy strong {
+  color: var(--hero-text);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.detail-copy small {
+  overflow: hidden;
+  color: var(--hero-muted);
+  font-size: 11px;
+  font-weight: 650;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.detail-value {
+  display: flex;
+  align-items: baseline;
+  justify-content: flex-end;
+  gap: 5px;
+  margin: 0;
+  color: var(--hero-text);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.detail-value > strong {
+  font-size: 19px;
+  font-weight: 820;
+  letter-spacing: -0.025em;
+}
+
+.detail-value > small {
+  color: var(--hero-muted);
+  font-size: 11px;
+  font-weight: 750;
+}
+
+.detail-value.missing > strong {
+  color: var(--hero-muted);
+  font-size: 13px;
+  letter-spacing: 0;
+}
+
+.detail-value--pair {
+  align-items: center;
+  gap: 14px;
+}
+
+.detail-value--pair > span {
+  display: grid;
+  grid-template-columns: auto auto;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.detail-value--pair > span > small {
+  color: var(--hero-muted);
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.detail-value--pair > span > strong {
+  font-size: 17px;
+  font-weight: 820;
+}
+
+.detail-value--pair > i {
+  width: 1px;
+  height: 22px;
+  background: rgba(255, 255, 255, 0.24);
 }
 
 @media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
@@ -544,13 +858,15 @@ onBeforeUnmount(() => {
   }
 
   .current-panel:hover .current-visual {
-    transform: translateY(-8px) scale(1.045);
+    transform: translateY(-3px) scale(1.04);
   }
-}
 
-@media (max-width: 860px) {
-  .metric-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  .detail-row:hover {
+    background: rgba(255, 255, 255, 0.06);
+  }
+
+  .detail-row:hover .detail-icon {
+    transform: translateY(-2px) scale(1.05);
   }
 }
 
@@ -564,38 +880,47 @@ onBeforeUnmount(() => {
   }
 
   .current-panel {
-    min-height: 0;
-    margin-top: 18px;
-    padding: 28px 0 20px;
+    margin-top: 10px;
+    padding: 10px 0 16px;
   }
 
   .current-content {
-    min-height: 0;
-    gap: 22px;
+    min-height: 92px;
+    grid-template-columns: 60px minmax(0, 1fr) auto;
+    gap: 11px;
+    padding: 0 2px;
   }
 
   .current-location > p {
-    font-size: clamp(24px, 8vw, 34px);
+    font-size: 19px;
   }
 
-  .current-reading {
-    gap: 10px;
+  .current-location > strong {
+    font-size: 11px;
+  }
+
+  .current-location > span {
+    width: 100%;
+    overflow: hidden;
+    font-size: 9px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .current-temperature {
-    gap: 8px;
-    font-size: clamp(60px, 20vw, 82px);
+    gap: 4px;
+    font-size: clamp(36px, 12vw, 48px);
     letter-spacing: -0.04em;
   }
 
   .current-temperature small {
-    font-size: 20px;
+    font-size: 14px;
   }
 
   .current-visual {
-    width: clamp(96px, 28vw, 126px);
-    height: clamp(96px, 28vw, 126px);
-    padding: 8px;
+    width: 60px;
+    height: 60px;
+    padding: 5px;
   }
 
   .details-heading {
@@ -603,11 +928,80 @@ onBeforeUnmount(() => {
     flex-direction: column;
     gap: 3px;
   }
+
+  .details-list {
+    padding: 0 14px;
+    border-radius: 22px;
+  }
+
+  .detail-row {
+    min-height: 66px;
+    gap: 12px;
+    padding-block: 10px;
+  }
+
+  .detail-label {
+    gap: 10px;
+  }
+
+  .detail-icon {
+    width: 34px;
+    height: 34px;
+  }
+
+  .detail-icon svg {
+    width: 24px;
+    height: 24px;
+  }
+
+  .detail-copy strong {
+    font-size: 12px;
+  }
+
+  .detail-copy small {
+    font-size: 10px;
+  }
+
+  .detail-value > strong {
+    font-size: 16px;
+  }
+
+  .detail-value--pair {
+    gap: 9px;
+  }
+
+  .detail-value--pair > span {
+    gap: 4px;
+  }
+
+  .detail-value--pair > span > strong {
+    font-size: 14px;
+  }
 }
 
-@media (max-width: 430px) {
-  .metric-grid {
+@media (max-width: 360px) {
+  .current-content {
+    grid-template-columns: 54px minmax(0, 1fr) auto;
+    gap: 8px;
+  }
+
+  .current-visual {
+    width: 54px;
+    height: 54px;
+  }
+
+  .current-temperature {
+    font-size: 34px;
+  }
+
+  .detail-copy small {
+    display: none;
+  }
+
+  .detail-value--pair > span {
     grid-template-columns: 1fr;
+    justify-items: end;
+    gap: 0;
   }
 }
 
@@ -619,12 +1013,15 @@ onBeforeUnmount(() => {
   }
 
   .back-button,
-  .current-visual {
+  .current-visual,
+  .detail-row,
+  .detail-icon {
     transition: none;
   }
 
   .back-button:hover,
-  .current-panel:hover .current-visual {
+  .current-panel:hover .current-visual,
+  .detail-row:hover .detail-icon {
     transform: none;
   }
 }

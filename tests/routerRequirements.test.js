@@ -134,8 +134,10 @@ test('검색창은 기본 취소 아이콘을 숨기고 사용자 정의 지우�
 
 test('검색창 아래 버튼으로 도시 목록을 처음에는 숨기고 펼치거나 다시 접는다', () => {
   const homeSource = readSource('../src/views/WeatherHomeView.vue')
+  const storeSource = readSource('../src/stores/homeWeatherStore.js')
 
-  assert.match(homeSource, /const isCityListOpen = ref\(false\)/)
+  assert.match(storeSource, /const isCityListOpen = ref\(false\)/)
+  assert.match(homeSource, /const \{ weatherList, selectedCityId, lastUpdated, isCityListOpen \} = storeToRefs\(homeWeatherStore\)/)
   assert.match(homeSource, /ref="cityListEntry" class="hero-search-stack"/)
   assert.match(homeSource, /class="list-jump-button"[\s\S]*?aria-controls="city-weather-region"[\s\S]*?:aria-expanded="isCityListOpen"[\s\S]*?@click="toggleCityList"/)
   assert.match(homeSource, /<Transition name="city-list" @after-enter="scrollToOpenedCityList">[\s\S]*?<div v-show="isCityListOpen" class="city-list-reveal">/)
@@ -149,6 +151,21 @@ test('검색창 아래 버튼으로 도시 목록을 처음에는 숨기고 펼�
   assert.match(homeSource, /\.city-list-enter-from,[\s\S]*?\.city-list-leave-to\s*\{[^}]*grid-template-rows:\s*0fr;[^}]*opacity:\s*0;/s)
   assert.doesNotMatch(homeSource, /scrollToCityList/)
   assert.doesNotMatch(homeSource, /weather-scroll-snap|scroll-snap-/)
+})
+
+test('히스토리로 홈에 돌아오면 최근 날씨와 펼친 목록 상태를 cache에서 즉시 복원한다', () => {
+  const homeSource = readSource('../src/views/WeatherHomeView.vue')
+  const storeSource = readSource('../src/stores/homeWeatherStore.js')
+
+  assert.match(storeSource, /HOME_WEATHER_CACHE_TTL = 5 \* 60 \* 1000/)
+  assert.match(storeSource, /const weatherList = ref\(\[\]\)/)
+  assert.match(storeSource, /const selectedCityId = ref\(''\)/)
+  assert.match(storeSource, /const isCityListOpen = ref\(false\)/)
+  assert.match(storeSource, /const hasFreshWeather = \(now = Date\.now\(\)\)/)
+  assert.match(homeSource, /const restoreCachedWeather = \(\) => \{/)
+  assert.match(homeSource, /if \(apiReady && homeWeatherStore\.hasFreshWeather\(\)\) \{[\s\S]*restoreCachedWeather\(\)[\s\S]*return/)
+  assert.match(homeSource, /homeWeatherStore\.markWeatherLoaded\(\)/)
+  assert.match(homeSource, /homeWeatherStore\.clearWeatherData\(\)/)
 })
 
 test('도시 목록을 펼친 뒤에도 문서 스크롤로 자연스럽게 위아래를 오간다', () => {
@@ -178,7 +195,6 @@ test('리스트 카드와 Hero 액션을 경계가 옅은 compact·quiet 스타�
 test('Hero 지표는 세로선으로 구분하고 카드와 아이콘에 포인터 플로팅 모션을 적용한다', () => {
   const homeSource = readSource('../src/views/WeatherHomeView.vue')
   const cardSource = readSource('../src/components/exercise/WeatherCard.vue')
-  const metricSource = readSource('../src/components/weather/MetricCard.vue')
   const detailSource = readSource('../src/views/WeatherDetailView.vue')
 
   assert.match(homeSource, /\.hero-metrics > div\s*\{[^}]*border:\s*0;[^}]*background:\s*transparent;/s)
@@ -186,29 +202,68 @@ test('Hero 지표는 세로선으로 구분하고 카드와 아이콘에 포인�
   assert.match(homeSource, /\.hero-metrics > div:nth-child\(even\)::before/)
   assert.match(cardSource, /\.weather-card-hover-zone:hover \.weather-card:not\(\.is-promoting\)/)
   assert.match(cardSource, /\.weather-card-hover-zone:hover \.weather-card:not\(\.is-promoting\) \.weather-mark/)
-  assert.match(metricSource, /\.metric-card-hover-zone:hover \.metric-card[\s\S]*\.metric-card-hover-zone:hover \.metric-icon/)
+  assert.match(detailSource, /\.detail-row:hover \.detail-icon/)
   assert.match(cardSource, /prefers-reduced-motion:\s*no-preference/)
   assert.match(homeSource, /\.weather-hero:not\(\.is-promoting\):hover \.hero-icon/)
   assert.match(detailSource, /\.current-panel:hover \.current-visual/)
 })
 
-test('상세 화면은 메인과 같은 경계 없는 Hero와 옅은 지표 카드를 사용한다', () => {
+test('상세 화면은 compact 현재 요약과 단일 행 목록형 상세 패널을 사용한다', () => {
   const detailSource = readSource('../src/views/WeatherDetailView.vue')
-  const metricSource = readSource('../src/components/weather/MetricCard.vue')
   const routerSource = readSource('../src/router/index.js')
   const location = detailSource.indexOf('class="current-location"')
   const reading = detailSource.indexOf('class="current-reading"')
+  const detailsSection = detailSource.indexOf('class="details-section"')
+  const hourlyForecast = detailSource.indexOf('<HourlyForecastStrip')
+  const dailyForecast = detailSource.indexOf('<DailyForecastList')
 
   assert.ok(location >= 0 && reading > location)
+  assert.ok(detailsSection > reading && hourlyForecast > detailsSection && dailyForecast > hourlyForecast)
   assert.match(routerSource, /meta:\s*\{\s*title:\s*'도시 날씨',\s*layout:\s*'weather-scene'\s*\}/)
   assert.match(detailSource, /\.detail-topbar\s*\{[^}]*border:\s*0;[^}]*background:\s*transparent;/s)
   assert.match(detailSource, /\.back-button\s*\{[^}]*width:\s*44px;[^}]*height:\s*44px;[^}]*border:\s*0;[^}]*background:\s*transparent;/s)
   assert.match(detailSource, /\.current-panel\s*\{[^}]*border:\s*0;[^}]*background:\s*transparent;[^}]*box-shadow:\s*none;/s)
-  assert.match(detailSource, /\.current-visual\s*\{[^}]*width:\s*clamp\(118px, 16vw, 172px\)/s)
-  assert.match(metricSource, /border:\s*1px solid rgba\(255, 255, 255, 0\.22\)/)
-  assert.match(metricSource, /background:\s*linear-gradient\(135deg, rgba\(255, 255, 255, 0\.15\), rgba\(255, 255, 255, 0\.08\)\)/)
-  assert.match(metricSource, /transform:\s*translateY\(-4px\) scale\(1\.006\)/)
-  assert.doesNotMatch(metricSource, /\.metric-card-hover-zone,\s*\.metric-card\s*\{[^}]*padding:/s)
+  assert.match(detailSource, /\.current-content\s*\{[^}]*grid-template-columns:\s*82px minmax\(0, 1fr\) auto;/s)
+  assert.match(detailSource, /\.current-visual\s*\{[^}]*width:\s*82px;[^}]*height:\s*82px;/s)
+  assert.match(detailSource, /<span>관측 \{\{ observedAt \}\}<\/span>/)
+  assert.match(detailSource, /<strong>\{\{ sunriseTime \}\}<\/strong>/)
+  assert.match(detailSource, /<strong>\{\{ sunsetTime \}\}<\/strong>/)
+  assert.equal((detailSource.match(/class="detail-row(?: detail-row--solar)?"/g) ?? []).length, 6)
+  assert.match(detailSource, /<dl class="details-list">/)
+  assert.match(detailSource, /<h2 id="forecast-overview-title" class="sr-only">날씨 예보<\/h2>/)
+  assert.match(detailSource, /\.details-list\s*\{[^}]*border:\s*1px solid rgba\(255, 255, 255, 0\.22\);[^}]*background:\s*linear-gradient/s)
+  assert.match(detailSource, /\.detail-row \+ \.detail-row\s*\{[^}]*border-top:/s)
+  assert.match(detailSource, /@media \(max-width: 560px\)[\s\S]*\.current-content\s*\{[^}]*grid-template-columns:\s*60px minmax\(0, 1fr\) auto;/s)
+  assert.doesNotMatch(detailSource, /<MetricCard|class="metric-grid"/)
+
+  for (const label of ['체감 온도', '습도', '풍속', '기압', '시정거리', '일출 · 일몰']) {
+    assert.match(detailSource, new RegExp(label))
+  }
+})
+
+test('상세 화면은 현재 날씨와 분리된 3시간·5일 예보 상태와 전용 목록을 제공한다', () => {
+  const detailSource = readSource('../src/views/WeatherDetailView.vue')
+  const hourlySource = readSource('../src/components/weather/HourlyForecastStrip.vue')
+  const dailySource = readSource('../src/components/weather/DailyForecastList.vue')
+  const serviceSource = readSource('../src/services/weatherApi.js')
+
+  assert.match(serviceSource, /data\/2\.5\/forecast/)
+  assert.match(serviceSource, /export const mapForecastResponse/)
+  assert.match(serviceSource, /hourly:\s*forecastEntries\.slice\(0, FORECAST_ITEM_LIMIT\)/)
+  assert.match(serviceSource, /daily:\s*timezoneOffset === null \? \[\] : mapDailyForecast/)
+  assert.match(detailSource, /const isForecastLoading = ref/)
+  assert.match(detailSource, /const forecastErrorMessage = ref/)
+  assert.match(detailSource, /fetchCityWeather\(requestedCity\)/)
+  assert.match(detailSource, /fetchCityForecast\(requestedCity\)/)
+  assert.match(detailSource, /Promise\.allSettled\(\[currentWeatherRequest, forecastRequest\]\)/)
+  assert.match(detailSource, /<section v-if="cityConfig && apiReady" class="forecast-section"/)
+  assert.doesNotMatch(detailSource, /<section v-if="cityData" class="forecast-section"/)
+  assert.match(detailSource, /<HourlyForecastStrip[^>]*:items="forecastData\.hourly"/)
+  assert.match(detailSource, /<DailyForecastList[^>]*:items="forecastData\.daily"/)
+  assert.match(hourlySource, /시간대별 날씨/)
+  assert.match(hourlySource, /role="region"[^>]*tabindex="0"/)
+  assert.match(dailySource, /5일 예보/)
+  assert.match(dailySource, /<ol class="daily-list">/)
 })
 
 test('소개 화면은 날씨 배경과 메인 계열의 기능 카드·quiet 복귀 링크를 사용한다', () => {
