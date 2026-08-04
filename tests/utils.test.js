@@ -3,7 +3,7 @@ import test from 'node:test'
 
 import { toFiniteMetric } from '../src/utils/metrics.js'
 import { matchesSearchQuery, normalizeSearchQuery } from '../src/utils/search.js'
-import { convertTemperature } from '../src/utils/temperature.js'
+import { convertTemperature, getTemperatureCondition } from '../src/utils/temperature.js'
 
 test('섭씨와 화씨 온도를 화면 표시용 한 자리 소수로 변환한다', () => {
   assert.equal(convertTemperature(25, 'celsius'), 25)
@@ -14,6 +14,14 @@ test('섭씨와 화씨 온도를 화면 표시용 한 자리 소수로 변환한
   assert.equal(convertTemperature(null, 'celsius'), null)
   assert.equal(convertTemperature('', 'celsius'), null)
   assert.equal(convertTemperature(false, 'celsius'), null)
+})
+
+test('화면에 표시되는 섭씨 25도를 기준으로 더움과 선선함을 구분한다', () => {
+  assert.equal(getTemperatureCondition(24.6)?.key, 'cool')
+  assert.equal(getTemperatureCondition(24.96)?.key, 'hot')
+  assert.equal(getTemperatureCondition(25)?.key, 'hot')
+  assert.equal(getTemperatureCondition(null), null)
+  assert.equal(getTemperatureCondition(''), null)
 })
 
 test('상세 지표는 숫자와 숫자 문자열만 유한한 값으로 정규화한다', () => {

@@ -18,7 +18,7 @@ const handleInput = (event) => {
 <template>
   <div class="search-box">
     <label class="search-label" for="city-search">도시명 검색</label>
-    <div class="input-row">
+    <div class="input-row dashboard-surface dashboard-surface--search">
       <svg class="search-icon" viewBox="0 0 24 24" aria-hidden="true">
         <circle cx="11" cy="11" r="7" />
         <path d="m16 16 4 4" />
@@ -52,12 +52,6 @@ const handleInput = (event) => {
   gap: 10px;
   min-height: 46px;
   padding: 0 10px 0 14px;
-  border: 1px solid rgba(255, 255, 255, 0.46);
-  border-radius: 15px;
-  background: rgba(255, 255, 255, 0.24);
-  box-shadow: 0 10px 30px rgba(28, 42, 47, 0.06);
-  color: var(--hero-text, var(--ink));
-  backdrop-filter: blur(18px) saturate(115%);
 }
 
 .input-row:focus-within {

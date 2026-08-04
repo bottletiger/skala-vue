@@ -6,8 +6,11 @@ import UnitToggler from '@/components/exercise/UnitToggler.vue'
 
 const route = useRoute()
 const isWeatherScene = computed(() => route.meta.layout === 'weather-scene')
+const isLabScene = computed(() => route.meta.layout === 'lab-scene')
 const activeNavigationIndex = computed(() => {
-  if (route.name === 'WeatherAbout') return 1
+  if (route.name === 'Dashboard') return 1
+  if (route.name === 'Login') return 2
+  if (route.name === 'WeatherAbout') return 3
   if (route.name === 'WeatherHome' || route.name === 'WeatherDetail') return 0
   return -1
 })
@@ -19,7 +22,13 @@ const navigationStyle = computed(() => ({
 <template>
   <div class="app-shell">
     <a class="skip-link" href="#main-content">본문 바로가기</a>
-    <header class="app-navigation" :class="{ 'app-navigation--weather': isWeatherScene }">
+    <header
+      class="app-navigation"
+      :class="{
+        'app-navigation--weather': isWeatherScene,
+        'app-navigation--without-unit': isLabScene,
+      }"
+    >
       <nav class="primary-navigation" :class="{ 'has-active-route': activeNavigationIndex >= 0 }" :style="navigationStyle" aria-label="주요 메뉴">
         <span class="navigation-slider" aria-hidden="true"></span>
         <RouterLink :to="{ name: 'WeatherHome' }" :class="{ 'is-active': activeNavigationIndex === 0 }" :aria-current="activeNavigationIndex === 0 ? 'page' : undefined">
@@ -28,7 +37,15 @@ const navigationStyle = computed(() => ({
           </svg>
           <span>날씨</span>
         </RouterLink>
-        <RouterLink :to="{ name: 'WeatherAbout' }" :class="{ 'is-active': activeNavigationIndex === 1 }" :aria-current="activeNavigationIndex === 1 ? 'page' : undefined">
+        <RouterLink :to="{ name: 'Dashboard' }" :class="{ 'is-active': activeNavigationIndex === 1 }" :aria-current="activeNavigationIndex === 1 ? 'page' : undefined">
+          <span class="navigation-icon navigation-icon--dashboard" aria-hidden="true"></span>
+          <span>대시보드</span>
+        </RouterLink>
+        <RouterLink :to="{ name: 'Login' }" :class="{ 'is-active': activeNavigationIndex === 2 }" :aria-current="activeNavigationIndex === 2 ? 'page' : undefined">
+          <span class="navigation-icon navigation-icon--login" aria-hidden="true"></span>
+          <span>로그인</span>
+        </RouterLink>
+        <RouterLink :to="{ name: 'WeatherAbout' }" :class="{ 'is-active': activeNavigationIndex === 3 }" :aria-current="activeNavigationIndex === 3 ? 'page' : undefined">
           <svg viewBox="0 0 24 24" aria-hidden="true">
             <circle cx="12" cy="12" r="8" />
             <path d="M12 11v5M12 8h.01" />
@@ -37,10 +54,18 @@ const navigationStyle = computed(() => ({
         </RouterLink>
       </nav>
 
-      <UnitToggler />
+      <UnitToggler v-if="isWeatherScene" />
     </header>
 
-    <main id="main-content" class="page-container" :class="{ 'page-container--weather': isWeatherScene }" tabindex="-1">
+    <main
+      id="main-content"
+      class="page-container"
+      :class="{
+        'page-container--weather': isWeatherScene,
+        'page-container--lab': isLabScene,
+      }"
+      tabindex="-1"
+    >
       <RouterView />
     </main>
   </div>
@@ -80,7 +105,7 @@ const navigationStyle = computed(() => ({
   bottom: calc(12px + env(safe-area-inset-bottom));
   left: 50%;
   display: flex;
-  width: min(360px, calc(100% - 24px));
+  width: min(650px, calc(100% - 24px));
   min-height: 54px;
   align-items: center;
   gap: 6px;
@@ -97,6 +122,10 @@ const navigationStyle = computed(() => ({
   transform: translateX(-50%);
 }
 
+.app-navigation--without-unit {
+  width: min(520px, calc(100% - 24px));
+}
+
 .app-navigation--weather {
   background: rgba(246, 249, 248, 0.34);
 }
@@ -107,7 +136,7 @@ const navigationStyle = computed(() => ({
   display: grid;
   min-width: 0;
   flex: 1 1 auto;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   align-items: center;
   padding: 3px;
   border-radius: 22px;
@@ -121,7 +150,7 @@ const navigationStyle = computed(() => ({
   top: 3px;
   bottom: 3px;
   left: 3px;
-  width: calc(50% - 3px);
+  width: calc((100% - 6px) / 4);
   border-radius: 19px;
   background: rgba(23, 35, 45, 0.62);
   box-shadow: 0 5px 14px rgba(23, 35, 45, 0.12);
@@ -165,6 +194,52 @@ const navigationStyle = computed(() => ({
   stroke-linecap: round;
   stroke-linejoin: round;
   stroke-width: 1.9;
+}
+
+.navigation-icon {
+  position: relative;
+  width: 17px;
+  height: 17px;
+  flex: 0 0 auto;
+}
+
+.navigation-icon--dashboard::before {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 5px;
+  height: 5px;
+  border-radius: 1.5px;
+  background: currentcolor;
+  box-shadow:
+    8px 0 currentcolor,
+    0 8px currentcolor,
+    8px 8px currentcolor;
+  content: '';
+}
+
+.navigation-icon--login::before,
+.navigation-icon--login::after {
+  position: absolute;
+  left: 50%;
+  border: 1.6px solid currentcolor;
+  content: '';
+  transform: translateX(-50%);
+}
+
+.navigation-icon--login::before {
+  top: 1px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+}
+
+.navigation-icon--login::after {
+  bottom: 1px;
+  width: 12px;
+  height: 6px;
+  border-bottom: 0;
+  border-radius: 8px 8px 0 0;
 }
 
 .primary-navigation a:hover {
@@ -226,6 +301,12 @@ const navigationStyle = computed(() => ({
   padding: 0;
 }
 
+.page-container--lab {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
 @supports not (backdrop-filter: blur(1px)) {
   .app-navigation {
     background: rgba(242, 246, 245, 0.94);
@@ -243,8 +324,16 @@ const navigationStyle = computed(() => ({
   }
 
   .primary-navigation a {
-    gap: 4px;
-    padding: 0 8px;
+    flex-direction: column;
+    gap: 2px;
+    padding: 3px 2px;
+    font-size: 10px;
+  }
+
+  .primary-navigation a svg,
+  .navigation-icon {
+    width: 15px;
+    height: 15px;
   }
 
   .page-container:not(.page-container--weather) {

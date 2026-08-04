@@ -1,11 +1,29 @@
 import { createRouter, createWebHashHistory } from 'vue-router'
 
+import { useAuthStore } from '@/stores/auth.js'
+
 const routes = [
   {
     path: '/',
     name: 'WeatherHome',
     component: () => import('@/views/WeatherHomeView.vue'),
     meta: { title: '오늘의 날씨', layout: 'weather-scene' },
+  },
+  {
+    path: '/dashboard',
+    name: 'Dashboard',
+    component: () => import('@/views/DashboardView.vue'),
+    meta: {
+      title: 'API 대시보드',
+      layout: 'lab-scene',
+      requiresAuth: true,
+    },
+  },
+  {
+    path: '/login',
+    name: 'Login',
+    component: () => import('@/views/LoginView.vue'),
+    meta: { title: '로그인', layout: 'lab-scene' },
   },
   {
     path: '/about',
@@ -41,6 +59,21 @@ const router = createRouter({
     if (to.path === from.path) return false
     return { top: 0 }
   },
+})
+
+router.beforeEach((to) => {
+  const authStore = useAuthStore()
+
+  if (to.meta.requiresAuth && !authStore.isLoggedIn) {
+    return {
+      name: 'Login',
+      query: { redirect: to.fullPath },
+    }
+  }
+
+  if (to.name === 'Login' && authStore.isLoggedIn) {
+    return { name: 'Dashboard' }
+  }
 })
 
 router.afterEach((to) => {
