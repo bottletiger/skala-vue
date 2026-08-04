@@ -131,21 +131,21 @@ const currentCopy = computed(() => copyByState[props.state])
   justify-content: center;
   gap: 8px;
   border: 0;
-  background: color-mix(in srgb, var(--hero-text) 86%, transparent);
-  color: white;
+  background: var(--hero-text);
+  color: var(--hero-start);
 }
 
 .location-secondary {
-  border: 1px solid color-mix(in srgb, var(--hero-text) 16%, transparent);
-  background: color-mix(in srgb, white 18%, transparent);
-  color: var(--hero-muted);
+  border: 1px solid color-mix(in srgb, var(--hero-text) 24%, transparent);
+  background: color-mix(in srgb, var(--hero-text) 7%, transparent);
+  color: var(--hero-text);
 }
 
 .location-spinner {
   width: 14px;
   height: 14px;
-  border: 2px solid rgba(255, 255, 255, 0.32);
-  border-top-color: white;
+  border: 2px solid color-mix(in srgb, currentcolor 32%, transparent);
+  border-top-color: currentcolor;
   border-radius: 50%;
   animation: location-spin 760ms linear infinite;
 }

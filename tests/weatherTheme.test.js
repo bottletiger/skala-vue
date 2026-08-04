@@ -90,6 +90,21 @@ test('모든 주간 Hero 테마의 작은 보조 글자가 양쪽 배경에서 4
   }
 })
 
+test('모든 Hero 테마의 주요 버튼 전경과 배경이 4.5:1 대비를 유지한다', () => {
+  const themes = [
+    getWeatherTheme(),
+    ...['Clear', 'Clouds', 'Rain', 'Snow', 'Mist', 'Thunderstorm'].map((condition) => getWeatherTheme({ condition })),
+    getWeatherTheme({ condition: 'Clear', iconCode: '01n' }),
+  ]
+
+  for (const theme of themes) {
+    const foreground = theme.cssVariables['--hero-start']
+    const background = theme.cssVariables['--hero-text']
+
+    assert.ok(contrastRatio(foreground, background) >= 4.5, `${theme.name} 주요 버튼 대비`)
+  }
+})
+
 test('도시 timezone offset을 적용해 날짜 경계를 고정 형식으로 표시한다', () => {
   const midnightUtc = 1_704_067_200
 

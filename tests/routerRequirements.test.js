@@ -351,6 +351,8 @@ test('현재 위치 진입 흐름은 장식 없이 한 줄 제목을 쓰는 Hero
   assert.match(panelSource, /class="location-permission-panel"/)
   assert.match(homeSource, /'is-location-prompt': locationPromptState/)
   assert.match(panelSource, /\.location-permission-panel h1\s*\{[^}]*white-space:\s*nowrap;/s)
+  assert.match(panelSource, /\.location-primary\s*\{[^}]*background:\s*var\(--hero-text\);[^}]*color:\s*var\(--hero-start\);/s)
+  assert.match(panelSource, /\.location-secondary\s*\{[^}]*background:\s*color-mix\(in srgb, var\(--hero-text\) 7%, transparent\);[^}]*color:\s*var\(--hero-text\);/s)
   assert.doesNotMatch(panelSource, /WeatherConditionIcon|location-consent-icon/)
   assert.doesNotMatch(panelSource, /role="dialog"|aria-modal|location-consent-backdrop|position:\s*fixed/)
 })
