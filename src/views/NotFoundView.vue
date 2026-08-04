@@ -1,90 +1,59 @@
 <script setup>
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 
+const route = useRoute()
 const router = useRouter()
-
-const goHome = () => {
-  router.push({ name: 'WeatherHome' })
-}
 </script>
 
 <template>
-  <!-- 전체 화면을 중앙 정렬하기 위한 래퍼 -->
-  <div class="not-found-container">
-    <div class="not-found-content">
-      <!-- 시각적 포인트를 위한 아이콘 또는 큰 텍스트 (옵션) -->
-      <div class="error-icon">☀️❓</div>
-
-      <h2>페이지를 찾을 수 없습니다.</h2>
-      <p>요청하신 주소가 존재하지 않거나,<br />아직 개발되지 않았습니다.</p>
-
-      <!-- 포인트 컬러가 적용된 버튼 -->
-      <button class="home-button" @click="goHome">날씨 메인으로 이동</button>
-    </div>
+  <div class="not-found">
+    <span aria-hidden="true">404</span>
+    <p class="eyebrow">경로 확인</p>
+    <h1>페이지를 찾을 수 없습니다</h1>
+    <p>
+      요청한 경로
+      <code>{{ route.query.from || route.fullPath }}</code>
+      에 해당하는 화면이 없습니다.
+    </p>
+    <el-button type="primary" @click="router.push({ name: 'WeatherHome' })">날씨로 돌아가기</el-button>
   </div>
 </template>
 
-<!-- Scoped CSS로 이 컴포넌트에만 스타일 적용 -->
 <style scoped>
-.not-found-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  /* 부모 요소(예: App.vue)에서 남은 높이를 다 쓰도록 설정 */
-  min-height: 80vh;
-  background-color: #f8f9fa; /* 아주 연한 회색 배경 */
-  font-family: 'Noto Sans KR', sans-serif; /* 기본 폰트 설정 (옵션) */
-}
-
-.not-found-content {
+.not-found {
+  max-width: 620px;
+  margin: 40px auto;
+  padding: 64px 28px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  box-shadow: var(--shadow-soft);
   text-align: center;
-  background-color: #ffffff;
-  padding: 50px;
-  border-radius: 16px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* 은은한 그림자 */
-  border: 1px solid #e9ecef;
 }
 
-.error-icon {
-  font-size: 5rem; /* 아주 크게 */
-  margin-bottom: 20px;
+.not-found > span {
+  display: block;
+  color: var(--sun);
+  font-size: 72px;
+  font-weight: 900;
+  letter-spacing: -0.08em;
+  line-height: 1;
 }
 
-h2 {
-  font-size: 2rem;
-  font-weight: 700;
-  color: #343a40; /* 짙은 회색 */
-  margin-bottom: 15px;
-  letter-spacing: -0.5px;
+.not-found h1 {
+  margin-bottom: 10px;
+  color: var(--navy);
 }
 
-p {
-  font-size: 1.1rem;
-  color: #6c757d; /* 중간 회색 */
-  line-height: 1.6;
-  margin-bottom: 35px;
+.not-found p:not(.eyebrow) {
+  color: var(--muted);
 }
 
-.home-button {
-  background-color: #007bff; /* 날씨 앱 포인트 컬러 (파란색) */
-  color: white;
-  border: none;
-  padding: 12px 30px;
-  font-size: 1.1rem;
-  font-weight: 500;
-  border-radius: 30px; /* 둥근 버튼 */
-  cursor: pointer;
-  transition:
-    background-color 0.2s ease,
-    transform 0.1s ease;
-}
-
-/* Hover 및 Active 효과 */
-.home-button:hover {
-  background-color: #0056b3; /* 조금 짙은 파란색 */
-}
-
-.home-button:active {
-  transform: scale(0.98); /* 클릭 시 살짝 눌리는 효과 */
+.not-found code {
+  overflow-wrap: anywhere;
+  padding: 2px 6px;
+  border-radius: 6px;
+  background: var(--surface-soft);
+  color: var(--danger);
 }
 </style>

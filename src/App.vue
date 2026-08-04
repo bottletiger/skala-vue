@@ -1,30 +1,261 @@
 <script setup>
-import StoreCounter from './components/practices/library/StoreCounter.vue'
-import AxiosWeather from './components/practices/library/AxiosWeather.vue'
-import AxiosJson from './components/practices/library/AxiosJson.vue'
-import ElementPlus from './components/practices/library/ElementPlus.vue'
-import EcmaScript from './components/practices/library/EcmaScript.vue'
+import { computed } from 'vue'
+import { RouterLink, RouterView, useRoute } from 'vue-router'
+
+import UnitToggler from '@/components/exercise/UnitToggler.vue'
+
+const route = useRoute()
+const isWeatherScene = computed(() => route.meta.layout === 'weather-scene')
+const activeNavigationIndex = computed(() => {
+  if (route.name === 'WeatherAbout') return 1
+  if (route.name === 'WeatherHome' || route.name === 'WeatherDetail') return 0
+  return -1
+})
+const navigationStyle = computed(() => ({
+  '--active-route-index': Math.max(activeNavigationIndex.value, 0),
+}))
 </script>
 
 <template>
-  <div class="practice-container">
-    <h1>1. Store</h1>
-    <hr />
-    <StoreCounter />
-    <h1>2. Axios</h1>
-    <hr />
-    <AxiosWeather />
-    <AxiosJson />
-    <h1>3. Element Plus</h1>
-    <hr />
-    <ElementPlus />
-    <h1>4. Modern JavaScript</h1>
-    <hr />
-    <EcmaScript />
+  <div class="app-shell">
+    <a class="skip-link" href="#main-content">본문 바로가기</a>
+    <header class="app-navigation" :class="{ 'app-navigation--weather': isWeatherScene }">
+      <nav class="primary-navigation" :class="{ 'has-active-route': activeNavigationIndex >= 0 }" :style="navigationStyle" aria-label="주요 메뉴">
+        <span class="navigation-slider" aria-hidden="true"></span>
+        <RouterLink :to="{ name: 'WeatherHome' }" :class="{ 'is-active': activeNavigationIndex === 0 }" :aria-current="activeNavigationIndex === 0 ? 'page' : undefined">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M4 16.5h15a4 4 0 0 0 0-8 6 6 0 0 0-11.3-.8A4.8 4.8 0 0 0 4 16.5Z" />
+          </svg>
+          <span>날씨</span>
+        </RouterLink>
+        <RouterLink :to="{ name: 'WeatherAbout' }" :class="{ 'is-active': activeNavigationIndex === 1 }" :aria-current="activeNavigationIndex === 1 ? 'page' : undefined">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="12" cy="12" r="8" />
+            <path d="M12 11v5M12 8h.01" />
+          </svg>
+          <span>소개</span>
+        </RouterLink>
+      </nav>
+
+      <UnitToggler />
+    </header>
+
+    <main id="main-content" class="page-container" :class="{ 'page-container--weather': isWeatherScene }" tabindex="-1">
+      <RouterView />
+    </main>
   </div>
 </template>
 
-<style>
-/* ⚠️ 외부 스타일 파일(예: 버튼 디자인 뭉치)을 이 방 안으로 쏙 가리켜 가져옵니다 */
-@import '@/assets/practice.css';
+<style scoped>
+.app-shell {
+  --floating-nav-height: 54px;
+  --floating-nav-offset: 12px;
+  --floating-nav-clearance: calc(var(--floating-nav-height) + var(--floating-nav-offset) + 160px + env(safe-area-inset-bottom));
+
+  position: relative;
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+.skip-link {
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  z-index: 100;
+  padding: 10px 14px;
+  border-radius: 999px;
+  background: #17232d;
+  color: #fff;
+  font-weight: 750;
+  transform: translateY(-160%);
+}
+
+.skip-link:focus {
+  transform: translateY(0);
+}
+
+.app-navigation {
+  position: fixed;
+  z-index: 50;
+  bottom: calc(12px + env(safe-area-inset-bottom));
+  left: 50%;
+  display: flex;
+  width: min(360px, calc(100% - 24px));
+  min-height: 54px;
+  align-items: center;
+  gap: 6px;
+  padding: 5px;
+  border: 1px solid rgba(255, 255, 255, 0.46);
+  border-radius: 27px;
+  background: rgba(242, 246, 245, 0.42);
+  box-shadow:
+    0 14px 38px rgba(20, 32, 36, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.42);
+  color: #243139;
+  backdrop-filter: blur(24px) saturate(135%);
+  -webkit-backdrop-filter: blur(24px) saturate(135%);
+  transform: translateX(-50%);
+}
+
+.app-navigation--weather {
+  background: rgba(246, 249, 248, 0.34);
+}
+
+.primary-navigation {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  min-width: 0;
+  flex: 1 1 auto;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: center;
+  padding: 3px;
+  border-radius: 22px;
+  background: rgba(23, 35, 45, 0.045);
+  overflow: hidden;
+}
+
+.navigation-slider {
+  position: absolute;
+  z-index: 0;
+  top: 3px;
+  bottom: 3px;
+  left: 3px;
+  width: calc(50% - 3px);
+  border-radius: 19px;
+  background: rgba(23, 35, 45, 0.62);
+  box-shadow: 0 5px 14px rgba(23, 35, 45, 0.12);
+  opacity: 0;
+  transform: translateX(calc(var(--active-route-index) * 100%));
+  transition:
+    transform 360ms cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 160ms ease;
+  will-change: transform;
+}
+
+.primary-navigation.has-active-route .navigation-slider {
+  opacity: 1;
+}
+
+.primary-navigation a {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  min-width: 0;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 11px;
+  border-radius: 19px;
+  color: rgba(36, 49, 57, 0.68);
+  font-size: 12px;
+  font-weight: 800;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: color 180ms ease;
+}
+
+.primary-navigation a svg {
+  width: 17px;
+  height: 17px;
+  flex: 0 0 auto;
+  fill: none;
+  stroke: currentcolor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.9;
+}
+
+.primary-navigation a:hover {
+  color: #243139;
+}
+
+.primary-navigation a.is-active {
+  color: #fff;
+}
+
+.primary-navigation a:focus-visible {
+  outline: 2px solid currentcolor;
+  outline-offset: -3px;
+}
+
+.app-navigation :deep(.unit-toggler) {
+  justify-self: end;
+}
+
+.app-navigation :deep(.unit-control) {
+  min-width: 84px;
+  min-height: 44px;
+  padding: 3px;
+  border-color: rgba(23, 35, 45, 0.12);
+  background: rgba(23, 35, 45, 0.045);
+  box-shadow: none;
+  color: rgba(36, 49, 57, 0.7);
+}
+
+.app-navigation :deep(.unit-indicator) {
+  top: 3px;
+  bottom: 3px;
+  left: 3px;
+  width: calc(50% - 3px);
+  background: rgba(23, 35, 45, 0.62);
+}
+
+.app-navigation :deep(.unit-option.active) {
+  color: #fff;
+}
+
+.app-navigation :deep(.unit-option) {
+  min-width: 32px;
+  min-height: 36px;
+  font-size: 12px;
+}
+
+.page-container {
+  width: min(1120px, calc(100% - 32px));
+  min-height: 100vh;
+  min-height: 100dvh;
+  margin: 0 auto;
+  padding: 48px 0 calc(116px + env(safe-area-inset-bottom));
+}
+
+.page-container--weather {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+@supports not (backdrop-filter: blur(1px)) {
+  .app-navigation {
+    background: rgba(242, 246, 245, 0.94);
+  }
+}
+
+@media (max-width: 420px) {
+  .app-shell {
+    --floating-nav-offset: 9px;
+  }
+
+  .app-navigation {
+    bottom: calc(9px + env(safe-area-inset-bottom));
+    width: min(340px, calc(100% - 18px));
+  }
+
+  .primary-navigation a {
+    gap: 4px;
+    padding: 0 8px;
+  }
+
+  .page-container:not(.page-container--weather) {
+    width: min(100% - 28px, 1120px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .navigation-slider,
+  .primary-navigation a {
+    transition: none;
+  }
+}
 </style>

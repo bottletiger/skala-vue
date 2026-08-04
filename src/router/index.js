@@ -1,32 +1,50 @@
-import { createRouter, createWebHistory } from 'vue-router'
-import WeatherHomeView from '../views/WeatherHomeView.vue'
+import { createRouter, createWebHashHistory } from 'vue-router'
 
 const routes = [
   {
     path: '/',
     name: 'WeatherHome',
-    component: WeatherHomeView,
+    component: () => import('@/views/WeatherHomeView.vue'),
+    meta: { title: '오늘의 날씨', layout: 'weather-scene' },
   },
   {
     path: '/about',
     name: 'WeatherAbout',
-    component: () => import('../views/WeatherAboutView.vue'),
+    component: () => import('@/views/WeatherAboutView.vue'),
+    meta: { title: '서비스 소개', layout: 'weather-scene' },
   },
   {
     path: '/weather/:cityId',
     name: 'WeatherDetail',
-    component: () => import('../views/WeatherDetailView.vue'),
+    component: () => import('@/views/WeatherDetailView.vue'),
+    meta: { title: '도시 날씨', layout: 'weather-scene' },
+  },
+  {
+    path: '/404',
+    name: 'NotFound',
+    component: () => import('@/views/NotFoundView.vue'),
+    meta: { title: '페이지를 찾을 수 없음' },
   },
   {
     path: '/:pathMatch(.*)*',
-    name: 'NotFound',
-    component: () => import('../views/NotFoundView.vue'),
+    name: 'CatchAll',
+    component: () => import('@/views/NotFoundView.vue'),
+    meta: { title: '페이지를 찾을 수 없음' },
   },
 ]
 
 const router = createRouter({
-  history: createWebHistory(),
+  history: createWebHashHistory(import.meta.env.BASE_URL),
   routes,
+  scrollBehavior: (to, from, savedPosition) => {
+    if (savedPosition) return savedPosition
+    if (to.path === from.path) return false
+    return { top: 0 }
+  },
+})
+
+router.afterEach((to) => {
+  document.title = to.meta.title ? `${to.meta.title} | Weather` : 'Weather'
 })
 
 export default router

@@ -1,86 +1,147 @@
-/* color palette from <https://github.com/vuejs/theme> */
-:root {
-  --vt-c-white: #ffffff;
-  --vt-c-white-soft: #f8f8f8;
-  --vt-c-white-mute: #f2f2f2;
-
-  --vt-c-black: #181818;
-  --vt-c-black-soft: #222222;
-  --vt-c-black-mute: #282828;
-
-  --vt-c-indigo: #2c3e50;
-
-  --vt-c-divider-light-1: rgba(60, 60, 60, 0.29);
-  --vt-c-divider-light-2: rgba(60, 60, 60, 0.12);
-  --vt-c-divider-dark-1: rgba(84, 84, 84, 0.65);
-  --vt-c-divider-dark-2: rgba(84, 84, 84, 0.48);
-
-  --vt-c-text-light-1: var(--vt-c-indigo);
-  --vt-c-text-light-2: rgba(60, 60, 60, 0.66);
-  --vt-c-text-dark-1: var(--vt-c-white);
-  --vt-c-text-dark-2: rgba(235, 235, 235, 0.64);
+@property --hero-start {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #b7c4c1;
 }
 
-/* semantic color variables for this project */
-:root {
-  --color-background: var(--vt-c-white);
-  --color-background-soft: var(--vt-c-white-soft);
-  --color-background-mute: var(--vt-c-white-mute);
-
-  --color-border: var(--vt-c-divider-light-2);
-  --color-border-hover: var(--vt-c-divider-light-1);
-
-  --color-heading: var(--vt-c-text-light-1);
-  --color-text: var(--vt-c-text-light-1);
-
-  --section-gap: 160px;
+@property --hero-end {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #dde0da;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --color-background: var(--vt-c-black);
-    --color-background-soft: var(--vt-c-black-soft);
-    --color-background-mute: var(--vt-c-black-mute);
+@property --weather-accent {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #60736d;
+}
 
-    --color-border: var(--vt-c-divider-dark-2);
-    --color-border-hover: var(--vt-c-divider-dark-1);
+@property --hero-text {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #1c292f;
+}
 
-    --color-heading: var(--vt-c-text-dark-1);
-    --color-text: var(--vt-c-text-dark-2);
-  }
+@property --hero-muted {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #3f4f55;
+}
+
+:root {
+  --page: #edf1f0;
+  --surface: #fcfcfa;
+  --surface-soft: #eef1ef;
+  --ink: #1c292f;
+  --muted: #69767b;
+  --line: #dde3e1;
+  --accent: #3f6665;
+  --accent-soft: #e3ebe8;
+  --navy: var(--ink);
+  --blue: var(--accent);
+  --sky: var(--accent-soft);
+  --sun: #c4934d;
+  --danger: #a34f48;
+  --success: #3f6f5d;
+  --radius-card: 20px;
+  --radius-control: 12px;
+  --shadow-soft: 0 8px 24px rgba(35, 53, 58, 0.055);
+  --el-color-primary: var(--accent);
+  --el-color-primary-light-3: #6f8b89;
+  --el-color-primary-light-5: #9cacab;
+  --el-color-primary-light-7: #c6d0cd;
+  --el-color-primary-light-8: #d9e1de;
+  --el-color-primary-light-9: var(--accent-soft);
+  --el-color-primary-dark-2: #315554;
+  --el-bg-color: var(--surface);
+  --el-bg-color-overlay: var(--surface);
+  --el-fill-color-light: var(--surface-soft);
+  --el-border-color: var(--line);
+  --el-border-color-light: #e8ecea;
+  --el-text-color-primary: var(--ink);
+  --el-text-color-regular: var(--muted);
+  --el-border-radius-base: var(--radius-control);
 }
 
 *,
 *::before,
 *::after {
   box-sizing: border-box;
-  margin: 0;
-  font-weight: normal;
+}
+
+html {
+  min-width: 320px;
+  background: var(--page);
+  overflow-x: clip;
 }
 
 body {
+  margin: 0;
   min-height: 100vh;
-  color: var(--color-text);
-  background: var(--color-background);
-  transition:
-    color 0.5s,
-    background-color 0.5s;
-  line-height: 1.6;
+  min-height: 100dvh;
+  color: var(--ink);
+  background: var(--page);
   font-family:
-    Inter,
+    Pretendard,
     -apple-system,
     BlinkMacSystemFont,
     'Segoe UI',
-    Roboto,
-    Oxygen,
-    Ubuntu,
-    Cantarell,
-    'Fira Sans',
-    'Droid Sans',
-    'Helvetica Neue',
     sans-serif;
-  font-size: 15px;
+  line-height: 1.6;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+}
+
+body,
+#app {
+  overflow-x: clip;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+button {
+  color: inherit;
+}
+
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+a {
+  text-decoration: none;
+}
+
+button:focus-visible,
+input:focus-visible,
+a:focus-visible {
+  outline: 3px solid currentcolor;
+  outline-offset: 2px;
+}
+
+h1,
+h2,
+h3,
+h4,
+p {
+  margin-top: 0;
+}
+
+strong {
+  font-weight: 750;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
