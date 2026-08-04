@@ -1,8 +1,9 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 
+import { toFiniteMetric } from '../src/utils/metrics.js'
 import { matchesSearchQuery, normalizeSearchQuery } from '../src/utils/search.js'
-import { convertTemperature, getTemperatureThreshold, isHotTemperature } from '../src/utils/temperature.js'
+import { convertTemperature } from '../src/utils/temperature.js'
 
 test('섭씨와 화씨 온도를 화면 표시용 한 자리 소수로 변환한다', () => {
   assert.equal(convertTemperature(25, 'celsius'), 25)
@@ -15,17 +16,12 @@ test('섭씨와 화씨 온도를 화면 표시용 한 자리 소수로 변환한
   assert.equal(convertTemperature(false, 'celsius'), null)
 })
 
-test('동일한 원본 온도는 단위를 바꿔도 더움 판정이 바뀌지 않는다', () => {
-  assert.equal(getTemperatureThreshold('celsius'), 25)
-  assert.equal(getTemperatureThreshold('fahrenheit'), 77)
-  assert.equal(isHotTemperature(24.6), false)
-  assert.equal(convertTemperature(24.96, 'celsius'), 25)
-  assert.equal(convertTemperature(24.96, 'fahrenheit'), 77)
-  assert.equal(isHotTemperature(24.96), true)
-  assert.equal(isHotTemperature(25), true)
-  assert.equal(isHotTemperature(25.4), true)
-  assert.equal(isHotTemperature(null), false)
-  assert.equal(isHotTemperature(''), false)
+test('상세 지표는 숫자와 숫자 문자열만 유한한 값으로 정규화한다', () => {
+  assert.equal(toFiniteMetric(0), 0)
+  assert.equal(toFiniteMetric('21.5'), 21.5)
+  assert.equal(toFiniteMetric(null), null)
+  assert.equal(toFiniteMetric(''), null)
+  assert.equal(toFiniteMetric(Number.POSITIVE_INFINITY), null)
 })
 
 test('한글 검색어를 NFC로 정규화하고 바깥 공백을 제거한다', () => {

@@ -4,8 +4,8 @@ import { storeToRefs } from 'pinia'
 
 import WeatherConditionIcon from '@/components/weather/WeatherConditionIcon.vue'
 import { useConfigStore } from '@/stores/configStore'
+import { formatForecastDateParts, getForecastVisual } from '@/utils/forecastPresentation'
 import { convertTemperature } from '@/utils/temperature'
-import { getWeatherTheme } from '@/utils/weatherTheme'
 
 const props = defineProps({
   items: {
@@ -21,45 +21,19 @@ const props = defineProps({
 const configStore = useConfigStore()
 const { unit, unitSymbol } = storeToRefs(configStore)
 
-const toOffsetDate = (timestamp, timezoneOffset) => {
-  if (!Number.isFinite(timestamp) || !Number.isFinite(timezoneOffset)) return null
-  const date = new Date((timestamp + timezoneOffset) * 1000)
-  return Number.isNaN(date.getTime()) ? null : date
-}
-
-const formatDateParts = (timestamp, timezoneOffset) => {
-  const date = toOffsetDate(timestamp, timezoneOffset)
-  if (!date) return { weekday: '날짜 없음', dateLabel: '', dateTime: undefined }
-
-  return {
-    weekday: new Intl.DateTimeFormat('ko-KR', { weekday: 'short', timeZone: 'UTC' }).format(date),
-    dateLabel: new Intl.DateTimeFormat('ko-KR', { month: 'numeric', day: 'numeric', timeZone: 'UTC' }).format(date),
-    dateTime: date.toISOString().slice(0, 10),
-  }
-}
-
 const displayItems = computed(() => {
   return props.items.map((item, index) => {
-    const theme = getWeatherTheme({
-      condition: item?.weatherMain,
-      conditionId: item?.weatherId,
-      iconCode: item?.icon,
-    })
-    const date = formatDateParts(item?.timestamp, props.timezoneOffset)
+    const date = formatForecastDateParts(item?.timestamp, props.timezoneOffset)
     const minimum = convertTemperature(item?.minTemperature, unit.value)
     const maximum = convertTemperature(item?.maxTemperature, unit.value)
-    const precipitation = Number.isFinite(item?.precipitationProbability) ? item.precipitationProbability : null
 
     return {
       ...item,
       ...date,
+      ...getForecastVisual(item),
       key: `${item?.date ?? item?.timestamp ?? 'missing'}-${index}`,
-      category: theme.category,
-      isNight: theme.isNight,
-      conditionLabel: item?.weatherDescription || theme.label || '날씨 정보 없음',
       minimum,
       maximum,
-      precipitation,
     }
   })
 })

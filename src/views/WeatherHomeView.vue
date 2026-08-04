@@ -1,7 +1,6 @@
 <script setup>
-import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch, watchEffect } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { ElMessage } from 'element-plus'
-import { storeToRefs } from 'pinia'
 import { useRoute, useRouter } from 'vue-router'
 
 import BaseDashboardCard from '@/components/exercise/BaseDashboardCard.vue'
@@ -9,30 +8,28 @@ import SearchBar from '@/components/exercise/SearchBar.vue'
 import WeatherCard from '@/components/exercise/WeatherCard.vue'
 import LoadingSpinner from '@/components/weather/LoadingSpinner.vue'
 import WeatherConditionIcon from '@/components/weather/WeatherConditionIcon.vue'
+import { useDocumentTitle } from '@/composables/useDocumentTitle'
+import { useHomeWeatherDashboard } from '@/composables/useHomeWeatherDashboard'
 import { useTemperature } from '@/composables/useTemperature'
 import { CITY_CONFIG } from '@/data/cities'
-import { fetchWeatherList, hasWeatherApiKey, MissingWeatherApiKeyError } from '@/services/weatherApi'
-import { useHomeWeatherStore } from '@/stores/homeWeatherStore'
 import { matchesSearchQuery, normalizeSearchQuery } from '@/utils/search'
 import { formatWeatherDateTime, getWeatherTheme } from '@/utils/weatherTheme'
 
 const route = useRoute()
 const router = useRouter()
 
-const MISSING_API_KEY_MESSAGE = '프로젝트 루트의 .env.local 파일에 VITE_OPENWEATHER_API_KEY를 설정해 주세요.'
-const apiReady = hasWeatherApiKey()
-const homeWeatherStore = useHomeWeatherStore()
-const { weatherList, selectedCityId, lastUpdated, isCityListOpen } = storeToRefs(homeWeatherStore)
+const getRouteSelectedCityId = () => {
+  if (typeof route.query.selected !== 'string') return ''
+  return CITY_CONFIG.some((city) => city.id === route.query.selected) ? route.query.selected : ''
+}
+
+const { apiReady, errorMessage, failedCityCount, initializeWeather, isCityListOpen, isLoading, lastUpdated, loadWeather, selectedCityId, selectedCityInfo, selectedWeather, selectCity, weatherList } =
+  useHomeWeatherDashboard(getRouteSelectedCityId)
 const searchQuery = ref('')
-const selectedCityInfo = ref(apiReady ? '도시 카드를 선택해 보세요.' : '날씨 데이터를 표시할 수 없습니다.')
-const isLoading = ref(apiReady && !homeWeatherStore.hasFreshWeather())
-const errorMessage = ref(apiReady ? '' : MISSING_API_KEY_MESSAGE)
-const failedCityCount = ref(0)
 const promotingCityId = ref('')
 const isHeroPromoting = ref(false)
 const weatherHero = ref(null)
 const cityListEntry = ref(null)
-let weatherRequestId = 0
 let routeCanonicalizationId = 0
 let promotionRequestId = 0
 let promotionTimer = 0
@@ -45,10 +42,6 @@ const filteredWeatherList = computed(() => {
 
 const otherWeatherList = computed(() => {
   return filteredWeatherList.value.filter((item) => item.id !== selectedCityId.value)
-})
-
-const selectedWeather = computed(() => {
-  return weatherList.value.find((item) => item.id === selectedCityId.value) ?? null
 })
 
 const heroState = computed(() => {
@@ -107,78 +100,13 @@ const emptyStateDescription = computed(() => {
   return weatherList.value.length ? '표시할 도시가 없습니다.' : '수신된 날씨 데이터가 없습니다.'
 })
 
-const formatApiError = (error) => {
-  if (error instanceof MissingWeatherApiKeyError) {
-    return MISSING_API_KEY_MESSAGE
-  }
-  if (error.response?.status === 401) {
-    return 'API 키가 유효하지 않거나 아직 활성화되지 않았습니다.'
-  }
-  return '날씨 데이터를 불러오지 못했습니다. 네트워크와 API 사용량을 확인해 주세요.'
-}
+useDocumentTitle(() => (selectedWeather.value ? `${selectedWeather.value.name} 현재 날씨` : '오늘의 날씨'))
 
-const getRouteSelectedCityId = () => {
-  if (typeof route.query.selected !== 'string') return ''
-  return CITY_CONFIG.some((city) => city.id === route.query.selected) ? route.query.selected : ''
-}
-
-const restoreCachedWeather = () => {
-  const routeSelectedCityId = getRouteSelectedCityId()
-  const cachedSelection = weatherList.value.find((item) => item.id === routeSelectedCityId) ?? weatherList.value.find((item) => item.id === selectedCityId.value) ?? weatherList.value[0] ?? null
-
-  selectedCityId.value = cachedSelection?.id ?? ''
-  selectedCityInfo.value = cachedSelection ? `${cachedSelection.name} 날씨를 다시 표시했습니다.` : '표시할 도시가 없습니다.'
-  failedCityCount.value = 0
-  errorMessage.value = ''
-  isLoading.value = false
-}
-
-const loadWeather = async (notify = false) => {
-  const requestId = ++weatherRequestId
-  const routeSelectedCityId = getRouteSelectedCityId()
-  const previousSelectedCityId = routeSelectedCityId || selectedCityId.value
-
-  if (!apiReady) {
-    homeWeatherStore.clearWeatherData()
-    failedCityCount.value = 0
-    errorMessage.value = MISSING_API_KEY_MESSAGE
-    selectedCityInfo.value = '날씨 데이터를 표시할 수 없습니다.'
-    isLoading.value = false
-    return
-  }
-
-  isLoading.value = true
-  errorMessage.value = ''
-  failedCityCount.value = 0
-  selectedCityInfo.value = '날씨 데이터를 갱신하는 중입니다.'
-
-  try {
-    const nextWeatherList = await fetchWeatherList(CITY_CONFIG, undefined, ({ failedCount }) => {
-      if (requestId === weatherRequestId) failedCityCount.value = failedCount
-    })
-    if (requestId !== weatherRequestId) return
-
-    weatherList.value = nextWeatherList
-    const nextSelectedWeather = nextWeatherList.find((item) => item.id === previousSelectedCityId) ?? nextWeatherList[0] ?? null
-    selectedCityId.value = nextSelectedWeather?.id ?? ''
-    selectedCityInfo.value = nextSelectedWeather ? `${nextSelectedWeather.name} 날씨를 표시하고 있습니다.` : '표시할 도시가 없습니다.'
-    lastUpdated.value = new Intl.DateTimeFormat('ko-KR', {
-      dateStyle: 'medium',
-      timeStyle: 'short',
-    }).format(new Date())
-    homeWeatherStore.markWeatherLoaded()
-    if (notify) ElMessage.success('실시간 날씨를 갱신했습니다.')
-  } catch (error) {
-    if (requestId !== weatherRequestId) return
-
-    homeWeatherStore.clearWeatherData()
-    failedCityCount.value = 0
-    errorMessage.value = formatApiError(error)
-    selectedCityInfo.value = '날씨 데이터를 표시할 수 없습니다.'
-    if (notify) ElMessage.error('날씨 데이터 요청에 실패했습니다.')
-  } finally {
-    if (requestId === weatherRequestId) isLoading.value = false
-  }
+const refreshWeather = () => {
+  void loadWeather({
+    onSuccess: () => ElMessage.success('실시간 날씨를 갱신했습니다.'),
+    onError: () => ElMessage.error('날씨 데이터 요청에 실패했습니다.'),
+  })
 }
 
 const syncSelectedRoute = (cityId) => {
@@ -190,8 +118,7 @@ const syncSelectedRoute = (cityId) => {
 }
 
 const applySelection = (city) => {
-  selectedCityId.value = city.id
-  selectedCityInfo.value = city.name + '이 선택되었습니다.'
+  selectCity(city)
   void syncSelectedRoute(city.id)
 }
 
@@ -264,16 +191,10 @@ const toggleCityList = () => {
 }
 
 onMounted(() => {
-  if (apiReady && homeWeatherStore.hasFreshWeather()) {
-    restoreCachedWeather()
-    return
-  }
-
-  void loadWeather()
+  initializeWeather()
 })
 
 onBeforeUnmount(() => {
-  weatherRequestId += 1
   promotionRequestId += 1
   window.clearTimeout(promotionTimer)
 })
@@ -320,10 +241,6 @@ watch(searchQuery, (newQuery, oldQuery) => {
     query: { ...route.query, search: normalizedQuery || undefined },
   })
 })
-
-watchEffect(() => {
-  document.title = selectedWeather.value ? `${selectedWeather.value.name} 현재 날씨 | Weather` : '오늘의 날씨 | Weather'
-})
 </script>
 
 <template>
@@ -342,7 +259,7 @@ watchEffect(() => {
           tabindex="-1"
         >
           <p class="sr-only" aria-live="polite">{{ heroAnnouncement }}</p>
-          <button class="refresh-button" type="button" :disabled="!apiReady || isLoading" :aria-label="isLoading ? '날씨 갱신 중' : '날씨 새로고침'" @click="loadWeather(true)">
+          <button class="refresh-button" type="button" :disabled="!apiReady || isLoading" :aria-label="isLoading ? '날씨 갱신 중' : '날씨 새로고침'" @click="refreshWeather">
             <svg viewBox="0 0 24 24" :class="{ 'is-spinning': isLoading }" aria-hidden="true">
               <path d="M20 6v5h-5" />
               <path d="M18.2 15a7 7 0 1 1-.7-7.1L20 11" />

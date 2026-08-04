@@ -1,5 +1,9 @@
 import axios from 'axios'
 
+import { MissingWeatherApiKeyError } from './weatherErrors.js'
+
+export { MissingWeatherApiKeyError } from './weatherErrors.js'
+
 const API_URL = 'https://api.openweathermap.org/data/2.5/weather'
 const FORECAST_API_URL = 'https://api.openweathermap.org/data/2.5/forecast'
 
@@ -95,13 +99,6 @@ const mapDailyForecast = (entries, timezoneOffset) => {
 }
 
 const getWeatherApiKey = () => import.meta.env?.VITE_OPENWEATHER_API_KEY
-
-export class MissingWeatherApiKeyError extends Error {
-  constructor() {
-    super('OpenWeatherMap API 키가 설정되지 않았습니다.')
-    this.name = 'MissingWeatherApiKeyError'
-  }
-}
 
 export const hasWeatherApiKey = () => {
   const key = getWeatherApiKey()

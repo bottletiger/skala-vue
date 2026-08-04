@@ -4,8 +4,9 @@ import { storeToRefs } from 'pinia'
 
 import WeatherConditionIcon from '@/components/weather/WeatherConditionIcon.vue'
 import { useConfigStore } from '@/stores/configStore'
+import { formatForecastDay, getForecastVisual, toIsoDateTime } from '@/utils/forecastPresentation'
 import { convertTemperature } from '@/utils/temperature'
-import { formatWeatherTime, getWeatherTheme } from '@/utils/weatherTheme'
+import { formatWeatherTime } from '@/utils/weatherTheme'
 
 const props = defineProps({
   items: {
@@ -21,51 +22,18 @@ const props = defineProps({
 const configStore = useConfigStore()
 const { unit, unitSymbol } = storeToRefs(configStore)
 
-const toDate = (timestamp, timezoneOffset) => {
-  if (!Number.isFinite(timestamp) || !Number.isFinite(timezoneOffset)) return null
-  const date = new Date((timestamp + timezoneOffset) * 1000)
-  return Number.isNaN(date.getTime()) ? null : date
-}
-
-const formatForecastDay = (timestamp, timezoneOffset) => {
-  const date = toDate(timestamp, timezoneOffset)
-  if (!date) return '날짜 정보 없음'
-
-  return new Intl.DateTimeFormat('ko-KR', {
-    month: 'numeric',
-    day: 'numeric',
-    weekday: 'short',
-    timeZone: 'UTC',
-  }).format(date)
-}
-
-const toIsoDateTime = (timestamp) => {
-  if (!Number.isFinite(timestamp)) return undefined
-  const date = new Date(timestamp * 1000)
-  return Number.isNaN(date.getTime()) ? undefined : date.toISOString()
-}
-
 const displayItems = computed(() => {
   return props.items.map((item, index) => {
-    const theme = getWeatherTheme({
-      condition: item?.weatherMain,
-      conditionId: item?.weatherId,
-      iconCode: item?.icon,
-    })
     const temperature = convertTemperature(item?.temperature, unit.value)
-    const precipitation = Number.isFinite(item?.precipitationProbability) ? item.precipitationProbability : null
 
     return {
       ...item,
+      ...getForecastVisual(item),
       key: `${item?.timestamp ?? 'missing'}-${index}`,
-      category: theme.category,
-      isNight: theme.isNight,
-      conditionLabel: item?.weatherDescription || theme.label || '날씨 정보 없음',
       dateLabel: formatForecastDay(item?.timestamp, props.timezoneOffset),
       timeLabel: formatWeatherTime(item?.timestamp, props.timezoneOffset),
       dateTime: toIsoDateTime(item?.timestamp),
       temperature,
-      precipitation,
     }
   })
 })
