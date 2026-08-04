@@ -19,6 +19,10 @@
         <ExDefaultSlotParent></ExDefaultSlotParent>
         <ExNamedSlotParent></ExNamedSlotParent>
         <ExScopedSlotParent></ExScopedSlotParent>
+
+        <h1>Day 3</h1>
+        <ExAxios></ExAxios>
+        <ExRun></ExRun>
     </main>
 </template>
 
@@ -38,6 +42,8 @@ import ExPropsEmitsParent from './basic/practice/exPropsEmitsParent.vue'
 import ExDefaultSlotParent from './basic/practice/slot/exDefaultSlotParent.vue'
 import ExNamedSlotParent from './basic/practice/slot/exNamedSlotParent.vue'
 import ExScopedSlotParent from './basic/practice/slot/exScopedSlotParent.vue'
+import ExAxios from './basic/practice/exAxios.vue'
+import ExRun from './basic/practice/exRun.vue'
 </script>
 
 <style scoped>

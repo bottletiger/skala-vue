@@ -8,4 +8,5 @@ export const cities = [
   { id: '07', name: 'Busan' , name_kr: '부산'},
   { id: '08', name: 'Daegu' , name_kr: '대구'},
   { id: '09', name: 'Ulsan' , name_kr: '울산'},
+  { id: '10', name: 'Seongnam' , name_kr: '성남'}
 ]

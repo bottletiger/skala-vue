@@ -17,6 +17,15 @@ const route = useRoute()
 </script>
 
 <style scoped>
+
+@keyframes rotation {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
 .not-found {
   margin: 40px auto 0;
   padding: 42px 24px;
@@ -30,6 +39,8 @@ const route = useRoute()
 .weather-icon {
   margin-bottom: 4px;
   font-size: 44px;
+  animation: rotation 2s infinite linear;
+
 }
 
 h2 {
