@@ -9,14 +9,14 @@
 
       <div class="temperature">
         <img :src="weatherIcon" :alt="detail.weather[0].description" />
-        <strong>{{ Math.round(detail.main.temp) }}°</strong>
+        <strong>{{ configStore.formatTemp(Math.round(detail.main.temp)) }}</strong>
       </div>
     </header>
 
     <div class="summary-grid">
       <article class="summary-card">
         <span>🌡️ 체감온도</span>
-        <strong>{{ Math.round(detail.main.feels_like) }}°C</strong>
+        <strong>{{ configStore.formatTemp(Math.round(detail.main.feels_like)) }}</strong>
       </article>
       <article class="summary-card">
         <span>💧 습도</span>
@@ -37,7 +37,7 @@
       <dl>
         <div>
           <dt>최저 / 최고 기온</dt>
-          <dd>{{ detail.main.temp_min }}° / {{ detail.main.temp_max }}°</dd>
+          <dd>{{ configStore.formatTemp(detail.main.temp_min )}}° / {{ configStore.formatTemp(detail.main.temp_max) }}°</dd>
         </div>
         <div>
           <dt>기압</dt>
@@ -77,7 +77,8 @@
 
 <script setup>
 import { computed } from 'vue'
-
+import { useConfigStore } from '@/stores/configStore'
+const configStore = useConfigStore();
 const city = window.history.state?.city ?? null
 const detail = city?.detail ?? null
 

@@ -63,7 +63,6 @@ const API_SUCCESS = 'OpenWeather API 데이터 로드 성공';
 const API_FAIL = 'OpenWeather API 데이터 로드 실패';
 const weatherList = ref([]);
 const apiStatus = ref('loading');
-
 onMounted(async () => {
   try {
     weatherList.value = await getWeatherList();
@@ -75,7 +74,6 @@ onMounted(async () => {
 })
 
 const temperatureFilter = ref('all');
-
 const filteredWeatherList = computed(() => {
   const keywords = searchQuery.value
     .split(',')

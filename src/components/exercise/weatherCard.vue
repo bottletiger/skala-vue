@@ -8,13 +8,13 @@
 
         <p >🌡️ 현재 기온: 
           <span :style="{color: cityItem.temp >= hotTemperature ? 'red': 'blue' }">
-            {{ cityItem.temp }}°C
+            {{ configStore.formatTemp(cityItem.temp) }}
           </span>
         </p>
 
         <p>👤 체감온도: 
           <span :style="{color: cityItem.main.feels_like >= hotTemperature ? 'red': 'blue' }">
-              {{ Math.round(cityItem.main.feels_like)}}°C
+              {{ configStore.formatTemp(Math.round(cityItem.main.feels_like))}}
           </span>
         </p>
 
@@ -30,18 +30,19 @@
 </template>
 
 <script setup>
-    defineProps({
-        cityItem: {
-            type: Object,
-            required: true,
-        },
-        hotTemperature: {
-            type:Number,
-            required: true,
-        }
-    })
-
-    const emit = defineEmits(['select-card','click-detail'])
+  import { useConfigStore } from '@/stores/configStore';
+  defineProps({
+      cityItem: {
+          type: Object,
+          required: true,
+      },
+      hotTemperature: {
+          type:Number,
+          required: true,
+      }
+  })
+  const emit = defineEmits(['select-card','click-detail'])
+  const configStore = useConfigStore();
 </script>
 
 <style scoped>
