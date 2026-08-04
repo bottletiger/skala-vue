@@ -26,7 +26,6 @@ const navigationStyle = computed(() => ({
       class="app-navigation"
       :class="{
         'app-navigation--weather': isWeatherScene,
-        'app-navigation--without-unit': isLabScene,
       }"
     >
       <nav class="primary-navigation" :class="{ 'has-active-route': activeNavigationIndex >= 0 }" :style="navigationStyle" aria-label="주요 메뉴">
@@ -54,7 +53,7 @@ const navigationStyle = computed(() => ({
         </RouterLink>
       </nav>
 
-      <UnitToggler v-if="isWeatherScene" />
+      <UnitToggler />
     </header>
 
     <main
@@ -120,10 +119,6 @@ const navigationStyle = computed(() => ({
   backdrop-filter: blur(24px) saturate(135%);
   -webkit-backdrop-filter: blur(24px) saturate(135%);
   transform: translateX(-50%);
-}
-
-.app-navigation--without-unit {
-  width: min(520px, calc(100% - 24px));
 }
 
 .app-navigation--weather {
@@ -336,7 +331,7 @@ const navigationStyle = computed(() => ({
     height: 15px;
   }
 
-  .page-container:not(.page-container--weather) {
+  .page-container:not(.page-container--weather):not(.page-container--lab) {
     width: min(100% - 28px, 1120px);
   }
 }

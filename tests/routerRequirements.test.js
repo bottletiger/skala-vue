@@ -115,6 +115,14 @@ test('Navigation Bar는 하단 고정형이며 활성 RouterLink 표시가 슬�
   assert.match(appSource, /route\.name === 'WeatherHome' \|\| route\.name === 'WeatherDetail'/)
 })
 
+test('Navigation Bar는 모든 탭에서 온도 전환을 유지하고 모바일 Lab 화면을 전체 폭으로 표시한다', () => {
+  const appSource = readSource('../src/App.vue')
+
+  assert.match(appSource, /<UnitToggler\s*\/>/)
+  assert.doesNotMatch(appSource, /UnitToggler v-if|app-navigation--without-unit/)
+  assert.match(appSource, /\.page-container:not\(\.page-container--weather\):not\(\.page-container--lab\)/)
+})
+
 test('Hero는 배경에 직접 표시하고 검색과 새로고침을 지정 위치에 배치한다', () => {
   const homeSource = readSource('../src/views/WeatherHomeView.vue')
   const heroStart = homeSource.indexOf('ref="weatherHero"')
