@@ -1,7 +1,5 @@
 <template>
     <div class="container">
-        <h1 class="title">과제 3: 날씨 (components)</h1>
-        <hr style="border: 0; border-top: 1px solid lightgray;"> <br>
         <BaseDashboardCard>
             <SearchBar 
                 :cur-query="searchQuery" 
@@ -47,30 +45,24 @@ import BaseDashboardCard from './BaseDashboardCard.vue';
 import SearchBar from './SearchBar.vue';
 import WeatherCard from './weatherCard.vue';
 import { getWeatherList } from '@/api/weatherApi';
+import { RouterLink, useRouter } from 'vue-router';
+
+
+const searchQuery = ref('');
+// - searchQuery 감시 (watchEffect 이용): 도시 검색어를 타이핑할 때 마다 변하는 searchQuery를 추적하여 콘솔로그로 작성
+const updateSearchQuery = (query) => {
+    searchQuery.value = query;
+}
+watchEffect(() => {
+  console.log(`[watchEffect 자동 호출] 현재 검색어 '${searchQuery.value}' 에 매칭되는 API 데이터를 필터링했습니다`)
+})
 
 const HOT_TEMPERATURE= 28;
 const API_LOADING = 'OpenWeather API 데이터 불러오는 중...';
 const API_SUCCESS = 'OpenWeather API 데이터 로드 성공';
 const API_FAIL = 'OpenWeather API 데이터 로드 실패';
-const searchQuery = ref('');
-// - searchQuery 감시 (watchEffect 이용): 도시 검색어를 타이핑할 때 마다 변하는 searchQuery를 추적하여 콘솔로그로 작성
-watchEffect(() => {
-  console.log(`[watchEffect 자동 호출] 현재 검색어 '${searchQuery.value}' 에 매칭되는 API 데이터를 필터링했습니다`)
-})
-
-
-const updateSearchQuery = (query) => {
-    searchQuery.value = query;
-}
-
 const weatherList = ref([]);
 const apiStatus = ref('loading');
-
-const selectedCityInfo = ref('카드를 클릭하거나 검색해 보세요.');
-// - selectedCityInfo 감시 (watch 이용): 상태바 문구가 바뀔때 마다 콘솔로그를 작성
-watch(selectedCityInfo, (newValue, oldValue) => {
-  console.log('[watch 감지] 상태 바 문구가 업데이트 되었습니다. ->', newValue)
-})
 
 onMounted(async () => {
   try {
@@ -116,21 +108,33 @@ const filteredWeatherList = computed(() => {
 
   return result
 })
+
+const selectedCityInfo = ref('카드를 클릭하거나 검색해 보세요.');
+// - selectedCityInfo 감시 (watch 이용): 상태바 문구가 바뀔때 마다 콘솔로그를 작성
+watch(selectedCityInfo, (newValue, oldValue) => {
+  console.log('[watch 감지] 상태 바 문구가 업데이트 되었습니다. ->', newValue)
+})
 const selectCity = (city) => {
   selectedCityInfo.value =
     `${city.name_kr ?? city.name}이(가) 선택되었습니다.`
 }
 
+const router = useRouter();
 const showDetail = (city) => {
-  window.alert(
-    `${city.name_kr ?? city.name}의 현재 날씨는 [${city.status}] 상태입니다.`,
-  )
+  router.push({
+    name: 'detail',
+    params: {
+      cityId: city.id,
+    },
+    state: {
+      city: JSON.parse(JSON.stringify(city)),
+    },
+  })
 }
 </script>
 
 <style scoped>
 .container {
-  width: min(100%, 600px);
   margin: 2rem auto 0;
 }
 .status-bar {
@@ -176,4 +180,5 @@ const showDetail = (city) => {
 .api-status--error {
   color: #b91c1c;
 }
+
 </style>

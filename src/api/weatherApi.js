@@ -52,6 +52,7 @@ export const getWeatherList = async () => {
         visibility: data.visibility,
         wind: data.wind,
         clouds: data.clouds,
+        detail: data
       }
     }),
   )

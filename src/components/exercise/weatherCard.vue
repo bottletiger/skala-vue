@@ -21,8 +21,9 @@
         <p>💦 습도: {{ cityItem.main.humidity }}%</p>
         <span v-if="cityItem.temp >= hotTemperature" class="badge hot">🔥 더움 </span>
         <span v-else class="badge cool">❄️ 선선함</span>
-
-        <button class="detail-button" @click.stop="emit('click-detail', cityItem)">
+        <button 
+          class="detail-button" 
+          @click.stop="emit('click-detail', cityItem)">
         상세보기
         </button>
     </div>

@@ -1,23 +1,15 @@
 <script setup>
-import WeatherParent from '@/components/basic/exercise/weatherParent.vue';
-import WeatherMockup from '../components/basic/exercise/WeatherMockup.vue'
+import WeatherParent from '@/components/exercise/weatherParent.vue';
+// import WeatherMockup from '../components/exercise/WeatherMockup.vue'
 </script>
 
 <template>
   <main class="assignment-page">
-    <RouterLink class="back-link" to="/">← 처음으로</RouterLink>
-    <p class="eyebrow">과제</p>
-    <!-- <WeatherMockup /> -->
     <WeatherParent></WeatherParent>
   </main>
 </template>
 
 <style scoped>
-.assignment-page {
-  width: min(100%, 900px);
-  margin: 0 auto;
-  padding-top: clamp(2rem, 8vh, 5rem);
-}
 
 .back-link {
   display: inline-block;

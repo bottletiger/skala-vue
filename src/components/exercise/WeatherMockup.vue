@@ -112,7 +112,6 @@ const filteredWeatherList = computed(() => {
           <span :style="{color: item.main.feels_like >= HOT_TEMPERATURE ? 'red': 'blue' }">
               {{ Math.round(item.main.feels_like)}}°C
           </span>
-        
         </p>
         <p>💦 습도: {{ item.main.humidity }}%</p>
         <span v-if="item.temp >= HOT_TEMPERATURE" class="badge hot">🔥 더움 </span>
