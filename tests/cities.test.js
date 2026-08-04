@@ -6,14 +6,14 @@ import { CITY_CONFIG, findCityConfig } from '../src/data/cities.js'
 const EXPECTED_CITIES = [
   ['city_01', '서울'],
   ['city_02', '수원'],
-  ['city_03', '부산'],
+  ['city_10', '세종'],
   ['city_04', '인천'],
+  ['city_03', '부산'],
   ['city_05', '대전'],
   ['city_06', '대구'],
   ['city_07', '광주'],
   ['city_08', '울산'],
   ['city_09', '제주'],
-  ['city_10', '세종'],
 ]
 
 test('날씨 목록에 기존 도시와 추가 주요 도시를 안정적인 순서로 제공한다', () => {

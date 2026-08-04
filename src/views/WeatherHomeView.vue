@@ -224,6 +224,16 @@ watch(
   { immediate: true },
 )
 
+watch(
+  () => normalizeSearchQuery(searchQuery.value),
+  (normalizedQuery) => {
+    if (normalizedQuery && !isCityListOpen.value) {
+      isCityListOpen.value = true
+    }
+  },
+  { immediate: true },
+)
+
 watch(searchQuery, (newQuery, oldQuery) => {
   const normalizedQuery = normalizeSearchQuery(newQuery)
 

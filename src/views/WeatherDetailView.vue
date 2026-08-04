@@ -32,8 +32,11 @@ const {
   forecastTimezoneOffset,
   isForecastLoading,
   isLoading,
+  refreshDetail,
   weatherTheme,
 } = useCityWeatherDetail(cityId, redirectUnknownCity)
+
+const isRefreshing = computed(() => isLoading.value || isForecastLoading.value)
 
 useDocumentTitle(() => {
   const cityName = cityData.value?.name ?? cityConfig.value?.name
@@ -66,6 +69,19 @@ onMounted(async () => {
           <span>현재 날씨</span>
           <h1 id="detail-page-title" ref="detailPageHeading" tabindex="-1">{{ cityConfig?.name || '도시 확인 중' }}</h1>
         </div>
+
+        <button
+          type="button"
+          class="detail-refresh-button"
+          :disabled="!cityConfig || !apiReady || isRefreshing"
+          :aria-label="isRefreshing ? '상세 날씨 갱신 중' : `${cityConfig?.name ?? '도시'} 상세 날씨 새로고침`"
+          @click="refreshDetail"
+        >
+          <svg viewBox="0 0 24 24" :class="{ 'is-spinning': isRefreshing }" aria-hidden="true">
+            <path d="M20 6v5h-5" />
+            <path d="M18.2 15a7 7 0 1 1-.7-7.1L20 11" />
+          </svg>
+        </button>
       </header>
 
       <section class="current-panel" :aria-busy="isLoading" :aria-labelledby="cityData ? 'detail-page-title detail-weather-title' : undefined" :aria-label="cityData ? undefined : detailStatusMessage">
@@ -192,7 +208,7 @@ onMounted(async () => {
 
 .detail-topbar {
   display: grid;
-  grid-template-columns: auto 1fr;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
   gap: 14px;
   min-height: 44px;
@@ -201,7 +217,8 @@ onMounted(async () => {
   background: transparent;
 }
 
-.back-button {
+.back-button,
+.detail-refresh-button {
   display: grid;
   width: 44px;
   height: 44px;
@@ -217,7 +234,8 @@ onMounted(async () => {
     transform 180ms ease;
 }
 
-.back-button svg {
+.back-button svg,
+.detail-refresh-button svg {
   width: 20px;
   fill: none;
   stroke: currentcolor;
@@ -226,9 +244,25 @@ onMounted(async () => {
   stroke-width: 2;
 }
 
-.back-button:focus-visible {
+.detail-refresh-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
+}
+
+.back-button:focus-visible,
+.detail-refresh-button:focus-visible {
   outline: 2px solid color-mix(in srgb, var(--weather-accent) 72%, white);
   outline-offset: 2px;
+}
+
+.detail-refresh-button svg.is-spinning {
+  animation: detail-refresh-spin 900ms linear infinite;
+}
+
+@keyframes detail-refresh-spin {
+  to {
+    transform: rotate(1turn);
+  }
 }
 
 .topbar-title span,
@@ -340,7 +374,8 @@ onMounted(async () => {
 }
 
 @media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
-  .back-button:hover {
+  .back-button:hover,
+  .detail-refresh-button:hover:not(:disabled) {
     background: rgba(255, 255, 255, 0.14);
     color: var(--hero-text);
     transform: translateY(-1px);
@@ -373,13 +408,19 @@ onMounted(async () => {
     transition: none;
   }
 
-  .back-button {
+  .back-button,
+  .detail-refresh-button {
     transition: none;
   }
 
   .back-button:hover,
+  .detail-refresh-button:hover:not(:disabled),
   .current-panel:hover :deep(.current-visual) {
     transform: none;
+  }
+
+  .detail-refresh-button svg.is-spinning {
+    animation: none;
   }
 }
 </style>

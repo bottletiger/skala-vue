@@ -164,6 +164,14 @@ test('검색창 아래 버튼으로 도시 목록을 처음에는 숨기고 펼�
   assert.doesNotMatch(homeSource, /weather-scroll-snap|scroll-snap-/)
 })
 
+test('도시 검색을 시작하면 닫힌 목록을 자동으로 펼친다', () => {
+  const homeSource = readSource('../src/views/WeatherHomeView.vue')
+
+  assert.match(homeSource, /watch\(\s*\(\) => normalizeSearchQuery\(searchQuery\.value\),/)
+  assert.match(homeSource, /if \(normalizedQuery && !isCityListOpen\.value\) \{\s*isCityListOpen\.value = true/)
+  assert.match(homeSource, /\{ immediate: true \},\s*\)\s*\n\s*watch\(searchQuery/)
+})
+
 test('히스토리로 홈에 돌아오면 최근 날씨와 펼친 목록 상태를 cache에서 즉시 복원한다', () => {
   const homeSource = readSource('../src/views/WeatherHomeView.vue')
   const dashboardSource = readSource('../src/composables/useHomeWeatherDashboard.js')
@@ -236,7 +244,7 @@ test('상세 화면은 compact 현재 요약과 단일 행 목록형 상세 패�
   assert.ok(currentSummary >= 0 && detailsSection > currentSummary && hourlyForecast > detailsSection && dailyForecast > hourlyForecast)
   assert.match(routerSource, /meta:\s*\{\s*title:\s*'도시 날씨',\s*layout:\s*'weather-scene'\s*\}/)
   assert.match(detailSource, /\.detail-topbar\s*\{[^}]*border:\s*0;[^}]*background:\s*transparent;/s)
-  assert.match(detailSource, /\.back-button\s*\{[^}]*width:\s*44px;[^}]*height:\s*44px;[^}]*border:\s*0;[^}]*background:\s*transparent;/s)
+  assert.match(detailSource, /\.back-button,\s*\.detail-refresh-button\s*\{[^}]*width:\s*44px;[^}]*height:\s*44px;[^}]*border:\s*0;[^}]*background:\s*transparent;/s)
   assert.match(detailSource, /\.current-panel\s*\{[^}]*border:\s*0;[^}]*background:\s*transparent;[^}]*box-shadow:\s*none;/s)
   assert.match(currentSummarySource, /\.current-content\s*\{[^}]*grid-template-columns:\s*82px minmax\(0, 1fr\) auto;/s)
   assert.match(currentSummarySource, /\.current-visual\s*\{[^}]*width:\s*82px;[^}]*height:\s*82px;/s)
@@ -284,7 +292,22 @@ test('상세 화면은 현재 날씨와 분리된 3시간·5일 예보 상태와
   assert.match(dailySource, /<ol class="daily-list">/)
 })
 
-test('소개 화면은 날씨 배경과 메인 계열의 기능 카드·quiet 복귀 링크를 사용한다', () => {
+test('상세 화면 우상단에서 현재 날씨와 예보를 함께 새로고침한다', () => {
+  const detailSource = readSource('../src/views/WeatherDetailView.vue')
+  const detailWeatherSource = readSource('../src/composables/useCityWeatherDetail.js')
+  const titleStart = detailSource.indexOf('class="topbar-title"')
+  const refreshButton = detailSource.indexOf('class="detail-refresh-button"')
+
+  assert.ok(titleStart >= 0 && refreshButton > titleStart)
+  assert.match(detailSource, /const isRefreshing = computed\(\(\) => isLoading\.value \|\| isForecastLoading\.value\)/)
+  assert.match(detailSource, /class="detail-refresh-button"[\s\S]*?:disabled="!cityConfig \|\| !apiReady \|\| isRefreshing"[\s\S]*?@click="refreshDetail"/)
+  assert.match(detailSource, /\.detail-topbar\s*\{[^}]*grid-template-columns:\s*auto minmax\(0, 1fr\) auto;/s)
+  assert.match(detailSource, /\.detail-refresh-button svg\.is-spinning\s*\{[^}]*animation:\s*detail-refresh-spin 900ms linear infinite;/s)
+  assert.match(detailWeatherSource, /const refreshDetail = \(\) => loadDetail\(cityConfig\.value\)/)
+  assert.match(detailWeatherSource, /isLoading,\s*refreshDetail,\s*weatherTheme/)
+})
+
+test('소개 화면은 실제 제공 범위·예보 기준·기술 구성을 구체적으로 안내한다', () => {
   const routerSource = readSource('../src/router/index.js')
   const aboutSource = readSource('../src/views/WeatherAboutView.vue')
 
@@ -294,5 +317,12 @@ test('소개 화면은 날씨 배경과 메인 계열의 기능 카드·quiet �
   assert.match(aboutSource, /\.about-shell\s*\{[^}]*border:\s*0;[^}]*background:\s*transparent;/s)
   assert.match(aboutSource, /\.feature-grid\s*\{[^}]*grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\)/s)
   assert.match(aboutSource, /\.feature-card\s*\{[^}]*border:\s*1px solid rgba\(255, 255, 255, 0\.22\)/s)
+  assert.match(aboutSource, /대한민국 10개 도시/)
+  assert.match(aboutSource, /초성, 완성 전 음절과 두벌식 영문 오타/)
+  assert.match(aboutSource, /3시간 간격의 기온·날씨·강수확률/)
+  assert.match(aboutSource, /Current Weather<br \/>5 Day \/ 3 Hour Forecast/)
+  assert.match(aboutSource, /const technologyStack = \['Vue 3', 'Vue Router', 'Pinia', 'Axios', 'Element Plus'\]/)
+  assert.match(aboutSource, /\.service-facts\s*\{[^}]*grid-template-columns:\s*repeat\(3, minmax\(0, 1fr\)\);/s)
+  assert.match(aboutSource, /\.data-panel\s*\{[^}]*grid-template-columns:\s*minmax\(240px, 0\.78fr\) minmax\(0, 1\.35fr\);/s)
   assert.match(aboutSource, /\.home-link\s*\{[^}]*min-height:\s*44px;[^}]*border:\s*0;[^}]*background:\s*transparent;/s)
 })

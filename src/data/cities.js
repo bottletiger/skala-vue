@@ -14,11 +14,11 @@ export const CITY_CONFIG = Object.freeze([
     longitude: 127.0286,
   },
   {
-    id: 'city_03',
-    name: '부산',
-    fullName: '대한민국 부산광역시',
-    latitude: 35.1796,
-    longitude: 129.0756,
+    id: 'city_10',
+    name: '세종',
+    fullName: '대한민국 세종특별자치시',
+    latitude: 36.48,
+    longitude: 127.289,
   },
   {
     id: 'city_04',
@@ -26,6 +26,13 @@ export const CITY_CONFIG = Object.freeze([
     fullName: '대한민국 인천광역시',
     latitude: 37.4563,
     longitude: 126.7052,
+  },
+  {
+    id: 'city_03',
+    name: '부산',
+    fullName: '대한민국 부산광역시',
+    latitude: 35.1796,
+    longitude: 129.0756,
   },
   {
     id: 'city_05',
@@ -61,13 +68,6 @@ export const CITY_CONFIG = Object.freeze([
     fullName: '대한민국 제주특별자치도 제주시',
     latitude: 33.4996,
     longitude: 126.5312,
-  },
-  {
-    id: 'city_10',
-    name: '세종',
-    fullName: '대한민국 세종특별자치시',
-    latitude: 36.48,
-    longitude: 127.289,
   },
 ])
 

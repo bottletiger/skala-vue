@@ -107,6 +107,8 @@ export const useCityWeatherDetail = (cityIdSource, redirectUnknownCity) => {
     await Promise.allSettled([currentWeatherRequest, forecastRequest])
   }
 
+  const refreshDetail = () => loadDetail(cityConfig.value)
+
   watch(
     () => toValue(cityIdSource),
     (cityId) => void loadDetail(findCityConfig(cityId)),
@@ -129,6 +131,7 @@ export const useCityWeatherDetail = (cityIdSource, redirectUnknownCity) => {
     forecastTimezoneOffset,
     isForecastLoading,
     isLoading,
+    refreshDetail,
     weatherTheme,
   }
 }
