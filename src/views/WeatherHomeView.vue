@@ -1,5 +1,5 @@
 <script setup>
-import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch, watchEffect } from 'vue'
 import { ElMessage } from 'element-plus'
 import { useRoute, useRouter } from 'vue-router'
 
@@ -7,6 +7,7 @@ import BaseDashboardCard from '@/components/exercise/BaseDashboardCard.vue'
 import SearchBar from '@/components/exercise/SearchBar.vue'
 import WeatherCard from '@/components/exercise/WeatherCard.vue'
 import LoadingSpinner from '@/components/weather/LoadingSpinner.vue'
+import TemperatureConditionLabel from '@/components/weather/TemperatureConditionLabel.vue'
 import WeatherConditionIcon from '@/components/weather/WeatherConditionIcon.vue'
 import { useDocumentTitle } from '@/composables/useDocumentTitle'
 import { useHomeWeatherDashboard } from '@/composables/useHomeWeatherDashboard'
@@ -34,8 +35,10 @@ let routeCanonicalizationId = 0
 let promotionRequestId = 0
 let promotionTimer = 0
 
+const normalizedSearchQuery = computed(() => normalizeSearchQuery(searchQuery.value))
+
 const filteredWeatherList = computed(() => {
-  const query = normalizeSearchQuery(searchQuery.value)
+  const query = normalizedSearchQuery.value
   if (!query) return weatherList.value
   return weatherList.value.filter((item) => matchesSearchQuery(item.name, query))
 })
@@ -91,8 +94,8 @@ const heroAnnouncement = computed(() => {
 })
 
 const emptyStateDescription = computed(() => {
-  if (normalizeSearchQuery(searchQuery.value) && filteredWeatherList.value.length === 0) {
-    return `'${normalizeSearchQuery(searchQuery.value)}' 검색 결과가 없습니다.`
+  if (normalizedSearchQuery.value && filteredWeatherList.value.length === 0) {
+    return `'${normalizedSearchQuery.value}' 검색 결과가 없습니다.`
   }
   if (filteredWeatherList.value.length === 1 && selectedWeather.value?.id === filteredWeatherList.value[0]?.id) {
     return '현재 선택한 도시 외에 표시할 도시가 없습니다.'
@@ -122,8 +125,22 @@ const applySelection = (city) => {
   void syncSelectedRoute(city.id)
 }
 
+const showCitySelectionMessage = (city) => {
+  ElMessage({
+    message: `${city.name}이 선택되었습니다.`,
+    type: 'primary',
+    plain: true,
+    duration: 1500,
+    grouping: true,
+    showClose: false,
+    customClass: 'weather-selection-message',
+  })
+}
+
 const handleSelect = async (city) => {
   if (city.id === selectedCityId.value) return
+
+  showCitySelectionMessage(city)
 
   const requestId = ++promotionRequestId
   window.clearTimeout(promotionTimer)
@@ -251,6 +268,16 @@ watch(searchQuery, (newQuery, oldQuery) => {
     query: { ...route.query, search: normalizedQuery || undefined },
   })
 })
+
+if (import.meta.env.DEV) {
+  watch(selectedCityInfo, (message) => {
+    console.log(`[watch] 선택 상태 변경: ${message}`)
+  })
+
+  watchEffect(() => {
+    console.log(`[watchEffect] 검색어 변경: ${searchQuery.value}`)
+  })
+}
 </script>
 
 <template>
@@ -286,9 +313,12 @@ watch(searchQuery, (newQuery, oldQuery) => {
               <div class="hero-icon">
                 <WeatherConditionIcon :category="heroTheme.category" :is-night="heroTheme.isNight" />
               </div>
-              <div class="hero-temperature" :class="{ missing: !hasHeroTemperature }">
-                <strong>{{ hasHeroTemperature ? heroTemp : '정보 없음' }}</strong>
-                <span v-if="hasHeroTemperature">{{ unitSymbol }}</span>
+              <div class="hero-temperature-stack">
+                <div class="hero-temperature" :class="{ missing: !hasHeroTemperature }">
+                  <strong>{{ hasHeroTemperature ? heroTemp : '정보 없음' }}</strong>
+                  <span v-if="hasHeroTemperature">{{ unitSymbol }}</span>
+                </div>
+                <TemperatureConditionLabel v-if="hasHeroTemperature" class="hero-temperature-condition" :temperature="heroWeather.temp" />
               </div>
             </div>
 
@@ -353,12 +383,13 @@ watch(searchQuery, (newQuery, oldQuery) => {
       <Transition name="city-list" @after-enter="scrollToOpenedCityList">
         <div v-show="isCityListOpen" class="city-list-reveal">
           <section id="city-weather-region" class="city-section" aria-label="도시별 날씨 목록">
+            <p v-if="isCityListOpen && normalizedSearchQuery" class="search-result-label" role="status">[{{ normalizedSearchQuery }}] 검색 결과</p>
             <p v-if="failedCityCount" class="partial-warning" role="status">{{ failedCityCount }}개 도시는 잠시 불러오지 못했습니다.</p>
             <BaseDashboardCard class="weather-content" :aria-busy="isLoading">
-              <div v-if="isLoading" class="state-panel loading-state">
+              <div v-if="isLoading" class="state-panel dashboard-surface dashboard-surface--state loading-state">
                 <el-skeleton :rows="3" animated />
               </div>
-              <div v-else-if="errorMessage" class="state-panel">
+              <div v-else-if="errorMessage" class="state-panel dashboard-surface dashboard-surface--state">
                 <el-result :icon="apiReady ? 'error' : 'warning'" title="날씨 정보를 표시할 수 없습니다" :sub-title="errorMessage" />
               </div>
               <div v-else-if="otherWeatherList.length" class="weather-results">
@@ -375,7 +406,7 @@ watch(searchQuery, (newQuery, oldQuery) => {
                   />
                 </div>
               </div>
-              <div v-else class="state-panel empty-state">
+              <div v-else class="state-panel dashboard-surface dashboard-surface--state empty-state">
                 <el-empty :description="emptyStateDescription" />
               </div>
             </BaseDashboardCard>
@@ -503,7 +534,7 @@ watch(searchQuery, (newQuery, oldQuery) => {
 
 .hero-search-stack {
   position: relative;
-  width: min(620px, 100%);
+  width: min(310px, 100%);
   min-width: 0;
   margin: 0 auto;
   scroll-margin-top: clamp(52px, 9svh, 132px);
@@ -716,6 +747,18 @@ watch(searchQuery, (newQuery, oldQuery) => {
   white-space: nowrap;
 }
 
+.hero-temperature-stack {
+  display: grid;
+  min-width: 0;
+  justify-items: start;
+  gap: 12px;
+}
+
+.hero-temperature-condition {
+  --temperature-condition-font-size: 12px;
+  --temperature-condition-icon-size: 15px;
+}
+
 .hero-temperature strong {
   font-size: clamp(72px, 11vw, 112px);
   font-weight: 720;
@@ -880,11 +923,12 @@ watch(searchQuery, (newQuery, oldQuery) => {
   transform: translateY(-18px);
 }
 
+.search-result-label,
 .partial-warning {
   margin: 0 4px 12px;
   color: var(--hero-muted);
   font-size: 12px;
-  font-weight: 650;
+  font-weight: 750;
 }
 
 .weather-list {
@@ -918,10 +962,6 @@ watch(searchQuery, (newQuery, oldQuery) => {
 .state-panel {
   min-height: 190px;
   padding: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.4);
-  border-radius: 24px;
-  background: rgba(255, 255, 255, 0.2);
-  backdrop-filter: blur(20px);
 }
 
 .loading-state {

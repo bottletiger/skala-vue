@@ -1,9 +1,9 @@
 <script setup>
 import { RouterLink } from 'vue-router'
 
-import { getWeatherTheme } from '@/utils/weatherTheme'
+import { useSharedWeatherTheme } from '@/composables/useSharedWeatherTheme'
 
-const aboutTheme = getWeatherTheme(null)
+const { weatherTheme: aboutTheme } = useSharedWeatherTheme()
 const serviceFacts = [
   {
     value: '10개',
@@ -66,15 +66,17 @@ const technologyStack = ['Vue 3', 'Vue Router', 'Pinia', 'Axios', 'Element Plus'
 </script>
 
 <template>
-  <div class="about-scene" :style="aboutTheme.cssVariables" data-theme="neutral">
+  <div class="about-scene" :style="aboutTheme.cssVariables" :data-theme="aboutTheme.name">
     <div class="about-atmosphere" aria-hidden="true"></div>
 
     <article class="about-shell">
       <header class="about-hero">
         <p class="eyebrow">WEATHER DASHBOARD</p>
         <h1>웹사이트 소개</h1>
-        <p class="intro">대한민국 10개 도시의 현재 관측값부터 약 24시간의 시간대별 날씨와 최대 5일 예보까지,<br />
-          OpenWeatherMap 데이터를 같은 기준으로 정리하는 날씨 대시보드입니다.</p>
+        <p class="intro">
+          대한민국 10개 도시의 현재 관측값부터 약 24시간의 시간대별 날씨와 최대 5일 예보까지,<br />
+          OpenWeatherMap 데이터를 같은 기준으로 정리하는 날씨 대시보드입니다.
+        </p>
       </header>
 
       <dl class="service-facts" aria-label="서비스 제공 범위">
@@ -93,8 +95,8 @@ const technologyStack = ['Vue 3', 'Vue Router', 'Pinia', 'Axios', 'Element Plus'
           <span>Weather Dashboard</span>
         </div>
 
-        <ul class="feature-grid">
-          <li v-for="feature in features" :key="feature.index" class="feature-card">
+        <ul class="feature-list">
+          <li v-for="feature in features" :key="feature.index" class="feature-row">
             <span class="feature-index" aria-hidden="true">{{ feature.index }}</span>
             <div>
               <h3>{{ feature.title }}</h3>
@@ -319,28 +321,42 @@ h1 {
   letter-spacing: 0.04em;
 }
 
-.feature-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 14px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.feature-card {
-  display: grid;
-  min-width: 0;
-  min-height: 126px;
-  grid-template-columns: auto minmax(0, 1fr);
-  align-items: start;
-  gap: 16px;
-  padding: 20px;
+.feature-list {
   border: 1px solid rgba(255, 255, 255, 0.22);
-  border-radius: 22px;
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.08));
   box-shadow: 0 8px 26px rgba(28, 43, 48, 0.045);
   backdrop-filter: blur(14px) saturate(108%);
+}
+
+.feature-list {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0;
+  margin: 0;
+  padding: 0 22px;
+  overflow: hidden;
+  border-radius: 24px;
+  list-style: none;
+}
+
+.feature-row {
+  display: grid;
+  min-width: 0;
+  min-height: 72px;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 16px;
+  padding: 12px 2px;
+}
+
+.feature-row + .feature-row {
+  border-top: 1px solid rgba(255, 255, 255, 0.19);
+}
+
+.feature-row > div {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
 }
 
 .feature-index {
@@ -356,13 +372,13 @@ h1 {
   font-variant-numeric: tabular-nums;
 }
 
-.feature-card h3 {
-  margin: 2px 0 6px;
+.feature-row h3 {
+  margin: 0 0 2px;
   color: var(--hero-text);
   font-size: 15px;
 }
 
-.feature-card p {
+.feature-row p {
   margin: 0;
   color: var(--hero-muted);
   font-size: 13px;
@@ -508,7 +524,7 @@ h1 {
 }
 
 @supports not (backdrop-filter: blur(1px)) {
-  .feature-card,
+  .feature-list,
   .data-panel {
     background: rgba(238, 242, 239, 0.72);
   }
@@ -537,8 +553,15 @@ h1 {
     font-size: clamp(36px, 12vw, 50px);
   }
 
-  .feature-grid {
-    grid-template-columns: 1fr;
+  .feature-list {
+    padding: 0 14px;
+    border-radius: 22px;
+  }
+
+  .feature-row {
+    min-height: 66px;
+    gap: 12px;
+    padding-block: 10px;
   }
 
   .service-facts {

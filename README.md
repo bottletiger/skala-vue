@@ -57,6 +57,25 @@ OpenWeatherMap의 Current Weather와 5 Day / 3 Hour Forecast 응답에서 `weath
 - npm
 - OpenWeatherMap API Key
 
+## Mock API와 로그인
+
+하단 내비게이션은 날씨, 대시보드, 로그인, 소개 순서로 구성됩니다. 대시보드는
+JWT 로그인이 필요한 보호 경로이며, 로그인 후 한 화면에서 상품과 게시글 API를
+탭으로 전환해 조회·등록·수정·삭제할 수 있습니다.
+
+로컬 Mock API는 다음 기능을 제공합니다.
+
+- 상품·게시글 REST CRUD와 검색·필터
+- 데이터 초기화와 최대 3초 응답 지연
+- JWT 로그인, 사용자 프로필 조회, Bearer Token 보호 API
+
+테스트 계정은 다음과 같습니다.
+
+- 수강생: `student@skala.com` / `1234`
+- 관리자: `admin@skala.com` / `admin1234`
+
+Mock 데이터와 JWT는 수업용이며 실제 사용자 계정이나 비밀번호를 사용하면 안 됩니다.
+
 ## 로컬 실행
 
 ```sh
@@ -70,15 +89,18 @@ cp .env.example .env.local
 VITE_OPENWEATHER_API_KEY=your_openweathermap_key
 ```
 
-개발 서버를 실행합니다.
+Vue와 Mock API 서버를 함께 실행합니다.
 
 ```sh
-npm run dev
+npm run dev:all
 ```
 
-기본 주소는 <http://localhost:3000>입니다. 환경변수를 추가하거나 변경한 경우 개발
-서버를 다시 시작해야 합니다. VS Code의 `python.terminal.useEnvFile` 안내는 Python
-터미널용이며, Vite는 프로젝트의 `.env.local`을 자체적으로 읽습니다.
+기본 주소는 Vue <http://localhost:3000>, Mock API
+<http://localhost:3001/api>입니다. 날씨 화면만 확인할 때는 `npm run dev`를 사용할
+수 있지만 로그인과 대시보드 기능에는 `npm run dev:all`이 필요합니다. 환경변수를
+추가하거나 변경한 경우 개발 서버를 다시 시작해야 합니다. VS Code의
+`python.terminal.useEnvFile` 안내는 Python 터미널용이며, Vite는 프로젝트의
+`.env.local`을 자체적으로 읽습니다.
 
 ## 검증
 
@@ -89,6 +111,10 @@ npm run check
 테스트, 정적 검사, 프로덕션 빌드를 순서대로 실행합니다.
 
 ## GitHub Pages 배포
+
+GitHub Pages는 정적 호스팅이므로 로컬 Node Mock API를 실행하지 않습니다. 따라서
+배포된 페이지에서 로그인·상품·게시글 기능을 사용하려면 별도로 배포한 API 주소를
+`VITE_API_BASE_URL`에 설정해야 합니다. 아래 절차는 날씨 화면의 정적 배포 기준입니다.
 
 1. GitHub 저장소의 `Settings > Secrets and variables > Actions`에서
    `VITE_OPENWEATHER_API_KEY` Repository Secret을 등록합니다.

@@ -1,6 +1,7 @@
 <script setup>
 import { computed } from 'vue'
 
+import TemperatureConditionLabel from '@/components/weather/TemperatureConditionLabel.vue'
 import WeatherConditionIcon from '@/components/weather/WeatherConditionIcon.vue'
 import { useTemperature } from '@/composables/useTemperature'
 import { getWeatherTheme } from '@/utils/weatherTheme'
@@ -43,7 +44,7 @@ const handleDetailClick = () => {
 
 <template>
   <div class="weather-card-hover-zone" :style="{ viewTransitionName: promoting ? 'weather-promotion' : undefined }">
-    <article class="weather-card" :class="{ 'is-selected': selected, 'is-promoting': promoting }">
+    <article class="weather-card dashboard-surface dashboard-surface--weather" :class="{ 'is-selected': selected, 'is-promoting': promoting }">
       <button class="card-select" type="button" :aria-label="`${cityItem.name} 날씨를 메인 화면으로 보기`" @click="handleCardSelect">
         <span class="weather-mark" aria-hidden="true">
           <WeatherConditionIcon :category="weatherTheme.category" :is-night="weatherTheme.isNight" />
@@ -54,9 +55,12 @@ const handleDetailClick = () => {
           <span class="condition">{{ cityItem.status || weatherTheme.label || '날씨 설명 없음' }}</span>
         </span>
 
-        <span class="temperature">
-          <strong :class="{ missing: !hasTemperature }">{{ hasTemperature ? displayTemp : '정보 없음' }}</strong>
-          <span v-if="hasTemperature">{{ unitSymbol }}</span>
+        <span class="temperature-stack">
+          <span class="temperature">
+            <strong :class="{ missing: !hasTemperature }">{{ hasTemperature ? displayTemp : '정보 없음' }}</strong>
+            <span v-if="hasTemperature">{{ unitSymbol }}</span>
+          </span>
+          <TemperatureConditionLabel v-if="hasTemperature" :temperature="cityItem.temp" />
         </span>
       </button>
 
@@ -84,12 +88,6 @@ const handleDetailClick = () => {
   height: 100%;
   grid-template-rows: 1fr auto;
   overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  border-radius: 22px;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.08));
-  box-shadow: 0 8px 26px rgba(28, 43, 48, 0.045);
-  color: var(--hero-text, var(--ink));
-  backdrop-filter: blur(14px) saturate(108%);
   transition:
     transform 320ms cubic-bezier(0.22, 1, 0.36, 1),
     box-shadow 320ms ease,
@@ -169,6 +167,14 @@ const handleDetailClick = () => {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.temperature-stack {
+  display: grid;
+  min-width: 0;
+  justify-items: end;
+  gap: 8px;
+  align-self: center;
 }
 
 .temperature {

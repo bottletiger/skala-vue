@@ -38,9 +38,52 @@ test('화면별 동적 문서 제목은 공통 composable을 통해 기존 문�
 test('이전 컴포넌트 과제의 BaseDashboardCard slot을 홈 검색과 목록에 유지한다', () => {
   const baseCardSource = readSource('../src/components/exercise/BaseDashboardCard.vue')
   const homeSource = readSource('../src/views/WeatherHomeView.vue')
+  const searchSource = readSource('../src/components/exercise/SearchBar.vue')
+  const weatherCardSource = readSource('../src/components/exercise/WeatherCard.vue')
 
   assert.match(baseCardSource, /<slot\s*\/>/)
   assert.equal((homeSource.match(/<BaseDashboardCard/g) ?? []).length, 2)
+  assert.match(baseCardSource, /:deep\(\.dashboard-surface\)/)
+  assert.match(baseCardSource, /dashboard-surface--search/)
+  assert.match(baseCardSource, /dashboard-surface--weather/)
+  assert.match(baseCardSource, /dashboard-surface--state/)
+  assert.match(searchSource, /class="input-row dashboard-surface dashboard-surface--search"/)
+  assert.match(weatherCardSource, /class="weather-card dashboard-surface dashboard-surface--weather"/)
+  assert.equal((homeSource.match(/dashboard-surface--state/g) ?? []).length, 3)
+})
+
+test('메인과 도시 카드의 온도 아래에 테두리 없는 선형 상태 표시를 사용한다', () => {
+  const homeSource = readSource('../src/views/WeatherHomeView.vue')
+  const cardSource = readSource('../src/components/exercise/WeatherCard.vue')
+  const conditionSource = readSource('../src/components/weather/TemperatureConditionLabel.vue')
+
+  assert.match(homeSource, /<TemperatureConditionLabel[^>]*:temperature="heroWeather\.temp"/)
+  assert.match(cardSource, /<TemperatureConditionLabel[^>]*:temperature="cityItem\.temp"/)
+  assert.match(conditionSource, /condition\.key === 'hot'/)
+  assert.match(conditionSource, /\{\{ condition\.label \}\}/)
+  assert.match(conditionSource, /\.temperature-condition\s*\{[^}]*border:\s*0;[^}]*background:\s*transparent;/s)
+  assert.doesNotMatch(conditionSource, /🔥|❄️/)
+})
+
+test('도시 선택 토스트와 펼친 검색 결과 문구를 조용한 피드백으로 제공한다', () => {
+  const homeSource = readSource('../src/views/WeatherHomeView.vue')
+  const mainCssSource = readSource('../src/assets/main.css')
+
+  assert.match(homeSource, /const showCitySelectionMessage = \(city\) => \{[\s\S]*message: `\$\{city\.name\}이 선택되었습니다\.`[\s\S]*duration: 1500[\s\S]*customClass: 'weather-selection-message'/)
+  assert.match(homeSource, /const handleSelect = async \(city\) => \{[\s\S]*if \(city\.id === selectedCityId\.value\) return[\s\S]*showCitySelectionMessage\(city\)/)
+  assert.match(homeSource, /v-if="isCityListOpen && normalizedSearchQuery"[^>]*>\[\{\{ normalizedSearchQuery \}\}\] 검색 결과<\/p>/)
+  assert.match(mainCssSource, /\.el-message\.weather-selection-message\s*\{[^}]*border-radius:\s*999px;[^}]*backdrop-filter:\s*blur\(20px\) saturate\(125%\);/s)
+})
+
+test('과제용 watch와 watchEffect 콘솔 기록은 개발 모드에서만 실행한다', () => {
+  const homeSource = readSource('../src/views/WeatherHomeView.vue')
+  const devBlockStart = homeSource.indexOf('if (import.meta.env.DEV)')
+  const devBlock = homeSource.slice(devBlockStart, homeSource.indexOf('</script>'))
+
+  assert.match(homeSource, /import \{[^}]*watchEffect[^}]*\} from 'vue'/)
+  assert.ok(devBlockStart >= 0)
+  assert.match(devBlock, /watch\(selectedCityInfo,[\s\S]*console\.log\(`\[watch\] 선택 상태 변경:/)
+  assert.match(devBlock, /watchEffect\(\(\) => \{[\s\S]*console\.log\(`\[watchEffect\] 검색어 변경: \$\{searchQuery\.value\}`\)/)
 })
 
 test('홈의 상세보기는 모달 대신 동적 상세 경로로 Programmatic Navigation한다', () => {
@@ -312,11 +355,15 @@ test('소개 화면은 실제 제공 범위·예보 기준·기술 구성을 구
   const aboutSource = readSource('../src/views/WeatherAboutView.vue')
 
   assert.match(routerSource, /meta:\s*\{\s*title:\s*'서비스 소개',\s*layout:\s*'weather-scene'\s*\}/)
-  assert.match(aboutSource, /getWeatherTheme\(null\)/)
+  assert.match(aboutSource, /useSharedWeatherTheme\(\)/)
+  assert.match(aboutSource, /:data-theme="aboutTheme\.name"/)
   assert.match(aboutSource, /\.about-scene\s*\{[^}]*overflow:\s*clip;[^}]*linear-gradient\(158deg/s)
   assert.match(aboutSource, /\.about-shell\s*\{[^}]*border:\s*0;[^}]*background:\s*transparent;/s)
-  assert.match(aboutSource, /\.feature-grid\s*\{[^}]*grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\)/s)
-  assert.match(aboutSource, /\.feature-card\s*\{[^}]*border:\s*1px solid rgba\(255, 255, 255, 0\.22\)/s)
+  assert.match(aboutSource, /<ul class="feature-list">[\s\S]*v-for="feature in features"[\s\S]*class="feature-row"/)
+  assert.match(aboutSource, /\.feature-list\s*\{[^}]*border:\s*1px solid rgba\(255, 255, 255, 0\.22\);[^}]*backdrop-filter:\s*blur\(14px\) saturate\(108%\);/s)
+  assert.match(aboutSource, /\.feature-row\s*\{[^}]*min-height:\s*72px;/s)
+  assert.match(aboutSource, /\.feature-row \+ \.feature-row\s*\{[^}]*border-top:/s)
+  assert.doesNotMatch(aboutSource, /feature-grid|feature-card|features\.slice/)
   assert.match(aboutSource, /대한민국 10개 도시/)
   assert.match(aboutSource, /초성, 완성 전 음절과 두벌식 영문 오타/)
   assert.match(aboutSource, /3시간 간격의 기온·날씨·강수확률/)
