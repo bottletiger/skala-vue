@@ -6,11 +6,13 @@ import { fileURLToPath } from 'node:url'
 const projectRoot = fileURLToPath(new URL('../', import.meta.url))
 const readSource = (relativePath) => readFileSync(new URL(relativePath, import.meta.url), 'utf8')
 
-test('Router 과제의 홈·소개·동적 상세·Catch-all 경로를 지연 로딩한다', () => {
+test('Router는 날씨·여행·내 여행·로그인·동적 상세 경로를 지연 로딩한다', () => {
   const routerSource = readSource('../src/router/index.js')
 
   assert.match(routerSource, /path:\s*'\/'[\s\S]*import\('@\/views\/WeatherHomeView\.vue'\)/)
-  assert.match(routerSource, /path:\s*'\/about'[\s\S]*import\('@\/views\/WeatherAboutView\.vue'\)/)
+  assert.match(routerSource, /path:\s*'\/travel'[\s\S]*import\('@\/views\/TravelPlannerView\.vue'\)/)
+  assert.match(routerSource, /path:\s*'\/trips'[\s\S]*import\('@\/views\/TripsView\.vue'\)/)
+  assert.match(routerSource, /path:\s*'\/login'[\s\S]*import\('@\/views\/LoginView\.vue'\)/)
   assert.match(routerSource, /path:\s*'\/weather\/:cityId'[\s\S]*import\('@\/views\/WeatherDetailView\.vue'\)/)
   assert.match(routerSource, /path:\s*'\/:pathMatch\(\.\*\)\*'[\s\S]*import\('@\/views\/NotFoundView\.vue'\)/)
 })
@@ -21,7 +23,9 @@ test('App에 RouterLink Navigation Bar와 RouterView를 함께 배치한다', ()
   assert.match(appSource, /RouterLink/)
   assert.match(appSource, /<nav[\s\S]*?aria-label="주요 메뉴"/)
   assert.match(appSource, /name:\s*'WeatherHome'/)
-  assert.match(appSource, /name:\s*'WeatherAbout'/)
+  assert.match(appSource, /name:\s*'TravelPlanner'/)
+  assert.match(appSource, /name:\s*accountNavigation\.name/)
+  assert.match(appSource, /isLoggedIn\.value \? \{ name: 'Trips', label: '내 여행' \} : \{ name: 'Login', label: '로그인' \}/)
   assert.match(appSource, /<RouterView\s*\/>/)
 })
 
@@ -69,17 +73,14 @@ test('세계 도시 선택 토스트와 지역·검색 필터를 조용한 피�
   const homeSource = readSource('../src/views/WeatherHomeView.vue')
   const dashboardSource = readSource('../src/composables/useHomeWeatherDashboard.js')
   const drawerSource = readSource('../src/components/weather/WorldWeatherDrawer.vue')
-  const mainCssSource = readSource('../src/assets/main.css')
 
-  assert.match(
-    homeSource,
-    /const showCitySelectionMessage = \(city\) => \{[\s\S]*message: formatKoreanSelectionMessage\(getCityDisplayName\(city\), city\.name\)[\s\S]*duration: 1500[\s\S]*customClass: 'weather-selection-message'/,
-  )
+  assert.match(homeSource, /const showCitySelectionMessage = \(city\) => \{[\s\S]*showWeatherToast\(formatKoreanSelectionMessage\(getCityDisplayName\(city\), city\.name\), 'status', 1500\)/)
   assert.match(dashboardSource, /selectedCityInfo\.value = formatKoreanSelectionMessage\(city\.displayName \|\| city\.name, city\.name\)/)
   assert.match(homeSource, /const handleSelect = async \(city\) => \{[\s\S]*if \(city\.id === selectedCityId\.value\) return[\s\S]*showCitySelectionMessage\(city\)/)
   assert.match(homeSource, /matchesSearchQuery\(\[item\.name, item\.displayName, item\.countryName, item\.countryCode\]/)
   assert.match(drawerSource, /class="region-filters"[\s\S]*aria-pressed="activeRegion === region\.id"/)
-  assert.match(mainCssSource, /\.el-message\.weather-selection-message\s*\{[^}]*border-radius:\s*999px;[^}]*backdrop-filter:\s*blur\(20px\) saturate\(125%\);/s)
+  assert.match(homeSource, /class="weather-toast"[\s\S]*:role="toastTone === 'error' \? 'alert' : 'status'"/)
+  assert.match(homeSource, /\.weather-toast\s*\{[^}]*border-radius:\s*999px;[^}]*backdrop-filter:\s*blur\(20px\) saturate\(125%\);/s)
 })
 
 test('과제용 watch와 watchEffect 콘솔 기록은 개발 모드에서만 실행한다', () => {
@@ -104,15 +105,12 @@ test('홈의 상세보기는 모달 대신 동적 상세 경로로 Programmatic 
   assert.equal(existsSync(modalPath), false)
 })
 
-test('서비스 소개 화면은 공통 경로 링크로 메인 날씨에 돌아간다', () => {
-  const aboutSource = readSource('../src/views/WeatherAboutView.vue')
-  const routeLinkSource = readSource('../src/components/common/WeatherRouteLink.vue')
-
-  assert.match(aboutSource, /<h1>/)
-  assert.match(aboutSource, /<WeatherRouteLink[\s\S]*name:\s*'WeatherHome'/)
-  assert.match(aboutSource, />날씨 보기<\/WeatherRouteLink>/)
-  assert.match(routeLinkSource, /<RouterLink class="weather-route-link"/)
-  assert.match(routeLinkSource, /<slot><\/slot>/)
+test('폐기한 소개·Mock 대시보드·확인 모달 코드는 저장소에서 제거한다', () => {
+  assert.equal(existsSync(`${projectRoot}src/views/WeatherAboutView.vue`), false)
+  assert.equal(existsSync(`${projectRoot}src/views/DashboardView.vue`), false)
+  assert.equal(existsSync(`${projectRoot}src/components/common/ConfirmDialog.vue`), false)
+  assert.equal(existsSync(`${projectRoot}src/components/mock`), false)
+  assert.equal(existsSync(`${projectRoot}mock-api`), false)
 })
 
 test('Navigation Bar는 하단 고정형이며 활성 RouterLink 표시가 슬라이딩한다', () => {
@@ -122,7 +120,7 @@ test('Navigation Bar는 하단 고정형이며 활성 RouterLink 표시가 슬�
   assert.match(appSource, /class="navigation-slider"/)
   assert.match(appSource, /transform:\s*translateX\(calc\(var\(--active-route-index\) \* 100%\)\);/)
   assert.match(appSource, /transition:[\s\S]*transform 360ms/)
-  assert.match(appSource, /const isThemedScene = computed\(\(\) => route\.meta\.layout === 'weather-scene' \|\| route\.meta\.layout === 'lab-scene'\)/)
+  assert.match(appSource, /const isThemedScene = computed\(\(\) => route\.meta\.layout === 'weather-scene'\)/)
   assert.match(appSource, /'app-navigation--immersive-weather': isThemedScene/)
 })
 
@@ -289,14 +287,15 @@ test('검색과 지역 필터는 메인이 아니라 세계 날씨 서랍 안에
   assert.match(drawerSource, /class="region-filters"/)
 })
 
-test('히스토리로 홈에 돌아오면 최근 날씨와 세계 서랍 상태를 cache에서 즉시 복원한다', () => {
+test('히스토리와 새로고침 뒤에도 실제 세계 날씨 cache를 30분 동안 복원한다', () => {
   const homeSource = readSource('../src/views/WeatherHomeView.vue')
   const dashboardSource = readSource('../src/composables/useHomeWeatherDashboard.js')
   const locationSource = readSource('../src/composables/useCurrentLocationWeather.js')
   const storeSource = readSource('../src/stores/homeWeatherStore.js')
 
-  assert.match(storeSource, /HOME_WEATHER_CACHE_TTL = 5 \* 60 \* 1000/)
-  assert.match(storeSource, /const weatherList = ref\(\[\]\)/)
+  assert.match(storeSource, /HOME_WEATHER_CACHE_TTL = 30 \* 60 \* 1000/)
+  assert.match(storeSource, /HOME_WEATHER_CACHE_KEY = 'weather-world-cache-v1'/)
+  assert.match(storeSource, /const weatherList = ref\(persistedWeather\.weatherList\)/)
   assert.match(storeSource, /const selectedCityId = ref\(''\)/)
   assert.match(storeSource, /const isWorldDrawerOpen = ref\(false\)/)
   assert.match(storeSource, /const hasFreshWeather = \(now = Date\.now\(\)\)/)
@@ -304,23 +303,28 @@ test('히스토리로 홈에 돌아오면 최근 날씨와 세계 서랍 상태�
   assert.match(homeSource, /startLocationExperience\(\)/)
   assert.match(locationSource, /weatherInitialization = Promise\.resolve\(initializeWeather\(\)\)/)
   assert.match(dashboardSource, /const restoreCachedWeather = \(\) => \{/)
-  assert.match(dashboardSource, /if \(apiReady && homeWeatherStore\.hasFreshWeather\(\)\) \{[\s\S]*restoreCachedWeather\(\)[\s\S]*return/)
-  assert.match(dashboardSource, /homeWeatherStore\.markWeatherLoaded\(\)/)
-  assert.match(dashboardSource, /homeWeatherStore\.clearWeatherData\(\)/)
+  assert.match(dashboardSource, /const nextWeather = await fetchCityWeather\(cityConfig\)/)
+  assert.match(dashboardSource, /worldLoadPromise = fetchWeatherList\(CITY_CONFIG/)
+  assert.match(dashboardSource, /homeWeatherStore\.hasFreshCityWeather\(cachedSelection\.id/)
+  assert.match(dashboardSource, /homeWeatherStore\.persistWorldWeather\(worldWeather, loadedAt\)/)
+  assert.match(dashboardSource, /homeWeatherStore\.markCityWeatherLoaded\(CURRENT_LOCATION_ID\)/)
+  assert.match(homeSource, /if \(isOpen\) void loadWorldWeather\(\)/)
 })
 
 test('날씨별 배경 영상은 상태 코드를 세분화한 저용량 로컬 루프로 제공한다', () => {
   const homeSource = readSource('../src/views/WeatherHomeView.vue')
   const videoSource = readSource('../src/components/weather/WeatherBackgroundVideo.vue')
+  const weatherMediaSource = readSource('../src/data/weatherMedia.js')
   const videoMappingSource = readSource('../src/utils/weatherVideo.js')
   const videoFiles = ['clear.mp4', 'night.mp4', 'few-clouds.mp4', 'clouds.mp4', 'drizzle.mp4', 'rain.mp4', 'heavy-rain.mp4', 'thunderstorm.mp4', 'snow.mp4', 'fog.mp4']
 
   assert.match(homeSource, /<WeatherBackgroundVideo :weather="heroWeather"/)
-  assert.match(videoSource, /'few-clouds':\s*'few-clouds\.mp4'/)
-  assert.match(videoSource, /drizzle:\s*'drizzle\.mp4'/)
-  assert.match(videoSource, /'heavy-rain':\s*'heavy-rain\.mp4'/)
-  assert.match(videoSource, /thunderstorm:\s*'thunderstorm\.mp4'/)
-  assert.match(videoSource, /fog:\s*'fog\.mp4'/)
+  assert.match(videoSource, /getWeatherVideoSource\(activeVideoKey\.value, import\.meta\.env\.BASE_URL\)/)
+  assert.match(weatherMediaSource, /'few-clouds':\s*'few-clouds\.mp4'/)
+  assert.match(weatherMediaSource, /drizzle:\s*'drizzle\.mp4'/)
+  assert.match(weatherMediaSource, /'heavy-rain':\s*'heavy-rain\.mp4'/)
+  assert.match(weatherMediaSource, /thunderstorm:\s*'thunderstorm\.mp4'/)
+  assert.match(weatherMediaSource, /fog:\s*'fog\.mp4'/)
   assert.match(videoMappingSource, /conditionId >= 200 && conditionId <= 232/)
   assert.match(videoMappingSource, /conditionId === 801 \|\| conditionId === 802/)
   assert.match(videoMappingSource, /conditionId === 803 \|\| conditionId === 804/)
@@ -378,6 +382,7 @@ test('세계 날씨 서랍은 sticky 검색 뒤로 목록이 흐르며 하단을
   assert.match(drawerSource, /class="world-drawer-toolbar" :class="\{ 'is-scrolled': isWeatherRailScrolled \}"/)
   assert.match(drawerSource, /\.world-drawer-toolbar\s*\{[^}]*position:\s*sticky;[^}]*top:\s*0;/s)
   assert.match(drawerSource, /\.world-drawer-toolbar::before\s*\{[^}]*backdrop-filter:\s*blur\(24px\) saturate\(120%\);[^}]*mask-image:/s)
+  assert.match(drawerSource, /<AsyncStatePanel kind="error"[\s\S]*:message="errorMessage"/)
   assert.match(drawerSource, /const isWeatherRailScrolled = ref\(false\)/)
   assert.match(drawerSource, /const hasMoreWeatherBelow = ref\(false\)/)
   assert.match(drawerSource, /rail\.scrollTop > 0/)
@@ -503,17 +508,18 @@ test('상세 화면은 현재 날씨와 분리된 3시간·5일 예보 상태와
   const detailWeatherSource = readSource('../src/composables/useCityWeatherDetail.js')
   const serviceSource = readSource('../src/services/weatherApi.js')
 
-  assert.match(serviceSource, /data\/2\.5\/forecast/)
+  assert.match(serviceSource, /api\.open-meteo\.com\/v1\/forecast/)
   assert.match(serviceSource, /export const mapForecastResponse/)
-  assert.match(serviceSource, /hourly:\s*forecastEntries\.slice\(0, FORECAST_ITEM_LIMIT\)/)
-  assert.match(serviceSource, /daily:\s*timezoneOffset === null \? \[\] : mapDailyForecast/)
+  assert.match(serviceSource, /const FORECAST_ITEM_LIMIT = 8/)
+  assert.match(serviceSource, /const DAILY_FORECAST_LIMIT = 5/)
+  assert.match(serviceSource, /const daily = timezoneOffset === null \? \[\] : mapDailyForecast\(payload, timezoneOffset, dailyLimit\)/)
   assert.match(detailSource, /useCityWeatherDetail\(cityId, redirectUnknownCity\)/)
   assert.match(detailWeatherSource, /const isForecastLoading = ref/)
   assert.match(detailWeatherSource, /const forecastErrorMessage = ref/)
   assert.match(detailWeatherSource, /fetchCityWeather\(city\)/)
   assert.match(detailWeatherSource, /fetchCityForecast\(city\)/)
   assert.match(detailWeatherSource, /Promise\.allSettled\(\[currentWeatherRequest, forecastRequest\]\)/)
-  assert.match(detailSource, /<section v-if="cityConfig && apiReady" class="forecast-section"/)
+  assert.match(detailSource, /<section v-if="cityConfig" class="forecast-section"/)
   assert.doesNotMatch(detailSource, /<section v-if="cityData" class="forecast-section"/)
   assert.match(detailSource, /<HourlyForecastStrip[^>]*:items="forecastData\.hourly"/)
   assert.match(detailSource, /<DailyForecastList[^>]*:items="forecastData\.daily"/)
@@ -531,37 +537,24 @@ test('상세 화면 우상단에서 현재 날씨와 예보를 함께 새로고�
 
   assert.ok(titleStart >= 0 && refreshButton > titleStart)
   assert.match(detailSource, /const isRefreshing = computed\(\(\) => isLoading\.value \|\| isForecastLoading\.value\)/)
-  assert.match(detailSource, /class="detail-refresh-button"[\s\S]*?:disabled="!cityConfig \|\| !apiReady \|\| isRefreshing"[\s\S]*?@click="refreshDetail"/)
+  assert.match(detailSource, /class="detail-refresh-button"[\s\S]*?:disabled="!cityConfig \|\| isRefreshing"[\s\S]*?@click="refreshDetail"/)
   assert.match(detailSource, /\.detail-topbar\s*\{[^}]*grid-template-columns:\s*auto minmax\(0, 1fr\) auto;/s)
   assert.match(detailSource, /\.detail-refresh-button svg\.is-spinning\s*\{[^}]*animation:\s*detail-refresh-spin 900ms linear infinite;/s)
   assert.match(detailWeatherSource, /const refreshDetail = \(\) => loadDetail\(cityConfig\.value\)/)
   assert.match(detailWeatherSource, /isLoading,\s*refreshDetail,\s*weatherTheme/)
 })
 
-test('소개 화면은 실제 도시 수와 핵심 예보 범위만 제품형 목록으로 안내한다', () => {
+test('여행 화면은 공통 날씨 장면과 실제 데이터 서비스를 재사용한다', () => {
   const routerSource = readSource('../src/router/index.js')
-  const aboutSource = readSource('../src/views/WeatherAboutView.vue')
-  const sceneSource = readSource('../src/components/common/WeatherScene.vue')
-  const routeLinkSource = readSource('../src/components/common/WeatherRouteLink.vue')
+  const travelSource = readSource('../src/views/TravelPlannerView.vue')
+  const travelApiSource = readSource('../src/services/travelApi.js')
 
-  assert.match(routerSource, /meta:\s*\{\s*title:\s*'서비스 소개',\s*layout:\s*'weather-scene'\s*\}/)
-  assert.match(aboutSource, /useSharedWeatherTheme\(\)/)
-  assert.match(aboutSource, /<WeatherScene :theme="aboutTheme">/)
-  assert.match(sceneSource, /linear-gradient\(158deg, var\(--hero-start\)/)
-  assert.match(aboutSource, /<ul class="feature-list">[\s\S]*v-for="feature in forecastFeatures"[\s\S]*class="feature-row"/)
-  assert.match(aboutSource, /\.feature-list\s*\{[^}]*border-top:\s*1px solid color-mix[^}]*border-bottom:\s*1px solid color-mix/s)
-  assert.match(aboutSource, /\.feature-row\s*\{[^}]*min-height:\s*76px;/s)
-  assert.match(aboutSource, /\.feature-row \+ \.feature-row\s*\{[^}]*border-top:/s)
-  assert.doesNotMatch(aboutSource, /feature-grid|feature-card|features\.slice/)
-  assert.match(aboutSource, /`\$\{CITY_CONFIG\.length\}개`/)
-  assert.match(aboutSource, /title:\s*'현재 관측'/)
-  assert.match(aboutSource, /title:\s*'시간별 예보'/)
-  assert.match(aboutSource, /title:\s*'5일 예보'/)
-  assert.match(aboutSource, /OpenWeather/)
-  assert.doesNotMatch(aboutSource, /technologyStack|Vue Router|상태 보존과 경로 이동|서로 다른 요청 상태/)
-  assert.match(aboutSource, /\.service-facts\s*\{[^}]*grid-template-columns:\s*repeat\(3, minmax\(0, 1fr\)\);/s)
-  assert.match(aboutSource, /<WeatherRouteLink class="home-link"[\s\S]*name:\s*'WeatherHome'/)
-  assert.match(routeLinkSource, /min-height:\s*44px/)
+  assert.match(routerSource, /name:\s*'TravelPlanner'[\s\S]*layout:\s*'weather-scene'/)
+  assert.match(travelSource, /<WeatherScene/)
+  assert.match(travelSource, /<DestinationSearch/)
+  assert.match(travelApiSource, /geocoding-api\.open-meteo\.com/)
+  assert.match(travelApiSource, /air-quality-api\.open-meteo\.com/)
+  assert.match(travelApiSource, /wikipedia\.org\/w\/api\.php/)
 })
 
 test('404 화면도 공통 날씨 장면과 경로 링크를 사용한다', () => {

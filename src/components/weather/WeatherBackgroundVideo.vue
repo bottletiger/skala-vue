@@ -1,6 +1,7 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
+import { getWeatherVideoSource } from '@/data/weatherMedia'
 import { getWeatherVideoKey } from '@/utils/weatherVideo'
 
 const props = defineProps({
@@ -8,19 +9,6 @@ const props = defineProps({
     type: Object,
     default: null,
   },
-})
-
-const VIDEO_FILE_BY_KEY = Object.freeze({
-  'clear-day': 'clear.mp4',
-  'clear-night': 'night.mp4',
-  'few-clouds': 'few-clouds.mp4',
-  overcast: 'clouds.mp4',
-  drizzle: 'drizzle.mp4',
-  rain: 'rain.mp4',
-  'heavy-rain': 'heavy-rain.mp4',
-  thunderstorm: 'thunderstorm.mp4',
-  snow: 'snow.mp4',
-  fog: 'fog.mp4',
 })
 
 const prefersReducedMotion = ref(false)
@@ -31,8 +19,7 @@ let motionQuery
 let networkConnection
 
 const activeVideoKey = computed(() => getWeatherVideoKey(props.weather))
-const videoFile = computed(() => VIDEO_FILE_BY_KEY[activeVideoKey.value] ?? '')
-const videoSource = computed(() => (videoFile.value ? `${import.meta.env.BASE_URL}weather-videos/${videoFile.value}` : ''))
+const videoSource = computed(() => getWeatherVideoSource(activeVideoKey.value, import.meta.env.BASE_URL))
 const shouldPlayVideo = computed(() => Boolean(videoSource.value) && !prefersReducedMotion.value && !prefersDataSaving.value && !hasError.value)
 
 const updateMotionPreference = () => {

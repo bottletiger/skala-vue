@@ -14,12 +14,12 @@ const homeWeatherStore = useHomeWeatherStore()
 const { isLoggedIn } = storeToRefs(authStore)
 const { isWorldDrawerOpen } = storeToRefs(homeWeatherStore)
 const { weatherTheme: sharedWeatherTheme } = useSharedWeatherTheme()
-const isThemedScene = computed(() => route.meta.layout === 'weather-scene' || route.meta.layout === 'lab-scene')
+const isThemedScene = computed(() => route.meta.layout === 'weather-scene')
 const isWeatherHome = computed(() => route.name === 'WeatherHome')
-const accountNavigation = computed(() => (isLoggedIn.value ? { name: 'Dashboard', label: '대시보드', icon: 'dashboard' } : { name: 'Login', label: '로그인', icon: 'login' }))
+const accountNavigation = computed(() => (isLoggedIn.value ? { name: 'Trips', label: '내 여행' } : { name: 'Login', label: '로그인' }))
 const activeNavigationIndex = computed(() => {
-  if (route.name === 'Dashboard' || route.name === 'Login') return 1
-  if (route.name === 'WeatherAbout') return 2
+  if (route.name === 'TravelPlanner') return 1
+  if (route.name === 'Trips' || route.name === 'Login') return 2
   if (route.name === 'WeatherHome' || route.name === 'WeatherDetail') return 0
   return -1
 })
@@ -59,16 +59,23 @@ watch(
           </svg>
           <span>날씨</span>
         </RouterLink>
-        <RouterLink :to="{ name: accountNavigation.name }" :class="{ 'is-active': activeNavigationIndex === 1 }" :aria-current="activeNavigationIndex === 1 ? 'page' : undefined">
-          <span class="navigation-icon" :class="`navigation-icon--${accountNavigation.icon}`" aria-hidden="true"></span>
-          <span>{{ accountNavigation.label }}</span>
-        </RouterLink>
-        <RouterLink :to="{ name: 'WeatherAbout' }" :class="{ 'is-active': activeNavigationIndex === 2 }" :aria-current="activeNavigationIndex === 2 ? 'page' : undefined">
+        <RouterLink :to="{ name: 'TravelPlanner' }" :class="{ 'is-active': activeNavigationIndex === 1 }" :aria-current="activeNavigationIndex === 1 ? 'page' : undefined">
           <svg viewBox="0 0 24 24" aria-hidden="true">
-            <circle cx="12" cy="12" r="8" />
-            <path d="M12 11v5M12 8h.01" />
+            <path d="M12 21s6-5.2 6-11a6 6 0 1 0-12 0c0 5.8 6 11 6 11Z" />
+            <circle cx="12" cy="10" r="2" />
           </svg>
-          <span>소개</span>
+          <span>여행</span>
+        </RouterLink>
+        <RouterLink :to="{ name: accountNavigation.name }" :class="{ 'is-active': activeNavigationIndex === 2 }" :aria-current="activeNavigationIndex === 2 ? 'page' : undefined">
+          <svg v-if="isLoggedIn" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M6 8h12l1 12H5L6 8Z" />
+            <path d="M9 9V6a3 3 0 0 1 6 0v3" />
+          </svg>
+          <svg v-else viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="12" cy="8" r="3" />
+            <path d="M6.5 19a5.5 5.5 0 0 1 11 0" />
+          </svg>
+          <span>{{ accountNavigation.label }}</span>
         </RouterLink>
       </nav>
 
@@ -274,52 +281,6 @@ watch(
   stroke-width: 1.9;
 }
 
-.navigation-icon {
-  position: relative;
-  width: 17px;
-  height: 17px;
-  flex: 0 0 auto;
-}
-
-.navigation-icon--dashboard::before {
-  position: absolute;
-  top: 2px;
-  left: 2px;
-  width: 5px;
-  height: 5px;
-  border-radius: 1.5px;
-  background: currentcolor;
-  box-shadow:
-    8px 0 currentcolor,
-    0 8px currentcolor,
-    8px 8px currentcolor;
-  content: '';
-}
-
-.navigation-icon--login::before,
-.navigation-icon--login::after {
-  position: absolute;
-  left: 50%;
-  border: 1.6px solid currentcolor;
-  content: '';
-  transform: translateX(-50%);
-}
-
-.navigation-icon--login::before {
-  top: 1px;
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-}
-
-.navigation-icon--login::after {
-  bottom: 1px;
-  width: 12px;
-  height: 6px;
-  border-bottom: 0;
-  border-radius: 8px 8px 0 0;
-}
-
 .primary-navigation a:hover {
   color: #243139;
 }
@@ -463,8 +424,7 @@ watch(
     font-size: 10px;
   }
 
-  .primary-navigation a svg,
-  .navigation-icon {
+  .primary-navigation a svg {
     width: 15px;
     height: 15px;
   }

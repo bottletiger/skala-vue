@@ -5,33 +5,6 @@
   min-height: 100dvh;
 }
 
-.el-message.weather-selection-message {
-  --el-message-bg-color: rgba(242, 246, 245, 0.82);
-  --el-message-border-color: rgba(255, 255, 255, 0.62);
-  --el-message-text-color: #243139;
-
-  width: fit-content;
-  min-width: 0;
-  max-width: calc(100% - 32px);
-  padding: 10px 14px;
-  border-radius: 999px;
-  box-shadow: 0 12px 32px rgba(20, 32, 36, 0.12);
-  backdrop-filter: blur(20px) saturate(125%);
-  -webkit-backdrop-filter: blur(20px) saturate(125%);
-}
-
-.el-message.weather-selection-message .el-message__icon {
-  color: #4f6f6b;
-  font-size: 15px;
-}
-
-.el-message.weather-selection-message .el-message__content {
-  color: #243139;
-  font-size: 12px;
-  font-weight: 800;
-  line-height: 1.35;
-}
-
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

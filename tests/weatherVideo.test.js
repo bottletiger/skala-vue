@@ -3,7 +3,7 @@ import test from 'node:test'
 
 import { getWeatherVideoKey } from '../src/utils/weatherVideo.js'
 
-test('OpenWeather 상태 코드를 세분화된 배경 영상 키로 변환한다', () => {
+test('정규화된 날씨 상태 코드를 세분화된 배경 영상 키로 변환한다', () => {
   const cases = [
     [201, 'thunderstorm'],
     [301, 'drizzle'],

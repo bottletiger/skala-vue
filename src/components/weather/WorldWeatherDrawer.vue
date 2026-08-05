@@ -1,6 +1,7 @@
 <script setup>
 import { nextTick, ref, watch } from 'vue'
 
+import AsyncStatePanel from '@/components/common/AsyncStatePanel.vue'
 import BaseDashboardCard from '@/components/exercise/BaseDashboardCard.vue'
 import SearchBar from '@/components/exercise/SearchBar.vue'
 import WeatherCard from '@/components/exercise/WeatherCard.vue'
@@ -36,10 +37,6 @@ const props = defineProps({
     default: '',
   },
   isLoading: {
-    type: Boolean,
-    required: true,
-  },
-  apiReady: {
     type: Boolean,
     required: true,
   },
@@ -137,10 +134,10 @@ watch(
             </div>
 
             <div v-if="isLoading" class="drawer-state dashboard-surface dashboard-surface--state">
-              <el-skeleton :rows="3" animated />
+              <AsyncStatePanel kind="loading" :rows="3" message="세계 날씨를 불러오고 있습니다." />
             </div>
             <div v-else-if="errorMessage" class="drawer-state dashboard-surface dashboard-surface--state">
-              <el-result :icon="apiReady ? 'error' : 'warning'" title="세계 날씨를 표시할 수 없습니다" :sub-title="errorMessage" />
+              <AsyncStatePanel kind="error" title="세계 날씨를 표시할 수 없습니다" :message="errorMessage" />
             </div>
             <template v-else-if="items.length">
               <WeatherCard
@@ -155,7 +152,7 @@ watch(
               />
             </template>
             <div v-else class="drawer-state dashboard-surface dashboard-surface--state">
-              <el-empty :description="emptyDescription" />
+              <AsyncStatePanel kind="empty" :message="emptyDescription" />
             </div>
           </div>
         </BaseDashboardCard>
@@ -437,10 +434,8 @@ watch(
   --dashboard-surface-filter: none;
 }
 
-.drawer-state :deep(.el-result__title p),
-.drawer-state :deep(.el-result__subtitle p),
-.drawer-state :deep(.el-empty__description p) {
-  color: var(--hero-text);
+.drawer-state :deep(.async-state-panel) {
+  min-height: 196px;
 }
 
 .world-drawer-enter-active,

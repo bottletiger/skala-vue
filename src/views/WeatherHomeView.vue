@@ -1,6 +1,5 @@
 <script setup>
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch, watchEffect } from 'vue'
-import { ElMessage } from 'element-plus'
 import { useRoute, useRouter } from 'vue-router'
 
 import WeatherScene from '@/components/common/WeatherScene.vue'
@@ -37,36 +36,50 @@ const syncSelectedRoute = (cityId) => {
 }
 
 const {
-  apiReady,
   errorMessage,
   failedCityCount,
   initializeWeather,
   isWorldDrawerOpen,
   isLoading,
+  isWorldLoading,
   lastUpdated,
   loadCurrentLocation,
   loadWeather,
+  loadWorldWeather,
   selectedCityId,
   selectedCityInfo,
   selectedWeather,
   selectCity,
   weatherList,
+  worldErrorMessage,
 } = useHomeWeatherDashboard(getRouteSelectedCityId)
 const searchQuery = ref('')
 const activeRegion = ref('all')
 const promotingCityId = ref('')
 const isHeroPromoting = ref(false)
 const weatherHero = ref(null)
+const toastMessage = ref('')
+const toastTone = ref('status')
 let routeCanonicalizationId = 0
 let promotionRequestId = 0
 let promotionTimer = 0
+let toastTimer = 0
+
+const showWeatherToast = (message, tone = 'status', duration = 1800) => {
+  window.clearTimeout(toastTimer)
+  toastMessage.value = message
+  toastTone.value = tone
+  toastTimer = window.setTimeout(() => {
+    toastMessage.value = ''
+  }, duration)
+}
 
 const { dismissLocationPrompt, locationPromptMessage, locationPromptState, requestLocationWeather, startLocationExperience } = useCurrentLocationWeather({
   initializeWeather,
   loadCurrentLocation,
   onLocationLoaded: async (currentWeather) => {
     await syncSelectedRoute(CURRENT_LOCATION_ID)
-    ElMessage.success(`${currentWeather.name} 현재 위치 날씨를 표시합니다.`)
+    showWeatherToast(`${currentWeather.name} 현재 위치 날씨를 표시합니다.`, 'success')
   },
 })
 
@@ -88,10 +101,9 @@ const filteredWeatherList = computed(() => {
 })
 
 const heroState = computed(() => {
-  if (!apiReady) return 'unavailable'
+  if (selectedWeather.value) return 'ready'
   if (isLoading.value) return 'loading'
   if (errorMessage.value) return 'error'
-  if (selectedWeather.value) return 'ready'
   return 'empty'
 })
 
@@ -111,7 +123,6 @@ const heroWindText = computed(() => (Number.isFinite(heroWeather.value?.wind) ? 
 const heroStateTitle = computed(() => {
   if (heroState.value === 'loading') return '도시 날씨를 불러오는 중입니다'
   if (heroState.value === 'error') return '날씨 정보를 표시할 수 없습니다'
-  if (heroState.value === 'unavailable') return '실시간 날씨를 준비할 수 없습니다'
   return '표시할 도시가 없습니다'
 })
 
@@ -150,8 +161,8 @@ useDocumentTitle(() => (selectedWeather.value ? `${getCityDisplayName(selectedWe
 
 const refreshWeather = () => {
   void loadWeather({
-    onSuccess: () => ElMessage.success('실시간 날씨를 갱신했습니다.'),
-    onError: () => ElMessage.error('날씨 데이터 요청에 실패했습니다.'),
+    onSuccess: () => showWeatherToast('실시간 날씨를 갱신했습니다.', 'success'),
+    onError: () => showWeatherToast(errorMessage.value || '날씨 데이터 요청에 실패했습니다.', 'error', 3200),
   })
 }
 
@@ -161,15 +172,7 @@ const applySelection = (city) => {
 }
 
 const showCitySelectionMessage = (city) => {
-  ElMessage({
-    message: formatKoreanSelectionMessage(getCityDisplayName(city), city.name),
-    type: 'primary',
-    plain: true,
-    duration: 1500,
-    grouping: true,
-    showClose: false,
-    customClass: 'weather-selection-message',
-  })
+  showWeatherToast(formatKoreanSelectionMessage(getCityDisplayName(city), city.name), 'status', 1500)
 }
 
 const handleSelect = async (city) => {
@@ -239,6 +242,7 @@ onMounted(() => {
 onBeforeUnmount(() => {
   promotionRequestId += 1
   window.clearTimeout(promotionTimer)
+  window.clearTimeout(toastTimer)
   document.documentElement.classList.remove('world-drawer-open')
 })
 
@@ -289,6 +293,7 @@ watch(
   isWorldDrawerOpen,
   (isOpen) => {
     document.documentElement.classList.toggle('world-drawer-open', isOpen)
+    if (isOpen) void loadWorldWeather()
   },
   { immediate: true },
 )
@@ -325,7 +330,7 @@ if (import.meta.env.DEV) {
           <LocationPermissionPanel v-if="locationPromptState" :state="locationPromptState" :message="locationPromptMessage" @accept="requestLocationWeather" @dismiss="dismissLocationPrompt" />
 
           <template v-else>
-            <button class="refresh-button" type="button" :disabled="!apiReady || isLoading" :aria-label="isLoading ? '날씨 갱신 중' : '날씨 새로고침'" @click="refreshWeather">
+            <button class="refresh-button" type="button" :disabled="isLoading" :aria-label="isLoading ? '날씨 갱신 중' : '날씨 새로고침'" @click="refreshWeather">
               <svg viewBox="0 0 24 24" :class="{ 'is-spinning': isLoading }" aria-hidden="true">
                 <path d="M20 6v5h-5" />
                 <path d="M18.2 15a7 7 0 1 1-.7-7.1L20 11" />
@@ -406,9 +411,8 @@ if (import.meta.env.DEV) {
       :items="filteredWeatherList"
       :selected-city-id="selectedCityId"
       :promoting-city-id="promotingCityId"
-      :is-loading="isLoading"
-      :api-ready="apiReady"
-      :error-message="errorMessage"
+      :is-loading="isWorldLoading"
+      :error-message="worldErrorMessage"
       :failed-city-count="failedCityCount"
       :empty-description="emptyStateDescription"
       @close="closeWorldDrawer"
@@ -417,6 +421,18 @@ if (import.meta.env.DEV) {
       @select-city="handleSelect"
       @open-detail="openWeatherDetail"
     />
+
+    <Transition name="weather-toast">
+      <p
+        v-if="toastMessage"
+        class="weather-toast"
+        :class="`weather-toast--${toastTone}`"
+        :role="toastTone === 'error' ? 'alert' : 'status'"
+        :aria-live="toastTone === 'error' ? 'assertive' : 'polite'"
+      >
+        {{ toastMessage }}
+      </p>
+    </Transition>
   </WeatherScene>
 </template>
 
@@ -794,6 +810,48 @@ if (import.meta.env.DEV) {
   margin-bottom: 22px;
 }
 
+.weather-toast {
+  position: fixed;
+  z-index: 70;
+  top: max(18px, env(safe-area-inset-top));
+  left: 50%;
+  width: fit-content;
+  max-width: calc(100% - 32px);
+  margin: 0;
+  padding: 10px 14px;
+  border: 1px solid color-mix(in srgb, var(--hero-text) 16%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--hero-start) 70%, transparent);
+  box-shadow: 0 12px 32px color-mix(in srgb, var(--hero-end) 18%, transparent);
+  color: var(--hero-text);
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.35;
+  text-align: center;
+  backdrop-filter: blur(20px) saturate(125%);
+  -webkit-backdrop-filter: blur(20px) saturate(125%);
+  transform: translateX(-50%);
+  overflow-wrap: break-word;
+  word-break: keep-all;
+}
+
+.weather-toast--error {
+  border-color: color-mix(in srgb, #a95c52 28%, transparent);
+}
+
+.weather-toast-enter-active,
+.weather-toast-leave-active {
+  transition:
+    opacity 180ms ease,
+    transform 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.weather-toast-enter-from,
+.weather-toast-leave-to {
+  opacity: 0;
+  transform: translate(-50%, -8px);
+}
+
 @media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
   .refresh-button:hover:not(:disabled) {
     background: rgba(255, 255, 255, 0.14);
@@ -898,6 +956,11 @@ if (import.meta.env.DEV) {
 
   .refresh-button:hover:not(:disabled) {
     transform: none;
+  }
+
+  .weather-toast-enter-active,
+  .weather-toast-leave-active {
+    transition: none;
   }
 }
 </style>

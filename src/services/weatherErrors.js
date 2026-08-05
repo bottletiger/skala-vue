@@ -1,19 +1,16 @@
-export const MISSING_WEATHER_API_KEY_MESSAGE = 'VITE_OPENWEATHER_API_KEY를 설정해 주세요.'
-export const HOME_MISSING_WEATHER_API_KEY_MESSAGE = '프로젝트 루트의 .env.local 파일에 VITE_OPENWEATHER_API_KEY를 설정해 주세요.'
-
-export class MissingWeatherApiKeyError extends Error {
-  constructor() {
-    super('OpenWeatherMap API 키가 설정되지 않았습니다.')
-    this.name = 'MissingWeatherApiKeyError'
+export const getWeatherRequestErrorMessage = (error, fallbackMessage) => {
+  if (error?.response?.status === 429) {
+    const reason = String(error?.response?.data?.reason || '').toLowerCase()
+    if (reason.includes('daily api request limit exceeded')) {
+      return '오늘 사용할 수 있는 날씨 데이터 요청량을 모두 사용했습니다. 내일 다시 확인해 주세요.'
+    }
+    return '날씨 데이터 요청 한도를 초과했습니다. 잠시 후 다시 시도해 주세요.'
   }
-}
-
-export const getWeatherRequestErrorMessage = (error, fallbackMessage, missingApiKeyMessage = MISSING_WEATHER_API_KEY_MESSAGE) => {
-  if (error instanceof MissingWeatherApiKeyError) {
-    return missingApiKeyMessage
+  if (error?.code === 'ECONNABORTED' || error?.name === 'TimeoutError') {
+    return '날씨 서비스 응답이 지연되고 있습니다. 잠시 후 다시 시도해 주세요.'
   }
-  if (error.response?.status === 401) {
-    return 'API 키가 유효하지 않거나 아직 활성화되지 않았습니다.'
+  if (error?.code === 'ERR_NETWORK') {
+    return '날씨 서비스에 연결하지 못했습니다. 네트워크 상태를 확인해 주세요.'
   }
   return fallbackMessage
 }

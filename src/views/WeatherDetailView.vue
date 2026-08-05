@@ -1,20 +1,30 @@
 <script setup>
-import { computed, nextTick, onMounted, ref } from 'vue'
+import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
+import AsyncStatePanel from '@/components/common/AsyncStatePanel.vue'
 import WeatherScene from '@/components/common/WeatherScene.vue'
 import CurrentWeatherSummary from '@/components/weather/CurrentWeatherSummary.vue'
 import DailyForecastList from '@/components/weather/DailyForecastList.vue'
 import HourlyForecastStrip from '@/components/weather/HourlyForecastStrip.vue'
 import LoadingSpinner from '@/components/weather/LoadingSpinner.vue'
+import WeatherAdvicePanel from '@/components/weather/WeatherAdvicePanel.vue'
 import WeatherBackgroundVideo from '@/components/weather/WeatherBackgroundVideo.vue'
 import WeatherDetailsList from '@/components/weather/WeatherDetailsList.vue'
+import WeatherPlaylistPanel from '@/components/weather/WeatherPlaylistPanel.vue'
 import { useCityWeatherDetail } from '@/composables/useCityWeatherDetail'
 import { useDocumentTitle } from '@/composables/useDocumentTitle'
+import { getWeatherAdvice } from '@/services/tripsService'
+import { useAuthStore } from '@/stores/auth'
 
 const route = useRoute()
 const router = useRouter()
+const authStore = useAuthStore()
 const detailPageHeading = ref(null)
+const weatherAdvice = ref(null)
+const isAdviceLoading = ref(false)
+const adviceErrorMessage = ref('')
+let adviceRequestId = 0
 const cityId = computed(() => route.params.cityId)
 const redirectUnknownCity = () =>
   router.replace({
@@ -23,7 +33,6 @@ const redirectUnknownCity = () =>
   })
 
 const {
-  apiReady,
   cityConfig,
   cityData,
   detailStatusMessage,
@@ -48,6 +57,41 @@ useDocumentTitle(() => {
 const returnToWeatherList = () => {
   void router.push({ name: 'WeatherHome', query: route.query })
 }
+
+const requestWeatherAdvice = async () => {
+  if (!authStore.isLoggedIn) {
+    await router.push({ name: 'Login', query: { redirect: route.fullPath } })
+    return
+  }
+  if (!cityData.value || isAdviceLoading.value) return
+
+  isAdviceLoading.value = true
+  adviceErrorMessage.value = ''
+  const requestId = ++adviceRequestId
+
+  try {
+    const response = await getWeatherAdvice({
+      location: {
+        name: detailCityName.value,
+        countryName: cityData.value.countryName,
+      },
+      weather: cityData.value,
+      forecast: forecastData.value?.hourly?.slice(0, 8) ?? [],
+    })
+    if (requestId === adviceRequestId) weatherAdvice.value = response?.advice ?? response
+  } catch (error) {
+    if (requestId === adviceRequestId) adviceErrorMessage.value = error?.message || '맞춤 날씨 안내를 만들지 못했습니다.'
+  } finally {
+    if (requestId === adviceRequestId) isAdviceLoading.value = false
+  }
+}
+
+watch(cityId, () => {
+  adviceRequestId += 1
+  weatherAdvice.value = null
+  isAdviceLoading.value = false
+  adviceErrorMessage.value = ''
+})
 
 onMounted(async () => {
   await nextTick()
@@ -74,7 +118,7 @@ onMounted(async () => {
         <button
           type="button"
           class="detail-refresh-button"
-          :disabled="!cityConfig || !apiReady || isRefreshing"
+          :disabled="!cityConfig || isRefreshing"
           :aria-label="isRefreshing ? '상세 날씨 갱신 중' : `${detailCityName ?? '도시'} 상세 날씨 새로고침`"
           @click="refreshDetail"
         >
@@ -90,18 +134,18 @@ onMounted(async () => {
 
         <div v-if="isLoading" class="detail-loading-state">
           <LoadingSpinner class="detail-loading-spinner" />
-          <el-skeleton :rows="2" animated />
+          <AsyncStatePanel kind="loading" :rows="2" message="현재 날씨를 불러오고 있습니다." />
         </div>
-        <el-result v-else-if="errorMessage" :icon="apiReady ? 'error' : 'warning'" title="날씨를 불러올 수 없습니다" :sub-title="errorMessage" />
+        <AsyncStatePanel v-else-if="errorMessage" class="detail-async-state" kind="error" title="날씨를 불러올 수 없습니다" :message="errorMessage" />
 
         <CurrentWeatherSummary v-else-if="cityData" :weather="cityData" :theme="weatherTheme" />
 
-        <el-empty v-else description="표시할 날씨 정보가 없습니다." />
+        <AsyncStatePanel v-else class="detail-async-state" kind="empty" message="표시할 날씨 정보가 없습니다." />
       </section>
 
       <WeatherDetailsList v-if="cityData" :weather="cityData" />
 
-      <section v-if="cityConfig && apiReady" class="forecast-section" aria-labelledby="forecast-overview-title" :aria-busy="isForecastLoading">
+      <section v-if="cityConfig" class="forecast-section" aria-labelledby="forecast-overview-title" :aria-busy="isForecastLoading">
         <h2 id="forecast-overview-title" class="sr-only">날씨 예보</h2>
         <p class="sr-only" aria-live="polite">{{ forecastStatusMessage }}</p>
 
@@ -130,6 +174,10 @@ onMounted(async () => {
           <p>표시할 예보 정보가 없습니다.</p>
         </div>
       </section>
+
+      <WeatherAdvicePanel v-if="cityData" :weather="cityData" :advice="weatherAdvice" :is-loading="isAdviceLoading" :error-message="adviceErrorMessage" @request="requestWeatherAdvice" />
+
+      <WeatherPlaylistPanel v-if="cityData" :weather="cityData" />
     </div>
   </WeatherScene>
 </template>
@@ -220,10 +268,6 @@ onMounted(async () => {
   box-shadow: none;
 }
 
-.current-panel :deep(.el-skeleton__item) {
-  background: rgba(255, 255, 255, 0.36);
-}
-
 .detail-loading-state {
   display: grid;
   min-height: 110px;
@@ -237,10 +281,12 @@ onMounted(async () => {
   --loading-spinner-size: 38px;
 }
 
-.current-panel :deep(.el-result) {
-  --el-text-color-primary: var(--hero-text);
-  --el-text-color-regular: var(--hero-muted);
+.detail-loading-state :deep(.async-state-panel) {
+  width: 100%;
+}
 
+.detail-async-state {
+  min-height: 110px;
   padding: 16px 0;
 }
 

@@ -10,26 +10,25 @@ const routes = [
     meta: { title: '오늘의 날씨', layout: 'weather-scene' },
   },
   {
-    path: '/dashboard',
-    name: 'Dashboard',
-    component: () => import('@/views/DashboardView.vue'),
+    path: '/travel',
+    name: 'TravelPlanner',
+    component: () => import('@/views/TravelPlannerView.vue'),
     meta: {
-      title: 'API 대시보드',
-      layout: 'lab-scene',
-      requiresAuth: true,
+      title: '여행 날씨 계획',
+      layout: 'weather-scene',
     },
+  },
+  {
+    path: '/trips',
+    name: 'Trips',
+    component: () => import('@/views/TripsView.vue'),
+    meta: { title: '내 여행', layout: 'weather-scene', requiresAuth: true },
   },
   {
     path: '/login',
     name: 'Login',
     component: () => import('@/views/LoginView.vue'),
-    meta: { title: '로그인', layout: 'lab-scene' },
-  },
-  {
-    path: '/about',
-    name: 'WeatherAbout',
-    component: () => import('@/views/WeatherAboutView.vue'),
-    meta: { title: '서비스 소개', layout: 'weather-scene' },
+    meta: { title: '로그인', layout: 'weather-scene' },
   },
   {
     path: '/weather/:cityId',
@@ -61,8 +60,9 @@ const router = createRouter({
   },
 })
 
-router.beforeEach((to) => {
+router.beforeEach(async (to) => {
   const authStore = useAuthStore()
+  await authStore.initialize()
 
   if (to.meta.requiresAuth && !authStore.isLoggedIn) {
     return {
@@ -72,7 +72,7 @@ router.beforeEach((to) => {
   }
 
   if (to.name === 'Login' && authStore.isLoggedIn) {
-    return { name: 'Dashboard' }
+    return { name: 'Trips' }
   }
 })
 

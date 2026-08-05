@@ -17,24 +17,25 @@ jobs:
   build:
     runs-on: ubuntu-latest
     env:
-      VITE_OPENWEATHER_API_KEY: ${{ secrets.VITE_OPENWEATHER_API_KEY }}
+      VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
+      VITE_SUPABASE_PUBLISHABLE_KEY: ${{ vars.VITE_SUPABASE_PUBLISHABLE_KEY }}
+      VITE_GOOGLE_AUTH_ENABLED: ${{ vars.VITE_GOOGLE_AUTH_ENABLED }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
+
+      - name: Verify public runtime configuration
+        run: |
+          if [ -z "$VITE_SUPABASE_URL" ] || [ -z "$VITE_SUPABASE_PUBLISHABLE_KEY" ]; then
+            echo "::error::Required Supabase repository variables are missing."
+            exit 1
+          fi
 
       - name: Set up Node.js
         uses: actions/setup-node@v6
         with:
           node-version: 22
           cache: npm
-
-      - name: Verify deployment configuration
-        shell: bash
-        run: |
-          if [[ -z "$VITE_OPENWEATHER_API_KEY" ]]; then
-            echo "Repository secret VITE_OPENWEATHER_API_KEY is required." >&2
-            exit 1
-          fi
 
       - name: Install dependencies
         run: npm ci

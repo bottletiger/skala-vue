@@ -1,21 +1,20 @@
 import { computed, onBeforeUnmount, ref, toValue, watch } from 'vue'
 
 import { findCityConfig } from '@/data/cities'
-import { fetchCityForecast, fetchCityWeather, hasWeatherApiKey } from '@/services/weatherApi'
-import { getWeatherRequestErrorMessage, MISSING_WEATHER_API_KEY_MESSAGE } from '@/services/weatherErrors'
+import { fetchCityForecast, fetchCityWeather } from '@/services/weatherApi'
+import { getWeatherRequestErrorMessage } from '@/services/weatherErrors'
 import { useHomeWeatherStore } from '@/stores/homeWeatherStore'
 import { getWeatherTheme } from '@/utils/weatherTheme'
 
 export const useCityWeatherDetail = (cityIdSource, redirectUnknownCity) => {
-  const apiReady = hasWeatherApiKey()
   const homeWeatherStore = useHomeWeatherStore()
   const resolveCityConfig = (cityId) => findCityConfig(cityId) ?? homeWeatherStore.weatherList.find((city) => city.id === cityId && city.isCurrentLocation)
   const cityConfig = computed(() => resolveCityConfig(toValue(cityIdSource)))
   const cityData = ref(null)
   const forecastData = ref(null)
-  const isLoading = ref(apiReady)
-  const isForecastLoading = ref(apiReady)
-  const errorMessage = ref(apiReady ? '' : MISSING_WEATHER_API_KEY_MESSAGE)
+  const isLoading = ref(true)
+  const isForecastLoading = ref(true)
+  const errorMessage = ref('')
   const forecastErrorMessage = ref('')
   let requestId = 0
 
@@ -71,13 +70,6 @@ export const useCityWeatherDetail = (cityIdSource, redirectUnknownCity) => {
       return
     }
 
-    if (!apiReady) {
-      errorMessage.value = MISSING_WEATHER_API_KEY_MESSAGE
-      isLoading.value = false
-      isForecastLoading.value = false
-      return
-    }
-
     isLoading.value = true
     isForecastLoading.value = true
 
@@ -123,7 +115,6 @@ export const useCityWeatherDetail = (cityIdSource, redirectUnknownCity) => {
   })
 
   return {
-    apiReady,
     cityConfig,
     cityData,
     detailStatusMessage,
