@@ -108,24 +108,24 @@
   margin-bottom: 10px;
   min-height: 180px;
   padding: 16px;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--color-border);
   border-radius: 10px;
-  background: #fff;
+  background: var(--color-background-soft);
   cursor: pointer;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .card-hot {
-  background: linear-gradient(to bottom right, #fff 0%, #fff 62%, #fff7ed 100%);
+  background: linear-gradient(to bottom right, var(--color-background-soft) 0%, var(--color-background-soft) 62%, var(--color-hot-surface) 100%);
 }
 
 .card-cool {
-  background: linear-gradient(to bottom right, #fff 0%, #fff 62%, #eff6ff 100%);
+  background: linear-gradient(to bottom right, var(--color-background-soft) 0%, var(--color-background-soft) 62%, var(--color-cool-surface) 100%);
 }
 
 .weather-card:hover {
-  border-color: #cbd5e1;
-  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
+  border-color: var(--color-border-hover);
+  box-shadow: 0 6px 18px var(--color-shadow);
 }
 .weather-card:last-child {
   margin-bottom: 0;
@@ -140,7 +140,7 @@
 
 .card-heading h3 {
   margin: 0;
-  color: #111827;
+  color: var(--color-heading);
   font-size: 17px;
   font-weight: 700;
   letter-spacing: -0.02em;
@@ -148,7 +148,7 @@
 
 .card-heading p {
   margin: 3px 0 0;
-  color: #9ca3af;
+  color: var(--color-text-soft);
   font-size: 11px;
 }
 
@@ -166,12 +166,12 @@
 }
 
 .current-temperature span {
-  color: #9ca3af;
+  color: var(--color-text-soft);
   font-size: 11px;
 }
 
 .current-temperature strong {
-  color: #111827;
+  color: var(--color-heading);
   font-size: 32px;
   font-weight: 650;
   letter-spacing: -0.04em;
@@ -190,8 +190,8 @@
   height: 72px;
   object-fit: contain;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.76);
-  box-shadow: inset 0 0 0 1px rgba(226, 232, 240, 0.72);
+  background: var(--color-icon-background);
+  box-shadow: inset 0 0 0 1px var(--color-border);
 }
 
 .card-footer {
@@ -200,20 +200,20 @@
   justify-content: space-between;
   gap: 12px;
   padding-top: 10px;
-  border-top: 1px solid rgba(226, 232, 240, 0.8);
+  border-top: 1px solid var(--color-border);
 }
 
 .card-metrics {
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
-  color: #9ca3af;
+  color: var(--color-text-soft);
   font-size: 12px;
 }
 
 .card-metrics strong {
   margin-left: 3px;
-  color: #4b5563;
+  color: var(--color-text);
   font-weight: 600;
 }
 

@@ -24,7 +24,6 @@
       title="Weather Map"
       :src="windyEmbedUrl"
       frameborder="0"
-      scrolling="no"
       style="pointer-events: none;">
     </iframe>
   </section>
@@ -59,7 +58,7 @@ const windyEmbedUrl = computed(() =>
 
 .map-heading h2 {
   margin: 0;
-  color: #111827;
+  color: var(--color-heading);
   font-size: 18px;
   font-weight: 700;
   letter-spacing: -0.02em;
@@ -67,7 +66,7 @@ const windyEmbedUrl = computed(() =>
 
 .map-heading p {
   margin: 0;
-  color: #9ca3af;
+  color: var(--color-text-soft);
   font-size: 12px;
 }
 

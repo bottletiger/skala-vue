@@ -374,8 +374,8 @@ const showDetail = (city) => {
 .status-bar {
   margin-top: 16px;
   padding-top: 12px;
-  border-top: 1px solid #eef0f2;
-  color: #9ca3af;
+  border-top: 1px solid var(--color-border-soft);
+  color: var(--color-text-soft);
   font-size: 12px;
 }
 .empty-message{
@@ -396,20 +396,20 @@ const showDetail = (city) => {
   gap: 12px;
   margin: -4px 0 14px;
   padding: 9px 10px;
-  border: 1px solid #eef0f2;
+  border: 1px solid var(--color-border-soft);
   border-radius: 8px;
-  background: #fafafa;
+  background: var(--color-background-mute);
 }
 
 .cache-row p {
   margin: 0;
-  color: #6b7280;
+  color: var(--color-text-muted);
   font-size: 11px;
 }
 
 .city-add-message {
   margin: 8px 0 0;
-  color: #4b5563;
+  color: var(--color-text);
   font-size: 12px;
 }
 
@@ -421,7 +421,7 @@ const showDetail = (city) => {
 
 .section-heading h2 {
   margin: 0;
-  color: #111827;
+  color: var(--color-heading);
   font-size: 18px;
   font-weight: 700;
   letter-spacing: -0.02em;
@@ -429,7 +429,7 @@ const showDetail = (city) => {
 
 .section-heading p {
   margin: 0;
-  color: #9ca3af;
+  color: var(--color-text-soft);
   font-size: 12px;
 }
 
@@ -453,7 +453,7 @@ const showDetail = (city) => {
 
 .favorite-filter span {
   margin-left: 3px;
-  color: #94a3b8;
+  color: var(--color-text-soft);
 }
 
 .api-status {
@@ -462,15 +462,15 @@ const showDetail = (city) => {
 }
 
 .api-status--loading {
-  color: #4b5563;
+  color: var(--color-text);
 }
 
 .api-status--success {
-  color: #6b7280;
+  color: var(--color-text-muted);
 }
 
 .api-status--error {
-  color: #b91c1c;
+  color: var(--color-danger);
 }
 
 .weather-grid {

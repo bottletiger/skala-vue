@@ -40,6 +40,7 @@ declare module 'vue' {
     SampleOne: typeof import('./src/components/basic/practice/SampleOne.vue')['default']
     SearchBar: typeof import('./src/components/exercise/SearchBar.vue')['default']
     StyleBind: typeof import('./src/components/basic/practice/StyleBind.vue')['default']
+    ThemeToggler: typeof import('./src/components/exercise/ThemeToggler.vue')['default']
     UApp: typeof import('./node_modules/@nuxt/ui/dist/runtime/components/App.vue')['default']
     UBadge: typeof import('./node_modules/@nuxt/ui/dist/runtime/components/Badge.vue')['default']
     UButton: typeof import('./node_modules/@nuxt/ui/dist/runtime/components/Button.vue')['default']

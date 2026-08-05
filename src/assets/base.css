@@ -1,13 +1,43 @@
-:root {
+:root,
+:root.light {
   --color-background: #f6f7f9;
   --color-background-soft: #ffffff;
   --color-background-mute: #f1f3f5;
   --color-border: #e5e7eb;
+  --color-border-soft: #eef0f2;
   --color-border-hover: #cbd5e1;
   --color-heading: #111827;
   --color-text: #374151;
+  --color-text-muted: #6b7280;
+  --color-text-soft: #9ca3af;
+  --color-danger: #b91c1c;
+  --color-hot-surface: #fff7ed;
+  --color-cool-surface: #eff6ff;
+  --color-icon-background: rgba(255, 255, 255, 0.76);
+  --color-overlay: rgba(15, 23, 42, 0.38);
+  --color-shadow: rgba(15, 23, 42, 0.08);
   --section-gap: 160px;
   color-scheme: light;
+}
+
+:root.dark {
+  --color-background: #0f172a;
+  --color-background-soft: #111827;
+  --color-background-mute: #1e293b;
+  --color-border: #334155;
+  --color-border-soft: #263449;
+  --color-border-hover: #475569;
+  --color-heading: #f8fafc;
+  --color-text: #e5e7eb;
+  --color-text-muted: #cbd5e1;
+  --color-text-soft: #94a3b8;
+  --color-danger: #f87171;
+  --color-hot-surface: #2a211c;
+  --color-cool-surface: #17233a;
+  --color-icon-background: rgba(15, 23, 42, 0.5);
+  --color-overlay: rgba(2, 6, 23, 0.68);
+  --color-shadow: rgba(0, 0, 0, 0.28);
+  color-scheme: dark;
 }
 
 *,
@@ -41,6 +71,7 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   cursor: url("bonobono-cursor.png") 0 0, auto;
+  transition: background-color 0.18s ease, color 0.18s ease;
 }
 
 button,

@@ -67,7 +67,7 @@ const closeDetail = () => {
 .back-link {
   display: inline-block;
   margin-bottom: 3rem;
-  color: #335c67;
+  color: var(--color-text-muted);
   font-weight: 700;
 }
 
@@ -80,7 +80,7 @@ const closeDetail = () => {
 
 h1 {
   margin: 0.5rem 0 1rem;
-  color: #14213d;
+  color: var(--color-heading);
   font-size: clamp(2.5rem, 7vw, 4.5rem);
   font-weight: 900;
   line-height: 1.1;
@@ -93,7 +93,7 @@ h1 {
   display: grid;
   place-items: center;
   padding: clamp(12px, 3vw, 28px);
-  background: rgba(15, 23, 42, 0.38);
+  background: var(--color-overlay);
   backdrop-filter: blur(2px);
 }
 
@@ -102,10 +102,10 @@ h1 {
   max-height: min(820px, 90vh);
   overflow-y: auto;
   overscroll-behavior: contain;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--color-border);
   border-radius: 14px;
-  background: #fff;
-  box-shadow: 0 20px 48px rgba(15, 23, 42, 0.2);
+  background: var(--color-background-soft);
+  box-shadow: 0 20px 48px var(--color-shadow);
 }
 
 .weather-modal-enter-active,

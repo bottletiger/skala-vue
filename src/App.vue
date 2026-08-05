@@ -1,6 +1,21 @@
 <script setup lang="ts">
+import { watch } from 'vue';
+import ThemeToggler from './components/exercise/ThemeToggler.vue';
 import UnitToggler from './components/exercise/UnitToggler.vue';
+import { useConfigStore } from './stores/configStore';
 
+const configStore = useConfigStore();
+
+watch(
+  () => configStore.theme,
+  (theme) => {
+    const root = document.documentElement;
+    root.classList.toggle('dark', theme === 'dark');
+    root.classList.toggle('light', theme === 'light');
+    window.localStorage.setItem('weather-theme', theme);
+  },
+  { immediate: true },
+);
 </script>
 
 <template>
@@ -20,7 +35,10 @@ import UnitToggler from './components/exercise/UnitToggler.vue';
         <RouterLink to="/about" class="nav-item">ℹ️ 서비스 소개</RouterLink>
       </nav>
 
-      <UnitToggler class="unit-toggler"></UnitToggler>
+      <div class="header-actions">
+        <UnitToggler></UnitToggler>
+        <ThemeToggler />
+      </div>
     </header>
 
     <main>
@@ -42,14 +60,14 @@ import UnitToggler from './components/exercise/UnitToggler.vue';
   align-items: center;
   min-height: 56px;
   padding: 0 2px 14px;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid var(--color-border);
 }
 
 .brand {
   display: inline-flex;
   align-items: center;
   gap: 9px;
-  color: #111827;
+  color: var(--color-heading);
   font-size: 17px;
   font-weight: 700;
   letter-spacing: -0.02em;
@@ -68,7 +86,7 @@ import UnitToggler from './components/exercise/UnitToggler.vue';
 
 .brand small {
   margin-top: 2px;
-  color: #9ca3af;
+  color: var(--color-text-soft);
   font-size: 10px;
 }
 
@@ -76,7 +94,7 @@ import UnitToggler from './components/exercise/UnitToggler.vue';
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  background: #0f172a;
+  background: var(--color-heading);
 }
 
 .nav-bar {
@@ -89,7 +107,7 @@ import UnitToggler from './components/exercise/UnitToggler.vue';
 .nav-item {
   padding: 6px 9px;
   border-radius: 6px;
-  color: #6b7280;
+  color: var(--color-text-muted);
   font-size: 14px;
   font-weight: 500;
   white-space: nowrap;
@@ -97,11 +115,14 @@ import UnitToggler from './components/exercise/UnitToggler.vue';
 
 .nav-item:hover,
 .nav-item.router-link-active {
-  background: #eef0f3;
-  color: #111827;
+  background: var(--color-background-mute);
+  color: var(--color-heading);
 }
 
-.unit-toggler{
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   margin-left: auto;
 }
 

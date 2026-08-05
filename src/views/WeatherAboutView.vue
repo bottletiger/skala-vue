@@ -8,6 +8,7 @@
                 <li>클라이언트 사이드 라우팅을 통한 새로고침 없는 화면 전환</li>
                 <li>URL 쿼리 스트링 매핑을 활용한 실시간 검색 상태 동기화</li>
                 <li>즐겨찾기 도시를 localStorage에 저장하고 다시 불러오기</li>
+                <li>Pinia 전역 상태를 이용한 라이트·다크 테마 전환</li>
                 <li>상세 라우트를 모달로 표시하고 배경 화면 스크롤 잠금 처리</li>
                 <li>도시별 7일 예보 조회 및 localStorage 캐싱</li>
                 <li>캐시 남은 시간 표시 및 최신 날씨 강제 갱신</li>
@@ -33,14 +34,14 @@ import BaseDashboardCard from '@/components/exercise/BaseDashboardCard.vue';
   display: flex;
   align-items: center;
   margin: 0 0 14px;
-  color: #111827;
+  color: var(--color-heading);
   font-size: 20px;
   font-weight: 700;
   letter-spacing: -0.02em;
 }
 
 .about-card {
-  color: #475569;
+  color: var(--color-text);
   font-size: 15px;
   line-height: 1.65;
 }
@@ -61,8 +62,8 @@ import BaseDashboardCard from '@/components/exercise/BaseDashboardCard.vue';
 .about-card mark {
   padding: 2px 5px;
   border-radius: 4px;
-  color: #4b5563;
-  background: #f3f4f6;
+  color: var(--color-text);
+  background: var(--color-background-mute);
 }
 
 .btn-home {

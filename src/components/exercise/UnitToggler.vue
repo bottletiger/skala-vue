@@ -29,7 +29,7 @@ const configStore = useConfigStore();
 
 .unit-toggle span {
   margin: 0;
-  color: #6b7280;
+  color: var(--color-text-muted);
 }
 
 </style>

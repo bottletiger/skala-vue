@@ -14,6 +14,7 @@
 | 다중 기준 정렬 | 이름·기온·체감온도·습도·풍속 정렬 및 오름차순·내림차순 전환 |
 | 즐겨찾기 | 도시별 즐겨찾기와 즐겨찾기 전용 필터, 브라우저 재접속 시 복원 |
 | 온도 단위 변경 | Pinia를 이용해 전체 화면의 섭씨·화씨를 동시에 변경 |
+| 라이트·다크 모드 | Pinia 전역 테마 상태와 CSS 색상 토큰을 이용한 화면 테마 전환 |
 | 라우팅 기반 모달 | URL이 변경되는 상세 라우트를 대시보드 위 모달로 표시 |
 | 모달 스크롤 제어 | 상세 모달이 열리면 배경 스크롤을 잠그고 닫을 때 복원 |
 | 7일 예보 | 도시별 최고·최저 기온, 날씨, 강수확률 표시 |
@@ -31,7 +32,7 @@
 | --- | --- |
 | `vue` | Composition API와 컴포넌트 기반 화면 구성 |
 | `vue-router` | Hash 라우팅, 검색 쿼리, 중첩 라우트 기반 상세 모달 |
-| `pinia` | 섭씨·화씨 전역 상태와 온도 변환 함수 관리 |
+| `pinia` | 섭씨·화씨 단위와 라이트·다크 테마 전역 상태 관리 |
 | `axios` | OpenWeather와 Open-Meteo HTTP 요청 |
 | `@nuxt/ui` | 검색창, 셀렉트, 버튼, 배지 등 공통 UI 요소 |
 | `tailwindcss` | Nuxt UI 스타일 시스템과 전역 디자인 토큰 |
@@ -78,13 +79,16 @@
 
 관련 코드: [`weatherParent.vue`](src/components/exercise/weatherParent.vue), [`weatherCard.vue`](src/components/exercise/weatherCard.vue), [`useFavoriteCities.js`](src/composables/useFavoriteCities.js)
 
-### 4. 전역 온도 단위 변경
+### 4. 전역 단위와 테마 변경
 
 - Pinia store에서 섭씨·화씨 상태와 변환 함수를 관리합니다.
 - 헤더에서 단위를 변경하면 현재 날씨 카드, 상세 정보, 7일 예보가 함께 갱신됩니다.
 - API 원본 데이터는 섭씨로 유지하고 출력 시점에만 변환합니다.
+- 같은 store에서 라이트·다크 테마 상태를 관리하고 루트 클래스와 동기화합니다.
+- 선택한 테마를 `localStorage`에 저장해 새로고침 후에도 복원합니다.
+- 공통 CSS 색상 토큰으로 대시보드, 상세 모달, 소개 및 404 화면을 함께 전환합니다.
 
-관련 코드: [`configStore.js`](src/stores/configStore.js), [`UnitToggler.vue`](src/components/exercise/UnitToggler.vue)
+관련 코드: [`configStore.js`](src/stores/configStore.js), [`UnitToggler.vue`](src/components/exercise/UnitToggler.vue), [`ThemeToggler.vue`](src/components/exercise/ThemeToggler.vue)
 
 ### 5. 라우팅 기반 상세 모달
 

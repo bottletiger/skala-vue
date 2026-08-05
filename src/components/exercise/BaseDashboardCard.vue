@@ -11,8 +11,8 @@
 <style scoped>
 .base-dashboard-card {
   padding: clamp(16px, 2.5vw, 22px);
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--color-border);
   border-radius: 12px;
-  background: #fff;
+  background: var(--color-background-soft);
 }
 </style>

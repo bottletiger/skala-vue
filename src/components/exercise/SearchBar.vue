@@ -1,8 +1,8 @@
 <template>
     <section class="search-child" aria-labelledby="city-search-title">
       <div class="search-heading">
-        <h3 id="city-search-title">🔍 도시 검색</h3>
-        <p>입력하면 목록을 필터링하고, 추가 후보도 찾을 수 있습니다.</p>
+        <h3 id="city-search-title">🔍 검색</h3>
+        <p>입력하면 목록을 필터링하고, 추가 지역도 찾을 수 있습니다.</p>
       </div>
 
       <form class="search-row" @submit.prevent="handleCitySearch">
@@ -10,7 +10,7 @@
           class="search-input"
           :model-value="curQuery"
           size="lg"
-          placeholder="도시 이름 입력"
+          placeholder="지역 이름 입력"
           aria-label="도시 검색"
           @update:model-value="sendCurQuery">
           <template v-if="curQuery" #trailing>
@@ -31,7 +31,7 @@
           color="neutral"
           variant="outline"
           :loading="searchStatus === 'loading'">
-          추가 후보 찾기
+          지역 찾기
         </UButton>
       </form>
 
@@ -141,14 +141,14 @@ const handleCitySearch = async () => {
 
 .search-heading h3 {
   margin: 0;
-  color: #111827;
+  color: var(--color-heading);
   font-size: 15px;
   font-weight: 650;
 }
 
 .search-heading p {
   margin: 0;
-  color: #9ca3af;
+  color: var(--color-text-soft);
   font-size: 11px;
 }
 
@@ -163,7 +163,7 @@ const handleCitySearch = async () => {
 
 .search-message {
   margin: 8px 0 0;
-  color: #6b7280;
+  color: var(--color-text-muted);
   font-size: 12px;
 }
 
@@ -181,9 +181,9 @@ const handleCitySearch = async () => {
   justify-content: space-between;
   gap: 12px;
   padding: 8px 10px;
-  border: 1px solid #eef0f2;
+  border: 1px solid var(--color-border-soft);
   border-radius: 8px;
-  background: #fafafa;
+  background: var(--color-background-mute);
 }
 
 .search-results li div {
@@ -193,14 +193,14 @@ const handleCitySearch = async () => {
 }
 
 .search-results strong {
-  color: #111827;
+  color: var(--color-heading);
   font-size: 13px;
   font-weight: 600;
 }
 
 .search-results span {
   overflow: hidden;
-  color: #9ca3af;
+  color: var(--color-text-soft);
   font-size: 11px;
   text-overflow: ellipsis;
   white-space: nowrap;

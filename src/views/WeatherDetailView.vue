@@ -256,7 +256,7 @@ const closeDetail = () => {
 .detail-page,
 .empty-state {
   margin: 0;
-  color: #374151;
+  color: var(--color-text);
 }
 
 .detail-page {
@@ -269,10 +269,10 @@ const closeDetail = () => {
   align-items: center;
   justify-content: space-between;
   padding: 20px 22px;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--color-border);
   border-radius: 11px;
-  background: #f8fafc;
-  color: #111827;
+  background: var(--color-background-mute);
+  color: var(--color-heading);
 }
 
 .location,
@@ -281,7 +281,7 @@ const closeDetail = () => {
 }
 
 .location {
-  color: #6b7280;
+  color: var(--color-text-muted);
   font-size: 12px;
   font-weight: 600;
 }
@@ -293,7 +293,7 @@ const closeDetail = () => {
 }
 
 .updated-at {
-  color: #9ca3af;
+  color: var(--color-text-soft);
   font-size: 12px;
 }
 
@@ -326,28 +326,28 @@ const closeDetail = () => {
   gap: 6px;
   min-height: 76px;
   padding: 12px 8px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--color-border);
   border-radius: 9px;
-  background: #fff;
+  background: var(--color-background-soft);
   text-align: center;
 }
 
 .summary-card span {
-  color: #64748b;
+  color: var(--color-text-muted);
   font-size: 12px;
 }
 
 .summary-card strong {
-  color: #111827;
+  color: var(--color-heading);
   font-size: 18px;
 }
 
 .forecast-section {
   margin: 12px 0;
   padding: 14px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--color-border);
   border-radius: 10px;
-  background: #fff;
+  background: var(--color-background-soft);
 }
 
 .forecast-section h3 {
@@ -358,12 +358,12 @@ const closeDetail = () => {
 .forecast-status {
   margin: 0;
   padding: 14px 0;
-  color: #64748b;
+  color: var(--color-text-muted);
   text-align: center;
 }
 
 .forecast-status--error {
-  color: #b91c1c;
+  color: var(--color-danger);
 }
 
 .forecast-grid {
@@ -382,14 +382,14 @@ const closeDetail = () => {
   gap: 4px;
   padding: 9px 5px;
   border-radius: 8px;
-  border: 1px solid #eef0f2;
-  background: #fafafa;
+  border: 1px solid var(--color-border-soft);
+  background: var(--color-background-mute);
   text-align: center;
 }
 
 .forecast-day time,
 .forecast-day small {
-  color: #64748b;
+  color: var(--color-text-muted);
   font-size: 11px;
 }
 
@@ -399,7 +399,7 @@ const closeDetail = () => {
 
 .forecast-condition {
   min-height: 32px;
-  color: #475569;
+  color: var(--color-text);
   font-size: 11px;
 }
 
@@ -408,7 +408,7 @@ const closeDetail = () => {
 }
 
 .forecast-day strong span {
-  color: #64748b;
+  color: var(--color-text-muted);
   font-weight: 500;
 }
 
@@ -416,20 +416,20 @@ const closeDetail = () => {
   display: block;
   width: fit-content;
   margin: 6px 0 0 auto;
-  color: #94a3b8;
+  color: var(--color-text-soft);
   font-size: 10px;
 }
 
 .details-card {
   padding: 18px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--color-border);
   border-radius: 10px;
-  background: #fff;
+  background: var(--color-background-soft);
 }
 
 .details-card h3 {
   margin: 0 0 12px;
-  color: #111827;
+  color: var(--color-heading);
   font-size: 16px;
 }
 
@@ -445,11 +445,11 @@ const closeDetail = () => {
   justify-content: space-between;
   gap: 12px;
   padding: 9px 0;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid var(--color-border);
 }
 
 .details-card dt {
-  color: #64748b;
+  color: var(--color-text-muted);
 }
 
 .details-card dd {
@@ -468,10 +468,10 @@ const closeDetail = () => {
   height: 32px;
   place-items: center;
   padding: 0 0 3px;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--color-border);
   border-radius: 50%;
-  background: #fff;
-  color: #6b7280;
+  background: var(--color-background-soft);
+  color: var(--color-text-muted);
   cursor: pointer;
   font-size: 24px;
   line-height: 1;
@@ -479,8 +479,8 @@ const closeDetail = () => {
 }
 
 .modal-close:hover {
-  background: #f3f4f6;
-  color: #111827;
+  background: var(--color-background-mute);
+  color: var(--color-heading);
 }
 
 .btn-home {
@@ -504,7 +504,7 @@ const closeDetail = () => {
 .empty-state {
   padding: 40px 20px;
   border-radius: 10px;
-  background: #f8fafc;
+  background: var(--color-background-mute);
   text-align: center;
 }
 

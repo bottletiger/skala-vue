@@ -83,15 +83,15 @@ onBeforeUnmount(() => {
 .not-found {
   margin: 40px auto 0;
   padding: 42px 24px;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--color-border);
   border-radius: 12px;
-  background: #fff;
-  color: #475569;
+  background: var(--color-background-soft);
+  color: var(--color-text);
   text-align: center;
 }
 
 .error-code {
-  color: #9ca3af;
+  color: var(--color-text-soft);
   font-size: 13px;
   font-weight: 700;
   letter-spacing: 0.12em;
@@ -110,7 +110,7 @@ onBeforeUnmount(() => {
 
 h2 {
   margin: 12px 0 8px;
-  color: #111827;
+  color: var(--color-heading);
   font-size: 22px;
 }
 
@@ -127,7 +127,7 @@ h2 {
   padding: 5px 10px;
   overflow-wrap: anywhere;
   border-radius: 4px;
-  background: #f3f4f6;
-  color: #64748b;
+  background: var(--color-background-mute);
+  color: var(--color-text-muted);
 }
 </style>
