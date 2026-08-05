@@ -12,7 +12,6 @@ export {}
 declare module 'vue' {
   export interface GlobalComponents {
     BaseDashboardCard: typeof import('./src/components/exercise/BaseDashboardCard.vue')['default']
-    CityAddForm: typeof import('./src/components/exercise/CityAddForm.vue')['default']
     ClassBind: typeof import('./src/components/basic/practice/ClassBind.vue')['default']
     ExAxios: typeof import('./src/components/basic/practice/exAxios.vue')['default']
     ExComputed: typeof import('./src/components/basic/practice/exComputed.vue')['default']

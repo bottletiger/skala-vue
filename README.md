@@ -19,7 +19,7 @@
 | 7일 예보 | 도시별 최고·최저 기온, 날씨, 강수확률 표시 |
 | API 캐싱 | 현재 날씨 목록과 도시별 7일 예보를 각각 1시간 캐싱 |
 | 캐시 상태·갱신 | 캐시 사용 여부와 남은 시간을 표시하고 만료 시 자동 또는 버튼으로 갱신 |
-| 사용자 도시 추가 | Geocoding 검색으로 원하는 도시를 목록과 즐겨찾기에 추가 |
+| 사용자 도시 추가 | 기존 목록 필터와 Geocoding 도시 추가 검색을 하나의 검색창으로 통합 |
 | 컴포넌트 분리 | 검색·카드·지도·단위 기능을 분리하고 props/emits로 연결 |
 | 날씨 지도 | Windy의 기온·강수·구름·기압·바람·레이더·UV 레이어 전환 |
 | 예외 처리 | API 로딩·성공·실패 상태와 404 화면 제공 |
@@ -106,13 +106,14 @@
 
 ### 7. 원하는 도시 직접 추가
 
+- 하나의 검색창에서 입력 중에는 기존 카드 목록을 필터링하고, `추가 후보 찾기`를 누르면 새 도시 후보를 검색합니다.
 - OpenWeather Geocoding API에서 국문·영문 도시 이름으로 최대 5개 후보를 검색합니다.
 - 같은 이름의 도시는 지역과 국가 코드를 함께 표시해 구분할 수 있습니다.
-- 선택한 후보의 좌표로 현재 날씨를 조회하고 기존 목록에 추가합니다.
-- 추가된 도시는 자동으로 즐겨찾기에 포함되며 위치 정보와 날씨 목록을 `localStorage`에 저장합니다.
-- 기존 10개 도시를 다시 검색하면 중복 카드를 만들지 않고 기존 카드를 즐겨찾기에 추가합니다.
+- 선택한 후보의 좌표로 현재 날씨를 조회하고 목록과 `localStorage`에 추가합니다.
+- 즐겨찾기는 자동으로 지정하지 않고 각 날씨 카드의 별 버튼으로 직접 설정합니다.
+- 이미 있는 도시를 다시 선택해도 중복 카드를 만들지 않습니다.
 
-관련 코드: [`CityAddForm.vue`](src/components/exercise/CityAddForm.vue), [`weatherApi.js`](src/api/weatherApi.js), [`weatherParent.vue`](src/components/exercise/weatherParent.vue)
+관련 코드: [`SearchBar.vue`](src/components/exercise/SearchBar.vue), [`weatherApi.js`](src/api/weatherApi.js), [`weatherParent.vue`](src/components/exercise/weatherParent.vue)
 
 ### 8. 날씨 지도와 예외 화면
 

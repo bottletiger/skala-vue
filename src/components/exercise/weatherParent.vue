@@ -6,12 +6,11 @@
       
       <BaseDashboardCard>
           <SearchBar 
-              :cur-query="searchQuery" 
-              @update-query="updateSearchQuery">
+              :cur-query="searchQuery"
+              :adding="isAddingCity"
+              @update-query="updateSearchQuery"
+              @add-city="addCity">
           </SearchBar>
-          <CityAddForm
-            :adding="isAddingCity"
-            @add-city="addCity" />
           <p v-if="cityAddMessage" class="city-add-message" aria-live="polite">
             {{ cityAddMessage }}
           </p>
@@ -103,7 +102,6 @@
 <script setup>
 import { ref, onMounted, onBeforeUnmount, computed, watch, watchEffect } from 'vue';
 import BaseDashboardCard from './BaseDashboardCard.vue';
-import CityAddForm from './CityAddForm.vue';
 import SearchBar from './SearchBar.vue';
 import WeatherCard from './weatherCard.vue';
 import WeatherMap from './WeatherMap.vue';
@@ -125,6 +123,7 @@ const searchQuery = ref(initialQuery);
 // - searchQuery 감시 (watchEffect 이용): 도시 검색어를 타이핑할 때 마다 변하는 searchQuery를 추적하여 콘솔로그로 작성
 const updateSearchQuery = (query) => {
     searchQuery.value = query;
+    cityAddMessage.value = '';
 }
 watchEffect(() => {
   console.log(`[watchEffect 자동 호출] 현재 검색어 '${searchQuery.value}' 에 매칭되는 API 데이터를 필터링했습니다`)
@@ -237,13 +236,9 @@ const addCity = async (location) => {
       weatherSource.value = 'network';
     }
 
-    if (!isFavorite(targetCity.id)) {
-      toggleFavorite(targetCity.id);
-    }
-
     cityAddMessage.value = existingCity
-      ? `${targetCity.name_kr ?? targetCity.name}은(는) 이미 목록에 있어 즐겨찾기에 추가했습니다.`
-      : `${targetCity.name_kr ?? targetCity.name}을(를) 목록과 즐겨찾기에 추가했습니다.`;
+      ? `${targetCity.name_kr ?? targetCity.name}은(는) 이미 목록에 있습니다.`
+      : `${targetCity.name_kr ?? targetCity.name}을(를) 목록에 추가했습니다. 즐겨찾기는 카드의 별 버튼으로 설정할 수 있습니다.`;
   } catch (error) {
     console.error(error);
     cityAddMessage.value = '도시 날씨를 불러오지 못했습니다.';
