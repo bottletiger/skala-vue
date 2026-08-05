@@ -54,8 +54,11 @@
       <p v-if="forecastStatus === 'loading'" class="forecast-status" aria-live="polite">
         주간 예보를 불러오는 중입니다.
       </p>
-      <p v-else-if="forecastStatus === 'error'" class="forecast-status forecast-status--error">
-        주간 예보를 불러오지 못했습니다.
+      <p
+        v-else-if="forecastStatus === 'error'"
+        class="forecast-status forecast-status--error"
+        aria-live="polite">
+        {{ forecastErrorMessage }}
       </p>
 
       <div v-else class="forecast-grid">
@@ -143,12 +146,14 @@ const city = ref(null);
 const isLoading = ref(true);
 const weeklyForecast = ref([]);
 const forecastStatus = ref('loading');
+const forecastErrorMessage = ref('주간 예보를 불러오지 못했습니다.');
 
 const loadWeeklyForecast = async (currentCity) => {
   const requestedCityId = String(currentCity.id);
   const { lat, lon } = currentCity.detail.coord;
 
   forecastStatus.value = 'loading';
+  forecastErrorMessage.value = '주간 예보를 불러오지 못했습니다.';
 
   try {
     const forecast = await getWeeklyForecast({
@@ -167,6 +172,8 @@ const loadWeeklyForecast = async (currentCity) => {
     if (String(city.value?.id) !== requestedCityId) return;
 
     weeklyForecast.value = [];
+    forecastErrorMessage.value = error.response?.data?.reason
+      || '주간 예보를 불러오지 못했습니다.';
     forecastStatus.value = 'error';
   }
 };
@@ -175,6 +182,7 @@ const loadCity = async () => {
   isLoading.value = true;
   weeklyForecast.value = [];
   forecastStatus.value = 'loading';
+  forecastErrorMessage.value = '주간 예보를 불러오지 못했습니다.';
 
   const routedCity = window.history.state?.city;
   if (
