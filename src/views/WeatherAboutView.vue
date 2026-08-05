@@ -1,6 +1,6 @@
 <template>
     <div class="container">
-        <h2 class="info"><InfoFilled aria-hidden="true" /> 서비스 소개</h2>
+        <h2 class="info">ℹ️ 서비스 소개</h2>
         <BaseDashboardCard class="about-card">
             <p>본 앱은 Vue 3 및 Vue Router 4 기반 제작된 실습용 기상 관측 대시보드 시스템입니다.</p>
             <ul>
@@ -36,11 +36,6 @@ import BaseDashboardCard from '@/components/exercise/BaseDashboardCard.vue';
   color: #334155;
   font-size: 20px;
   font-weight: 500;
-}
-
-.info svg {
-  width: 18px;
-  height: 18px;
 }
 
 .about-card {

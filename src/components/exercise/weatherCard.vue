@@ -18,31 +18,37 @@
         </p>
 
         <p>💦 습도: {{ cityItem.main.humidity }}%</p>
-        <span v-if="cityItem.temp >= hotTemperature" class="badge hot">🔥 더움 </span>
-        <span v-else class="badge cool">❄️ 선선함</span>
+        <UBadge v-if="cityItem.temp >= hotTemperature" color="error" variant="soft">🔥 더움</UBadge>
+        <UBadge v-else color="info" variant="soft">❄️ 선선함</UBadge>
         <div class="weather-side">
           <img
             v-if="cityItem.detail?.weather?.[0]?.icon"
             class="weather-icon"
             :src="weatherIcon"
             :alt="cityItem.detail.weather[0].description">
-          <button
+          <UButton
             type="button"
+            :color="isFavorite ? 'warning' : 'neutral'"
+            variant="outline"
+            size="sm"
+            square
             class="favorite-button"
             :class="{ active: isFavorite }"
             :aria-pressed="isFavorite"
             :aria-label="isFavorite ? `${cityItem.name} 즐겨찾기 해제` : `${cityItem.name} 즐겨찾기 추가`"
             @click.stop="emit('toggle-favorite', cityItem.id)">
-            <StarFilled v-if="isFavorite" aria-hidden="true" />
-            <Star v-else aria-hidden="true" />
-          </button>
-          <button
+            {{ isFavorite ? '★' : '☆' }}
+          </UButton>
+          <UButton
             type="button"
+            color="neutral"
+            variant="outline"
+            size="sm"
+            block
             class="detail-button"
             @click.stop="emit('click-detail', cityItem)">
-            <View aria-hidden="true" />
             상세보기
-          </button>
+          </UButton>
         </div>
     </div>
 </template>
@@ -76,7 +82,8 @@
 .weather-card {
   position: relative;
   margin-bottom: 10px;
-  padding: 12px;
+  min-height: 174px;
+  padding: 12px 132px 12px 12px;
   border: 1px solid #dee2e6;
   border-radius: 6px;
   background: #fff;
@@ -130,62 +137,32 @@
 }
 
 .weather-icon {
-  width: 90px;
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
 }
 
 .weather-side {
   position: absolute;
-  top: 15px;
+  top: 12px;
   right: 12px;
   display: flex;
+  width: 100px;
   flex-direction: column;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
 }
 
 .favorite-button {
-  display: inline-flex;
-  width: 30px;
-  height: 28px;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-  border: 1px solid #d7dde5;
-  border-radius: 7px;
-  background: rgba(255, 255, 255, 0.85);
-  color: #94a3b8;
   font-size: 19px;
   line-height: 1;
 }
 
-.favorite-button:hover,
-.favorite-button.active {
-  border-color: #f59e0b;
-  background: #fffbeb;
-  color: #d97706;
-}
-
-.badge {
-  display: inline-block;
-  padding: 4px 8px;
-  border-radius: 4px;
-  color: #fff;
-  font-size: 12px;
-}
-
-.hot {
-  background-color: #ff7675;
-}
-
-.cool {
-  background-color: #2787c5;
-}
 .detail-button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
+  width: 100%;
+  min-height: 30px;
   padding: 6px 10px;
+  font-size: 13px;
   text-align: center;
   cursor: pointer;
 }

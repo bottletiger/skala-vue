@@ -1,4 +1,11 @@
+@import 'tailwindcss';
+@import '@nuxt/ui';
 @import './base.css';
+
+:root {
+  --ui-primary: var(--ui-color-sky-600);
+  --ui-radius: 0.45rem;
+}
 
 #app {
   width: 100%;

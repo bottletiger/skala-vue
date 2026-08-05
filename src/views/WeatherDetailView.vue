@@ -4,17 +4,21 @@
   </section>
 
   <section v-else-if="detail" class="detail-page">
-    <button
+    <UButton
       type="button"
+      color="neutral"
+      variant="soft"
+      size="sm"
+      square
       class="modal-close"
       aria-label="상세 닫기"
       @click="closeDetail">
-      <Close aria-hidden="true" />
-    </button>
+      ×
+    </UButton>
 
     <header class="weather-hero">
       <div>
-        <p class="location"><LocationInformation aria-hidden="true" /> {{ city.name_kr ?? detail.name }}, {{ detail.sys.country }}</p>
+        <p class="location">📍 {{ city.name_kr ?? detail.name }}, {{ detail.sys.country }}</p>
         <h2>{{ detail.weather[0].description }}</h2>
         <p class="updated-at">관측 시간 {{ formatTime(detail.dt) }}</p>
       </div>
@@ -82,7 +86,7 @@
 
   <section v-else class="empty-state">
     <p>도시 상세 정보를 불러올 수 없습니다.</p>
-    <button type="button" class="btn-home" @click="closeDetail">대시보드로 돌아가기</button>
+    <UButton type="button" color="primary" @click="closeDetail">대시보드로 돌아가기</UButton>
   </section>
 </template>
 
@@ -174,12 +178,6 @@ const closeDetail = () => {
 .location,
 .updated-at {
   margin: 0;
-}
-
-.location {
-  display: flex;
-  align-items: center;
-  gap: 5px;
 }
 
 .weather-hero h2 {
@@ -291,11 +289,6 @@ const closeDetail = () => {
   font-size: 24px;
   line-height: 1;
   transition: background-color 0.15s ease, transform 0.15s ease;
-}
-
-.modal-close svg {
-  width: 17px;
-  height: 17px;
 }
 
 .modal-close:hover {

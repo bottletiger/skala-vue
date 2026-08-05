@@ -1,14 +1,16 @@
 <template>
   <section class="weather-map" aria-label="날씨 지도">
     <div class="windy-categories" aria-label="날씨 지도 레이어 선택">
-      <button
+      <UButton
         v-for="category in windyCategories"
         :key="category.overlay"
         type="button"
-        :class="{ active: selectedOverlay === category.overlay }"
+        color="neutral"
+        :variant="selectedOverlay === category.overlay ? 'soft' : 'outline'"
+        size="xs"
         @click="selectedOverlay = category.overlay">
         {{ category.label }}
-      </button>
+      </UButton>
     </div>
 
     <iframe
@@ -49,21 +51,6 @@ const windyEmbedUrl = computed(() =>
   flex-wrap: wrap;
   gap: 7px;
   margin-top: 15px;
-}
-
-.windy-categories button {
-  padding: 6px 12px;
-  border: 1px solid #d1d5db;
-  border-radius: 4px;
-  background: #fff;
-  color: #4b5563;
-  cursor: pointer;
-}
-
-.windy-categories button.active {
-  border-color: #0284c7;
-  background: #e0f2fe;
-  color: #0369a1;
 }
 
 .weather-map-frame {

@@ -21,30 +21,35 @@
         </p>
         
         <div class="filter-row">
-          <select class="filter-select" v-model="sortKey" aria-label="정렬 기준">
-            <option value="name">이름순</option>
-            <option value="temp">기온순</option>
-            <option value="feels">체감온도순</option>
-            <option value="humidity">습도순</option>
-            <option value="wind">풍속순</option>
-          </select>
+          <USelect
+            v-model="sortKey"
+            :items="sortOptions"
+            class="filter-select"
+            size="sm"
+            aria-label="정렬 기준" />
 
-          <button
+          <UButton
             type="button"
+            color="neutral"
+            variant="solid"
+            size="sm"
+            square
             class="sort-direction"
             :aria-label="sortDirection === 'asc' ? '내림차순으로 변경' : '오름차순으로 변경'"
             @click="toggleSortDirection">
             {{ sortDirection === 'asc' ? '↑' : '↓' }}
-          </button>
+          </UButton>
 
-          <button
+          <UButton
             type="button"
+            :color="favoriteOnly ? 'warning' : 'neutral'"
+            variant="outline"
+            size="sm"
             class="favorite-filter"
-            :class="{ active: favoriteOnly }"
             :aria-pressed="favoriteOnly"
             @click="favoriteOnly = !favoriteOnly">
             ★ 즐겨찾기 <span>{{ favoriteCount }}</span>
-          </button>
+          </UButton>
         </div>
           
         <div class="weather-grid">
@@ -114,6 +119,13 @@ onMounted(async () => {
 
 const sortKey = ref('name');
 const sortDirection = ref('asc');
+const sortOptions = [
+  { label: '이름순', value: 'name' },
+  { label: '기온순', value: 'temp' },
+  { label: '체감온도순', value: 'feels' },
+  { label: '습도순', value: 'humidity' },
+  { label: '풍속순', value: 'wind' },
+]
 const favoriteOnly = ref(false);
 const { favoriteIds, isFavorite, toggleFavorite } = useFavoriteCities();
 const favoriteCount = computed(() => favoriteIds.value.length);
@@ -243,64 +255,26 @@ const showDetail = (city) => {
 }
 
 .filter-select {
-  height: 36px;
+  width: 132px;
   min-width: 132px;
-  padding: 0 34px 0 12px;
-  border: 1px solid #d7dde5;
-  border-radius: 8px;
-  outline: none;
-  background: #fff;
-  color: #273449;
-  font-size: 13px;
-  cursor: pointer;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
-}
-
-.filter-select:focus {
-  border-color: #64748b;
-  box-shadow: 0 0 0 3px rgba(100, 116, 139, 0.12);
+  max-width: 132px;
+  flex: 0 0 132px;
 }
 
 .sort-direction {
   width: 36px;
   height: 36px;
-  border: 1px solid #d7dde5;
-  border-radius: 8px;
-  background: #273449;
-  color: #fff;
   font-size: 18px;
   line-height: 1;
-  cursor: pointer;
-  transition: background-color 0.15s ease, transform 0.15s ease;
-}
-
-.sort-direction:hover {
-  background: #1e293b;
-  transform: translateY(-1px);
 }
 
 .favorite-filter {
   min-height: 36px;
-  padding: 0 12px;
-  border: 1px solid #d7dde5;
-  border-radius: 8px;
-  background: #fff;
-  color: #64748b;
-  font-size: 13px;
-  cursor: pointer;
-  transition: border-color 0.15s ease, background-color 0.15s ease, color 0.15s ease;
 }
 
 .favorite-filter span {
   margin-left: 3px;
   color: #94a3b8;
-}
-
-.favorite-filter:hover,
-.favorite-filter.active {
-  border-color: #f59e0b;
-  background: #fffbeb;
-  color: #b45309;
 }
 
 .api-status {

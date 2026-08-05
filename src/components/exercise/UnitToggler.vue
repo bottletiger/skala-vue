@@ -1,7 +1,14 @@
 <template>
     <div class="unit-toggle">
         <p>날씨단위: {{ configStore.unitSymbol}}</p>
-        <button type="button" @click="configStore.toggleUnit">단위변경</button>
+        <UButton
+          type="button"
+          color="neutral"
+          variant="outline"
+          size="xs"
+          @click="configStore.toggleUnit">
+          단위변경
+        </UButton>
     </div>
 </template>
 
@@ -24,16 +31,4 @@ const configStore = useConfigStore();
   margin: 0;
 }
 
-.unit-toggle button {
-  padding: 5px 9px;
-  border: 1px solid #d1d5db;
-  border-radius: 4px;
-  background: #fff;
-  color: #374151;
-  cursor: pointer;
-}
-
-.unit-toggle button:hover {
-  background: #f3f4f6;
-}
 </style>
