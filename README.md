@@ -18,6 +18,8 @@
 | 모달 스크롤 제어 | 상세 모달이 열리면 배경 스크롤을 잠그고 닫을 때 복원 |
 | 7일 예보 | 도시별 최고·최저 기온, 날씨, 강수확률 표시 |
 | API 캐싱 | 현재 날씨 목록과 도시별 7일 예보를 각각 1시간 캐싱 |
+| 캐시 상태·갱신 | 캐시 사용 여부와 남은 시간을 표시하고 만료 시 자동 또는 버튼으로 갱신 |
+| 사용자 도시 추가 | Geocoding 검색으로 원하는 도시를 목록과 즐겨찾기에 추가 |
 | 컴포넌트 분리 | 검색·카드·지도·단위 기능을 분리하고 props/emits로 연결 |
 | 날씨 지도 | Windy의 기온·강수·구름·기압·바람·레이더·UV 레이어 전환 |
 | 예외 처리 | API 로딩·성공·실패 상태와 404 화면 제공 |
@@ -40,7 +42,7 @@
 
 | 서비스 | 사용 목적 |
 | --- | --- |
-| OpenWeather Current Weather API | 10개 도시의 현재 관측 정보 조회 |
+| OpenWeather Current Weather · Geocoding API | 기본·사용자 추가 도시의 위치 검색과 현재 관측 정보 조회 |
 | Open-Meteo Forecast API | 선택 도시의 7일 일별 예보 조회 |
 | Windy Embed Map | 대한민국 중심 날씨 지도와 레이어 표시 |
 | GitHub Actions · GitHub Pages | `main` 브랜치 자동 빌드 및 배포 |
@@ -54,6 +56,7 @@
 - 응답에서 현재 기온뿐 아니라 체감온도, 습도, 풍속, 구름량, 가시거리와 좌표를 보존했습니다.
 - 로딩·성공·실패 상태를 화면에 구분해서 표시합니다.
 - 현재 날씨 목록은 `localStorage`에 1시간 동안 캐싱하며, 만료되거나 손상된 캐시는 제거한 뒤 다시 요청합니다.
+- 캐시 데이터 사용 여부와 다음 갱신까지 남은 시간을 표시하며, 만료 시 자동 갱신하거나 버튼으로 캐시를 우회할 수 있습니다.
 
 관련 코드: [`weatherApi.js`](src/api/weatherApi.js), [`cities.js`](src/data/cities.js), [`weatherParent.vue`](src/components/exercise/weatherParent.vue)
 
@@ -101,7 +104,17 @@
 
 관련 코드: [`weatherApi.js`](src/api/weatherApi.js), [`WeatherDetailView.vue`](src/views/WeatherDetailView.vue)
 
-### 7. 날씨 지도와 예외 화면
+### 7. 원하는 도시 직접 추가
+
+- OpenWeather Geocoding API에서 국문·영문 도시 이름으로 최대 5개 후보를 검색합니다.
+- 같은 이름의 도시는 지역과 국가 코드를 함께 표시해 구분할 수 있습니다.
+- 선택한 후보의 좌표로 현재 날씨를 조회하고 기존 목록에 추가합니다.
+- 추가된 도시는 자동으로 즐겨찾기에 포함되며 위치 정보와 날씨 목록을 `localStorage`에 저장합니다.
+- 기존 10개 도시를 다시 검색하면 중복 카드를 만들지 않고 기존 카드를 즐겨찾기에 추가합니다.
+
+관련 코드: [`CityAddForm.vue`](src/components/exercise/CityAddForm.vue), [`weatherApi.js`](src/api/weatherApi.js), [`weatherParent.vue`](src/components/exercise/weatherParent.vue)
+
+### 8. 날씨 지도와 예외 화면
 
 - Windy 지도에서 기온, 강수, 구름, 기압, 바람, 레이더, UV 레이어를 전환할 수 있습니다.
 - 정의되지 않은 주소는 현재 경로를 표시하는 404 화면으로 연결됩니다.

@@ -9,6 +9,12 @@
               :cur-query="searchQuery" 
               @update-query="updateSearchQuery">
           </SearchBar>
+          <CityAddForm
+            :adding="isAddingCity"
+            @add-city="addCity" />
+          <p v-if="cityAddMessage" class="city-add-message" aria-live="polite">
+            {{ cityAddMessage }}
+          </p>
       </BaseDashboardCard>
 
       <BaseDashboardCard>
@@ -22,6 +28,20 @@
           <span v-else-if="apiStatus === 'success'">{{ API_SUCCESS }}</span>
           <span v-else>{{ API_FAIL }}</span>
         </p>
+
+        <div class="cache-row">
+          <p>{{ cacheStatusText }}</p>
+          <UButton
+            type="button"
+            color="neutral"
+            variant="outline"
+            size="xs"
+            :loading="isRefreshing"
+            :disabled="apiStatus === 'loading'"
+            @click="loadWeather({ forceRefresh: true })">
+            최신 날씨 다시 불러오기
+          </UButton>
+        </div>
         
         <div class="filter-row">
           <USelect
@@ -81,12 +101,19 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed, watch, watchEffect } from 'vue';
+import { ref, onMounted, onBeforeUnmount, computed, watch, watchEffect } from 'vue';
 import BaseDashboardCard from './BaseDashboardCard.vue';
+import CityAddForm from './CityAddForm.vue';
 import SearchBar from './SearchBar.vue';
 import WeatherCard from './weatherCard.vue';
 import WeatherMap from './WeatherMap.vue';
-import { getWeatherList } from '@/api/weatherApi';
+import {
+  getWeatherByLocation,
+  getWeatherCacheInfo,
+  getWeatherList,
+  saveCustomCity,
+  saveWeatherListCache,
+} from '@/api/weatherApi';
 import { useRoute, useRouter } from 'vue-router';
 import { useFavoriteCities } from '@/composables/useFavoriteCities';
 
@@ -109,15 +136,71 @@ const API_SUCCESS = 'OpenWeather API 데이터 로드 성공';
 const API_FAIL = 'OpenWeather API 데이터 로드 실패';
 const weatherList = ref([]);
 const apiStatus = ref('loading');
+const weatherSource = ref('');
+const cacheExpiresAt = ref(0);
+const currentTime = ref(Date.now());
+const isRefreshing = ref(false);
+const isAddingCity = ref(false);
+const cityAddMessage = ref('');
+let cacheTimer;
 
-onMounted(async () => {
+const loadWeather = async ({ forceRefresh = false } = {}) => {
+  const cacheBeforeLoad = forceRefresh ? null : getWeatherCacheInfo();
+
+  if (forceRefresh) {
+    isRefreshing.value = true;
+  } else if (weatherList.value.length === 0) {
+    apiStatus.value = 'loading';
+  }
+
   try {
-    weatherList.value = await getWeatherList();
+    weatherList.value = await getWeatherList({ forceRefresh });
     apiStatus.value = 'success';
+    weatherSource.value = cacheBeforeLoad ? 'cache' : 'network';
+
+    const cacheInfo = getWeatherCacheInfo();
+    cacheExpiresAt.value = cacheInfo?.expiresAt ?? 0;
+    currentTime.value = Date.now();
   } catch (error) {
     console.error(error);
     apiStatus.value = 'error';
+  } finally {
+    isRefreshing.value = false;
   }
+};
+
+onMounted(() => {
+  loadWeather();
+  cacheTimer = window.setInterval(() => {
+    currentTime.value = Date.now();
+
+    const isExpired = cacheExpiresAt.value > 0
+      && currentTime.value >= cacheExpiresAt.value;
+
+    if (isExpired && apiStatus.value === 'success' && !isRefreshing.value) {
+      loadWeather({ forceRefresh: true });
+    }
+  }, 60 * 1000);
+})
+
+onBeforeUnmount(() => {
+  window.clearInterval(cacheTimer);
+});
+
+const cacheStatusText = computed(() => {
+  if (apiStatus.value === 'loading') return '캐시 상태 확인 중'
+  if (!cacheExpiresAt.value) return '저장된 캐시 없음'
+
+  const remainingMilliseconds = cacheExpiresAt.value - currentTime.value
+
+  if (remainingMilliseconds <= 0) return '캐시가 만료되었습니다.'
+
+  const remainingMinutes = Math.ceil(remainingMilliseconds / (60 * 1000))
+  const sourceText = weatherSource.value === 'cache'
+    ? '캐시 데이터 사용 중'
+    : '최신 데이터 사용 중'
+
+  return `${sourceText} · 다음 갱신까지 ${remainingMinutes}분`
 })
 
 const sortKey = ref('name');
@@ -132,6 +215,42 @@ const sortOptions = [
 const favoriteOnly = ref(false);
 const { favoriteIds, isFavorite, toggleFavorite } = useFavoriteCities();
 const favoriteCount = computed(() => favoriteIds.value.length);
+
+const addCity = async (location) => {
+  isAddingCity.value = true;
+  cityAddMessage.value = '';
+
+  try {
+    const newCity = await getWeatherByLocation(location);
+    const existingCity = weatherList.value.find(
+      (item) => String(item.detail?.id) === String(newCity.detail.id),
+    );
+    const targetCity = existingCity ?? newCity;
+
+    if (!existingCity) {
+      weatherList.value.push(newCity);
+      saveCustomCity(newCity);
+
+      const cacheInfo = saveWeatherListCache(weatherList.value);
+      cacheExpiresAt.value = cacheInfo.expiresAt;
+      currentTime.value = Date.now();
+      weatherSource.value = 'network';
+    }
+
+    if (!isFavorite(targetCity.id)) {
+      toggleFavorite(targetCity.id);
+    }
+
+    cityAddMessage.value = existingCity
+      ? `${targetCity.name_kr ?? targetCity.name}은(는) 이미 목록에 있어 즐겨찾기에 추가했습니다.`
+      : `${targetCity.name_kr ?? targetCity.name}을(를) 목록과 즐겨찾기에 추가했습니다.`;
+  } catch (error) {
+    console.error(error);
+    cityAddMessage.value = '도시 날씨를 불러오지 못했습니다.';
+  } finally {
+    isAddingCity.value = false;
+  }
+};
 
 watch(searchQuery, (query) => {
   const normalizedQuery = query.trim();
@@ -258,6 +377,30 @@ const showDetail = (city) => {
   flex-wrap: wrap;
 }
 
+.cache-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: -4px 0 14px;
+  padding: 9px 10px;
+  border: 1px solid #eef0f2;
+  border-radius: 8px;
+  background: #fafafa;
+}
+
+.cache-row p {
+  margin: 0;
+  color: #6b7280;
+  font-size: 11px;
+}
+
+.city-add-message {
+  margin: 8px 0 0;
+  color: #4b5563;
+  font-size: 12px;
+}
+
 .section-heading {
   display: flex;
   align-items: baseline;
@@ -329,6 +472,11 @@ const showDetail = (city) => {
 }
 
 @media (max-width: 600px) {
+  .cache-row {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
   .weather-grid {
     grid-template-columns: 1fr;
   }

@@ -10,6 +10,8 @@
                 <li>즐겨찾기 도시를 localStorage에 저장하고 다시 불러오기</li>
                 <li>상세 라우트를 모달로 표시하고 배경 화면 스크롤 잠금 처리</li>
                 <li>도시별 7일 예보 조회 및 localStorage 캐싱</li>
+                <li>캐시 남은 시간 표시 및 최신 날씨 강제 갱신</li>
+                <li>Geocoding 검색으로 원하는 도시와 즐겨찾기 추가</li>
             </ul>
         </BaseDashboardCard>
         <UButton to="/" color="neutral" class="btn-home">대시보드로 이동</UButton>
