@@ -3,7 +3,7 @@
         :class="cityItem.temp >= hotTemperature ? 'card-hot':'card-cool'"
         @click="emit('select-card', cityItem)">
 
-        <h3>{{ cityItem.name }} ({{ cityItem.status }})</h3>
+        <h3>{{ cityItem.name_kr }} ({{ cityItem.status }})</h3>
 
         <p >🌡️ 현재 기온: 
           <span :style="{color: cityItem.temp >= hotTemperature ? 'red': 'blue' }">
