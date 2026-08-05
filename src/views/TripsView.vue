@@ -86,7 +86,6 @@ onMounted(loadSavedTrips)
       <header class="trips-hero">
         <div>
           <span>SAVED TRIPS</span>
-          <h1>내 여행</h1>
           <p>{{ userLabel }}</p>
         </div>
         <div class="trips-hero-actions">
@@ -152,14 +151,6 @@ onMounted(loadSavedTrips)
   font-size: 9px;
   font-weight: 850;
   letter-spacing: 0.15em;
-}
-
-.trips-hero h1 {
-  margin: 0;
-  color: var(--hero-text);
-  font-size: clamp(46px, 8vw, 72px);
-  line-height: 0.92;
-  letter-spacing: -0.065em;
 }
 
 .trips-hero p {

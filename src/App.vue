@@ -4,6 +4,7 @@ import { storeToRefs } from 'pinia'
 import { RouterLink, RouterView, useRoute } from 'vue-router'
 
 import UnitToggler from '@/components/exercise/UnitToggler.vue'
+import WeatherRecommendationsDrawer from '@/components/weather/WeatherRecommendationsDrawer.vue'
 import { useSharedWeatherTheme } from '@/composables/useSharedWeatherTheme'
 import { useAuthStore } from '@/stores/auth'
 import { useHomeWeatherStore } from '@/stores/homeWeatherStore'
@@ -12,14 +13,21 @@ const route = useRoute()
 const authStore = useAuthStore()
 const homeWeatherStore = useHomeWeatherStore()
 const { isLoggedIn } = storeToRefs(authStore)
-const { isWorldDrawerOpen } = storeToRefs(homeWeatherStore)
+const { isWorldDrawerOpen, isRecommendationDrawerOpen, weatherList, selectedCityId } = storeToRefs(homeWeatherStore)
 const { weatherTheme: sharedWeatherTheme } = useSharedWeatherTheme()
 const isThemedScene = computed(() => route.meta.layout === 'weather-scene')
 const isWeatherHome = computed(() => route.name === 'WeatherHome')
 const accountNavigation = computed(() => (isLoggedIn.value ? { name: 'Trips', label: '내 여행' } : { name: 'Login', label: '로그인' }))
+const recommendationCityId = computed(() => {
+  if (typeof route.params.cityId === 'string') return route.params.cityId
+  if (typeof route.query.selected === 'string') return route.query.selected
+  return selectedCityId.value
+})
+const recommendationWeather = computed(() => weatherList.value.find((item) => item.id === recommendationCityId.value) ?? null)
 const activeNavigationIndex = computed(() => {
-  if (route.name === 'TravelPlanner') return 1
-  if (route.name === 'Trips' || route.name === 'Login') return 2
+  if (isRecommendationDrawerOpen.value) return 1
+  if (route.name === 'TravelPlanner') return 2
+  if (route.name === 'Trips' || route.name === 'Login') return 3
   if (route.name === 'WeatherHome' || route.name === 'WeatherDetail') return 0
   return -1
 })
@@ -29,13 +37,22 @@ const navigationStyle = computed(() => ({
 const weatherNavigationStyle = computed(() => (isThemedScene.value ? sharedWeatherTheme.value.cssVariables : undefined))
 
 const toggleWorldDrawer = () => {
-  isWorldDrawerOpen.value = !isWorldDrawerOpen.value
+  const nextOpenState = !isWorldDrawerOpen.value
+  isWorldDrawerOpen.value = nextOpenState
+  if (nextOpenState) isRecommendationDrawerOpen.value = false
+}
+
+const toggleRecommendationDrawer = () => {
+  const nextOpenState = !isRecommendationDrawerOpen.value
+  isRecommendationDrawerOpen.value = nextOpenState
+  if (nextOpenState) isWorldDrawerOpen.value = false
 }
 
 watch(
   () => route.name,
   (routeName) => {
     if (routeName !== 'WeatherHome') isWorldDrawerOpen.value = false
+    isRecommendationDrawerOpen.value = false
   },
 )
 </script>
@@ -48,6 +65,7 @@ watch(
       :class="{
         'app-navigation--immersive-weather': isThemedScene,
         'is-world-drawer-open': isWeatherHome && isWorldDrawerOpen,
+        'is-recommendation-drawer-open': isRecommendationDrawerOpen,
       }"
       :style="weatherNavigationStyle"
     >
@@ -59,14 +77,28 @@ watch(
           </svg>
           <span>날씨</span>
         </RouterLink>
-        <RouterLink :to="{ name: 'TravelPlanner' }" :class="{ 'is-active': activeNavigationIndex === 1 }" :aria-current="activeNavigationIndex === 1 ? 'page' : undefined">
+        <button
+          class="recommendation-navigation-button"
+          type="button"
+          :class="{ 'is-active': activeNavigationIndex === 1 }"
+          aria-controls="weather-recommendation-drawer"
+          :aria-expanded="isRecommendationDrawerOpen"
+          @click="toggleRecommendationDrawer"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="m12 4 1.7 4.3L18 10l-4.3 1.7L12 16l-1.7-4.3L6 10l4.3-1.7L12 4Z" />
+            <path d="m18.5 15 .6 1.5 1.4.5-1.4.6-.6 1.4-.5-1.4-1.5-.6 1.5-.5.5-1.5Z" />
+          </svg>
+          <span>오늘의 추천</span>
+        </button>
+        <RouterLink :to="{ name: 'TravelPlanner' }" :class="{ 'is-active': activeNavigationIndex === 2 }" :aria-current="activeNavigationIndex === 2 ? 'page' : undefined">
           <svg viewBox="0 0 24 24" aria-hidden="true">
             <path d="M12 21s6-5.2 6-11a6 6 0 1 0-12 0c0 5.8 6 11 6 11Z" />
             <circle cx="12" cy="10" r="2" />
           </svg>
           <span>여행</span>
         </RouterLink>
-        <RouterLink :to="{ name: accountNavigation.name }" :class="{ 'is-active': activeNavigationIndex === 2 }" :aria-current="activeNavigationIndex === 2 ? 'page' : undefined">
+        <RouterLink :to="{ name: accountNavigation.name }" :class="{ 'is-active': activeNavigationIndex === 3 }" :aria-current="activeNavigationIndex === 3 ? 'page' : undefined">
           <svg v-if="isLoggedIn" viewBox="0 0 24 24" aria-hidden="true">
             <path d="M6 8h12l1 12H5L6 8Z" />
             <path d="M9 9V6a3 3 0 0 1 6 0v3" />
@@ -82,7 +114,7 @@ watch(
       <UnitToggler />
 
       <button
-        v-if="isWeatherHome"
+        v-if="isWeatherHome && !isRecommendationDrawerOpen"
         class="world-drawer-handle"
         type="button"
         aria-controls="world-weather-drawer"
@@ -105,6 +137,8 @@ watch(
     >
       <RouterView />
     </main>
+
+    <WeatherRecommendationsDrawer :open="isRecommendationDrawerOpen" :weather="recommendationWeather" :style="weatherNavigationStyle" @close="isRecommendationDrawerOpen = false" />
   </div>
 </template>
 
@@ -189,13 +223,23 @@ watch(
     inset 0 1px 0 color-mix(in srgb, white 20%, transparent);
 }
 
+.app-navigation--immersive-weather.is-recommendation-drawer-open {
+  border-color: color-mix(in srgb, var(--hero-text) 14%, transparent);
+  border-top: 0;
+  border-radius: 0 0 var(--floating-nav-radius) var(--floating-nav-radius);
+  background: color-mix(in srgb, var(--hero-start) 12%, transparent);
+  box-shadow:
+    0 10px 28px rgba(15, 27, 34, 0.11),
+    inset 0 1px 0 color-mix(in srgb, white 20%, transparent);
+}
+
 .primary-navigation {
   position: relative;
   isolation: isolate;
   display: grid;
   min-width: 0;
   flex: 1 1 auto;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   align-items: center;
   padding: 3px;
   border-radius: 22px;
@@ -209,7 +253,7 @@ watch(
   top: 3px;
   bottom: 3px;
   left: 3px;
-  width: calc((100% - 6px) / 3);
+  width: calc((100% - 6px) / 4);
   border-radius: 19px;
   background: rgba(23, 35, 45, 0.62);
   box-shadow: 0 5px 14px rgba(23, 35, 45, 0.12);
@@ -299,6 +343,58 @@ watch(
 }
 
 .primary-navigation a:focus-visible {
+  outline: 2px solid currentcolor;
+  outline-offset: -3px;
+}
+
+.primary-navigation button {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  min-width: 0;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 19px;
+  background: transparent;
+  color: rgba(36, 49, 57, 0.68);
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  white-space: nowrap;
+  transition: color 180ms ease;
+}
+
+.primary-navigation button svg {
+  width: 17px;
+  height: 17px;
+  flex: 0 0 auto;
+  fill: none;
+  stroke: currentcolor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.9;
+}
+
+.primary-navigation button:hover,
+.primary-navigation button.is-active {
+  color: #243139;
+}
+
+.app-navigation--immersive-weather .primary-navigation button {
+  color: var(--navigation-muted);
+}
+
+.app-navigation--immersive-weather .primary-navigation button:hover,
+.app-navigation--immersive-weather .primary-navigation button.is-active {
+  color: var(--navigation-ink);
+}
+
+.primary-navigation button:focus-visible {
   outline: 2px solid currentcolor;
   outline-offset: -3px;
 }
@@ -424,7 +520,19 @@ watch(
     font-size: 10px;
   }
 
+  .primary-navigation button {
+    flex-direction: column;
+    gap: 2px;
+    padding: 3px 1px;
+    font-size: 9px;
+  }
+
   .primary-navigation a svg {
+    width: 15px;
+    height: 15px;
+  }
+
+  .primary-navigation button svg {
     width: 15px;
     height: 15px;
   }
@@ -438,7 +546,8 @@ watch(
   .navigation-slider,
   .primary-navigation a,
   .world-drawer-handle,
-  .world-drawer-grabber {
+  .world-drawer-grabber,
+  .primary-navigation button {
     transition: none;
   }
 }

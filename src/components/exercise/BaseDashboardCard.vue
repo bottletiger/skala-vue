@@ -17,6 +17,7 @@
   box-shadow: var(--dashboard-surface-shadow, none);
   color: var(--dashboard-surface-color, inherit);
   backdrop-filter: var(--dashboard-surface-filter, none);
+  -webkit-backdrop-filter: var(--dashboard-surface-filter, none);
 }
 
 .base-dashboard-card :deep(.dashboard-surface--search) {

@@ -241,16 +241,19 @@ watch(
 }
 
 .world-search {
+  position: relative;
+  z-index: 1;
   width: 100%;
   margin: 0 auto;
 }
 
 .world-search :deep(.dashboard-surface--search) {
   --dashboard-surface-border: 1px solid color-mix(in srgb, var(--hero-text) 13%, transparent);
-  --dashboard-surface-background: color-mix(in srgb, white 8%, transparent);
-  --dashboard-surface-shadow: none;
+  --dashboard-surface-background: color-mix(in srgb, var(--hero-start) 22%, white 8%);
+  --dashboard-surface-shadow: 0 8px 24px color-mix(in srgb, var(--hero-end) 12%, transparent);
   --dashboard-surface-color: var(--hero-text);
-  --dashboard-surface-filter: blur(18px) saturate(108%);
+  --dashboard-surface-filter: blur(28px) saturate(125%);
+  -webkit-backdrop-filter: blur(28px) saturate(125%);
 }
 
 .region-filters {

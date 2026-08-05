@@ -1,5 +1,5 @@
 <script setup>
-import { computed, nextTick, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import AsyncStatePanel from '@/components/common/AsyncStatePanel.vue'
@@ -8,23 +8,14 @@ import CurrentWeatherSummary from '@/components/weather/CurrentWeatherSummary.vu
 import DailyForecastList from '@/components/weather/DailyForecastList.vue'
 import HourlyForecastStrip from '@/components/weather/HourlyForecastStrip.vue'
 import LoadingSpinner from '@/components/weather/LoadingSpinner.vue'
-import WeatherAdvicePanel from '@/components/weather/WeatherAdvicePanel.vue'
 import WeatherBackgroundVideo from '@/components/weather/WeatherBackgroundVideo.vue'
 import WeatherDetailsList from '@/components/weather/WeatherDetailsList.vue'
-import WeatherPlaylistPanel from '@/components/weather/WeatherPlaylistPanel.vue'
 import { useCityWeatherDetail } from '@/composables/useCityWeatherDetail'
 import { useDocumentTitle } from '@/composables/useDocumentTitle'
-import { getWeatherAdvice } from '@/services/tripsService'
-import { useAuthStore } from '@/stores/auth'
 
 const route = useRoute()
 const router = useRouter()
-const authStore = useAuthStore()
 const detailPageHeading = ref(null)
-const weatherAdvice = ref(null)
-const isAdviceLoading = ref(false)
-const adviceErrorMessage = ref('')
-let adviceRequestId = 0
 const cityId = computed(() => route.params.cityId)
 const redirectUnknownCity = () =>
   router.replace({
@@ -57,41 +48,6 @@ useDocumentTitle(() => {
 const returnToWeatherList = () => {
   void router.push({ name: 'WeatherHome', query: route.query })
 }
-
-const requestWeatherAdvice = async () => {
-  if (!authStore.isLoggedIn) {
-    await router.push({ name: 'Login', query: { redirect: route.fullPath } })
-    return
-  }
-  if (!cityData.value || isAdviceLoading.value) return
-
-  isAdviceLoading.value = true
-  adviceErrorMessage.value = ''
-  const requestId = ++adviceRequestId
-
-  try {
-    const response = await getWeatherAdvice({
-      location: {
-        name: detailCityName.value,
-        countryName: cityData.value.countryName,
-      },
-      weather: cityData.value,
-      forecast: forecastData.value?.hourly?.slice(0, 8) ?? [],
-    })
-    if (requestId === adviceRequestId) weatherAdvice.value = response?.advice ?? response
-  } catch (error) {
-    if (requestId === adviceRequestId) adviceErrorMessage.value = error?.message || '맞춤 날씨 안내를 만들지 못했습니다.'
-  } finally {
-    if (requestId === adviceRequestId) isAdviceLoading.value = false
-  }
-}
-
-watch(cityId, () => {
-  adviceRequestId += 1
-  weatherAdvice.value = null
-  isAdviceLoading.value = false
-  adviceErrorMessage.value = ''
-})
 
 onMounted(async () => {
   await nextTick()
@@ -175,9 +131,6 @@ onMounted(async () => {
         </div>
       </section>
 
-      <WeatherAdvicePanel v-if="cityData" :weather="cityData" :advice="weatherAdvice" :is-loading="isAdviceLoading" :error-message="adviceErrorMessage" @request="requestWeatherAdvice" />
-
-      <WeatherPlaylistPanel v-if="cityData" :weather="cityData" />
     </div>
   </WeatherScene>
 </template>

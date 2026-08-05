@@ -49,6 +49,18 @@ export const useCityWeatherDetail = (cityIdSource, redirectUnknownCity) => {
     return '수신된 예보 데이터가 없습니다.'
   })
 
+  const syncSelectedWeather = (weather) => {
+    const existingIndex = homeWeatherStore.weatherList.findIndex((item) => item.id === weather.id)
+    if (existingIndex < 0) {
+      homeWeatherStore.weatherList = [weather, ...homeWeatherStore.weatherList]
+    } else {
+      const nextWeatherList = [...homeWeatherStore.weatherList]
+      nextWeatherList[existingIndex] = weather
+      homeWeatherStore.weatherList = nextWeatherList
+    }
+    homeWeatherStore.selectedCityId = weather.id
+  }
+
   const loadDetail = async (city) => {
     const activeRequestId = ++requestId
 
@@ -75,7 +87,10 @@ export const useCityWeatherDetail = (cityIdSource, redirectUnknownCity) => {
 
     const currentWeatherRequest = fetchCityWeather(city)
       .then((nextCityData) => {
-        if (activeRequestId === requestId) cityData.value = nextCityData
+        if (activeRequestId === requestId) {
+          cityData.value = nextCityData
+          syncSelectedWeather(nextCityData)
+        }
       })
       .catch((error) => {
         if (activeRequestId === requestId) {

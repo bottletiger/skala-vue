@@ -66,6 +66,7 @@ export const useHomeWeatherStore = defineStore('home-weather', () => {
     Object.fromEntries(persistedWeather.weatherList.map((weather) => [weather.id, persistedWeather.loadedAt])),
   )
   const isWorldDrawerOpen = ref(false)
+  const isRecommendationDrawerOpen = ref(false)
 
   const hasFreshWeather = (now = Date.now()) => {
     const cacheAge = now - weatherLoadedAt.value
@@ -118,6 +119,7 @@ export const useHomeWeatherStore = defineStore('home-weather', () => {
     lastUpdated,
     weatherLoadedAt,
     isWorldDrawerOpen,
+    isRecommendationDrawerOpen,
     hasFreshWeather,
     hasFreshCityWeather,
     markCityWeatherLoaded,
