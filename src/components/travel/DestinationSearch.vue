@@ -173,7 +173,7 @@ watch(
         :aria-expanded="isListboxOpen"
         :aria-activedescendant="activeOptionId"
         :aria-busy="isLoading"
-        placeholder="서울, 도쿄, Paris"
+        placeholder=""
         :disabled="disabled"
         :aria-describedby="statusMessage ? 'destination-search-status' : undefined"
         @input="updateQuery"

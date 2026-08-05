@@ -1,6 +1,6 @@
 # Weather — 날씨 기반 여행 플래너
 
-현재 위치와 세계 주요 도시의 날씨를 확인하고, 여행 날짜의 예보·대기질·주변 장소를 바탕으로 실제 일정을 준비하는 Vue 웹 서비스입니다. 좌표와 날씨 수치는 전용 데이터 API에서 가져오고, OpenAI는 검증된 입력을 자연스러운 옷차림 조언과 여행 정보로 가공하는 역할만 담당합니다.
+현재 위치와 세계 주요 도시의 날씨를 확인하고, 여행 날짜의 예보·대기질·주변 장소를 바탕으로 실제 일정을 준비하는 Vue 웹 서비스입니다. 좌표와 날씨 수치는 전용 데이터 API에서 가져오고, OpenAI 또는 설정된 Gemini 대체 공급자는 검증된 입력을 자연스러운 옷차림 조언과 여행 정보로 가공하는 역할만 담당합니다.
 
 [서비스 바로가기](https://kngyeol.github.io/skala-vue/) · [배포 워크플로](https://github.com/kngyeol/skala-vue/actions/workflows/deploy-pages.yml)
 
@@ -19,7 +19,7 @@
 - 자유 입력 도시 지오코딩과 최대 16일 여행 예보·현재 대기질
 - 예보 범위를 벗어난 날짜의 NASA POWER 2001–2020 과거 기후 참고
 - Wikimedia 기반 주변 장소 후보와 원문 링크
-- OpenAI 웹 검색을 활용하고, 검증된 경우 출처를 표시하는 최대 14일 여행 일정
+- OpenAI 또는 Gemini 웹 검색을 활용하고, 검증된 경우 출처를 표시하는 최대 14일 여행 일정
 - 현재 날씨 기반 AI 옷차림·준비물 추천
 - 날씨 상태에 맞는 Spotify 플레이리스트 임베드
 - Supabase 이메일 로그인, 사용자별 여행 저장, 선택형 Google OAuth
@@ -49,7 +49,7 @@ GitHub Pages의 하위 경로와 새로고침을 안정적으로 지원하기 �
 | 주변 장소      | Wikimedia API                  | 좌표 주변 장소 후보, 설명, 원문 링크                    |
 | 인증·저장      | Supabase Auth/Postgres         | 사용자 세션, 여행 일정, Row Level Security              |
 | 서버리스 함수  | Supabase Edge Functions        | 사용자 JWT 검증, AI 호출, 캐시, 사용자별 요청 한도      |
-| AI 가공        | OpenAI Responses API           | 날씨 조언, 웹 검색 기반 여행 정보, 검증된 출처          |
+| AI 가공        | OpenAI Responses API + Gemini  | 날씨 조언, 웹 검색 기반 여행 정보, 검증된 출처          |
 | 음악           | Spotify Embed                  | 별도 Spotify OAuth 없는 플레이리스트 재생·외부 열기     |
 
 ```mermaid
@@ -63,6 +63,7 @@ flowchart LR
   V --> F["Supabase Edge Functions"]
   F --> S
   F --> O["OpenAI Responses API"]
+  F -. 잔액/쿼터 소진 시 .-> G["Gemini Generate Content"]
 ```
 
 ## 로컬 실행
@@ -84,18 +85,18 @@ VITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_replace_me
 VITE_GOOGLE_AUTH_ENABLED=false
 ```
 
-`VITE_GOOGLE_AUTH_ENABLED`는 Supabase에서 Google provider를 실제로 구성했을 때만 `true`로 바꿉니다. OpenAI 키와 Supabase service-role key에는 `VITE_` 접두사를 붙이지 않으며 브라우저 환경 변수에 저장하지 않습니다. 데이터베이스와 Edge Function 설정은 [Supabase + OpenAI 설정](docs/SUPABASE_SETUP.md)을 따릅니다.
+`VITE_GOOGLE_AUTH_ENABLED`는 Supabase에서 Google provider를 실제로 구성했을 때만 `true`로 바꿉니다. OpenAI·Gemini 키와 Supabase service-role key에는 `VITE_` 접두사를 붙이지 않으며 브라우저 환경 변수에 저장하지 않습니다. 데이터베이스와 Edge Function 설정은 [Supabase + AI 설정](docs/SUPABASE_SETUP.md)을 따릅니다.
 
 ## 데이터 신뢰성과 비용 제어
 
 - 좌표, 날짜, 날씨, 대기질은 전용 API 응답을 사실 원본으로 사용하며 누락 수치를 임의로 만들지 않습니다.
 - NASA POWER 값은 `과거 기후 참고 · 예보 아님`으로 분리해 특정 날짜의 예보처럼 표시하지 않습니다.
-- OpenAI 요청은 인증된 Edge Function에서만 수행하고 `store: false`와 strict JSON Schema를 사용합니다.
-- 여행 웹 정보는 실제 Responses API 출처 목록과 교차 검증한 URL만 클릭 가능한 링크로 표시합니다.
+- AI 요청은 인증된 Edge Function에서만 수행하고 provider별 JSON Schema 출력을 사용합니다.
+- 여행 웹 정보는 실제 AI provider 출처 목록과 교차 검증한 URL만 클릭 가능한 링크로 표시합니다.
 - 여행 일정은 입력으로 전달한 장소 후보만 사용할 수 있도록 서버와 응답 검증 양쪽에서 제한합니다.
 - AI 요청 한도는 사용자별로 날씨 조언 시간당 20회, 여행 일정 시간당 6회입니다.
 - 동일한 날씨 조언은 30분, 여행 일정은 6시간 동안 서버 캐시를 재사용합니다.
-- primary OpenAI 키가 정확히 `credit_balance_exhausted`를 반환할 때만 secondary 키로 한 번 전환합니다.
+- OpenAI 잔액/쿼터 소진 시 secondary OpenAI 키를 먼저 시도하고, 실패하면 설정된 Gemini 키로 한 번 전환합니다.
 - 홈은 선택 도시만 먼저 조회하고, 48개 세계 날씨는 서랍을 열 때 지연 로딩합니다. 성공한 응답은 브라우저에서 30분간 재사용합니다.
 - 외부 API 한도나 장애는 원문 오류 대신 사용자가 대응할 수 있는 안내로 변환하며 임의의 대체 날씨를 만들지 않습니다.
 

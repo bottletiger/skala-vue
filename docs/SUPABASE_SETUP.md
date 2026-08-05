@@ -1,6 +1,6 @@
-# Supabase + OpenAI 설정
+# Supabase + AI 설정
 
-브라우저에는 Supabase 공개 클라이언트 값만 두고, OpenAI 호출은 인증된 Supabase Edge Function에서만 수행한다. 두 Edge Function 모두 사용자 JWT를 다시 검증하며 OpenAI Responses API 요청에는 `store: false`와 strict JSON Schema를 사용한다.
+브라우저에는 Supabase 공개 클라이언트 값만 두고, AI 호출은 인증된 Supabase Edge Function에서만 수행한다. 두 Edge Function 모두 사용자 JWT를 다시 검증하며 OpenAI Responses API 또는 Gemini Generate Content API에 JSON Schema 출력을 사용한다.
 
 ## 1. Supabase 프로젝트 연결
 
@@ -34,7 +34,7 @@ VITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_...
 VITE_GOOGLE_AUTH_ENABLED=false
 ```
 
-publishable key는 RLS와 함께 브라우저에서 사용하는 공개 값이다. `service_role` 키나 OpenAI 키에는 절대 `VITE_` 접두사를 붙이지 않는다.
+publishable key는 RLS와 함께 브라우저에서 사용하는 공개 값이다. `service_role` 키나 OpenAI·Gemini 키에는 절대 `VITE_` 접두사를 붙이지 않는다.
 
 설정이 없을 때도 모듈 import와 빌드는 정상 동작한다. 읽기 API는 빈 값 또는 `null`을 반환하고, 로그인·저장·AI 생성처럼 쓰기가 필요한 API는 `code === 'SERVICE_NOT_CONFIGURED'` 오류를 반환한다.
 
@@ -49,16 +49,19 @@ supabase functions deploy weather-advice
 supabase functions deploy generate-itinerary
 ```
 
-`supabase/.env.local`에는 다음 값을 넣는다. `OPENAI_MODEL`은 Structured Outputs와 Responses API `web_search`를 모두 지원하는 모델이어야 한다.
+`supabase/.env.local`에는 다음 값을 넣는다. OpenAI를 사용할 때 `OPENAI_MODEL`은 Structured Outputs와 Responses API `web_search`를 모두 지원하는 모델이어야 한다. `GEMINI_KEY`가 있으면 OpenAI가 잔액/쿼터 소진 응답을 반환할 때 Gemini로 동일 요청을 한 번 전환한다. OpenAI 키를 넣지 않고 Gemini만 사용할 수도 있다.
 
 ```dotenv
 OPENAI_API_KEY=sk-...
 # 선택: OPENAI_API_KEY_SECONDARY=sk-...
 OPENAI_MODEL=gpt-5.6
+# 선택: OpenAI 잔액/쿼터 소진 시 사용하는 대체 공급자
+# GEMINI_KEY=AIza...
+# GEMINI_MODEL=gemini-3.1-flash-lite
 ALLOWED_ORIGINS=http://localhost:3000,https://kngyeol.github.io
 ```
 
-보조 키는 `OPENAI_API_KEY_SECONDARY`를 우선 사용하고 기존 이름 `BACKUP_OPENAI_API_KEY`도 인식한다. primary 응답의 오류 코드가 정확히 `credit_balance_exhausted`일 때만 동일한 여행 입력을 secondary OpenAI 프로젝트·조직으로 한 번 재전송한다. 일반 429, 인증 실패, timeout, 5xx, 프로젝트·조직 지출 한도 오류에는 보조 키를 사용하지 않으며 세 번째 요청도 보내지 않는다. 두 키가 같으면 전환하지 않는다.
+보조 키는 `OPENAI_API_KEY_SECONDARY`를 우선 사용하고 기존 이름 `BACKUP_OPENAI_API_KEY`도 인식한다. primary 응답이 잔액/쿼터 소진(`credit_balance_exhausted`, `insufficient_quota`, `billing_hard_limit_reached`)일 때만 secondary OpenAI 프로젝트·조직으로 한 번 재전송하고, secondary도 소진되면 Gemini가 설정된 경우 Gemini로 한 번 전환한다. 일반 rate limit 429, 인증 실패, timeout, 5xx에는 자동으로 공급자를 바꾸지 않는다. `GEMINI_KEY`와 `GEMINI_API_KEY`를 모두 지원하며 두 값이 있으면 `GEMINI_KEY`를 우선한다.
 
 `ALLOWED_ORIGINS`에는 경로 없이 origin만 쉼표로 구분해 입력한다. 값이 비어 있으면 Origin 헤더가 있는 모든 브라우저 요청을 거부한다. localhost도 자동 허용되지 않으므로 개발에 사용할 정확한 origin을 목록에 넣어야 한다. Origin이 없는 서버 간 요청은 허용한다. `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`는 배포된 Edge Function에 Supabase가 제공한다. service-role 키는 캐시에만 사용하며 브라우저 환경 변수나 GitHub secret의 `VITE_` 값으로 넣지 않는다.
 
@@ -79,4 +82,4 @@ supabase functions serve --env-file supabase/.env.local
 
 `climateReference`는 예보 범위 밖의 미래 날짜에만 사용한다. Edge Function은 NASA POWER 2001–2020 월별 기후 자료와 해당 월만 허용하고, 응답의 날씨 문구 앞에 `예보 범위 밖 · 과거 기후 참고`를 강제로 붙인다. 예보 데이터와 합치거나 특정 날짜의 실제·예측 날씨처럼 표시하면 안 된다.
 
-결과는 `summary`, `days[].blocks.{morning,afternoon,evening}`, `packing`, `weatherNotes`, `travelBrief`, `sources` 구조다. `travelBrief`의 세 목록은 문자열이 아니라 `{ text, sourceUrls[] }` claim 객체를 사용한다. Edge Function은 각 `sourceUrls`를 Responses API의 실제 citation/source URL allowlist와 교차 검증하고 유효한 URL이 하나도 없는 claim을 버린다. `sources`에는 살아남은 claim이 실제 사용한 URL과 기후 참고처럼 실제 입력에 사용한 출처만 들어가며, 가능한 경우 OpenAI annotation 위치도 함께 보존한다. 검증된 claim이 있을 때만 `webGrounded`가 `true`다. 웹 검색이나 출처 확인이 실패하면 `travelBrief`의 세 배열과 웹 출처를 비운 채 기존 날씨·후보 장소 기반 일정으로 한 번 더 생성한다. 장소 추천은 입력으로 전달한 후보의 ID만 일정에 사용할 수 있도록 서버와 응답 검증 양쪽에서 제한한다. 화면에서 웹 정보를 표시할 때 claim의 `sourceUrls` 또는 `sources` 링크를 클릭 가능하게 제공해야 한다.
+결과는 `summary`, `days[].blocks.{morning,afternoon,evening}`, `packing`, `weatherNotes`, `travelBrief`, `sources` 구조다. `travelBrief`의 세 목록은 문자열이 아니라 `{ text, sourceUrls[] }` claim 객체를 사용한다. Edge Function은 각 `sourceUrls`를 AI provider가 반환한 실제 citation/source URL allowlist와 교차 검증하고 유효한 URL이 하나도 없는 claim을 버린다. `sources`에는 살아남은 claim이 실제 사용한 URL과 기후 참고처럼 실제 입력에 사용한 출처만 들어가며, 가능한 경우 provider의 annotation 위치도 함께 보존한다. 검증된 claim이 있을 때만 `webGrounded`가 `true`다. 웹 검색이나 출처 확인이 실패하면 `travelBrief`의 세 배열과 웹 출처를 비운 채 기존 날씨·후보 장소 기반 일정으로 한 번 더 생성한다. 장소 추천은 입력으로 전달한 후보의 ID만 일정에 사용할 수 있도록 서버와 응답 검증 양쪽에서 제한한다. 화면에서 웹 정보를 표시할 때 claim의 `sourceUrls` 또는 `sources` 링크를 클릭 가능하게 제공해야 한다.

@@ -34,6 +34,14 @@ function requiredEnv(name: string) {
   return value;
 }
 
+function optionalEnv(...names: string[]) {
+  for (const name of names) {
+    const value = Deno.env.get(name)?.trim();
+    if (value) return value;
+  }
+  return null;
+}
+
 function secondaryApiKey(primaryApiKey: string) {
   const value = Deno.env.get("OPENAI_API_KEY_SECONDARY")?.trim() ||
     Deno.env.get("BACKUP_OPENAI_API_KEY")?.trim();
@@ -45,6 +53,20 @@ function providerErrorCode(body: Record<string, unknown>) {
     ? body.error as Record<string, unknown>
     : null;
   return typeof error?.code === "string" ? error.code : null;
+}
+
+function isQuotaExhausted(response: Response, body: Record<string, unknown>) {
+  const error = body.error && typeof body.error === "object"
+    ? body.error as Record<string, unknown>
+    : null;
+  const code = providerErrorCode(body);
+  const type = typeof error?.type === "string" ? error.type : null;
+  return [
+    "credit_balance_exhausted",
+    "insufficient_quota",
+    "billing_hard_limit_reached",
+  ].includes(code ?? "") ||
+    (response.status === 429 && type === "insufficient_quota");
 }
 
 async function requestOpenAI(
@@ -61,6 +83,34 @@ async function requestOpenAI(
     body,
     signal,
   });
+  const responseBody = (await response.json().catch(() => ({}))) as Record<
+    string,
+    unknown
+  >;
+  return { response, responseBody };
+}
+
+async function requestGemini(
+  apiKey: string,
+  model: string,
+  body: string,
+  signal: AbortSignal,
+) {
+  const normalizedModel = model.replace(/^models\//, "");
+  const response = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/${
+      encodeURIComponent(normalizedModel)
+    }:generateContent`,
+    {
+      method: "POST",
+      headers: {
+        "x-goog-api-key": apiKey,
+        "Content-Type": "application/json",
+      },
+      body,
+      signal,
+    },
+  );
   const responseBody = (await response.json().catch(() => ({}))) as Record<
     string,
     unknown
@@ -93,8 +143,8 @@ function normalizeCitation(value: unknown): ResponseCitation | null {
     const title = typeof nested.title === "string" && nested.title.trim()
       ? nested.title.trim()
       : url.hostname;
-    const startIndex = Number(nested.start_index);
-    const endIndex = Number(nested.end_index);
+    const startIndex = Number(nested.start_index ?? nested.startIndex);
+    const endIndex = Number(nested.end_index ?? nested.endIndex);
     const hasValidAnnotation = Number.isInteger(startIndex) &&
       Number.isInteger(endIndex) && startIndex >= 0 && endIndex >= startIndex;
     return {
@@ -199,6 +249,100 @@ function responseOutput(response: Record<string, unknown>) {
   };
 }
 
+function geminiGroundingOutput(response: Record<string, unknown>) {
+  const candidates = Array.isArray(response.candidates)
+    ? response.candidates
+    : [];
+  const candidate = candidates[0] && typeof candidates[0] === "object"
+    ? candidates[0] as Record<string, unknown>
+    : null;
+  const content = candidate?.content && typeof candidate.content === "object"
+    ? candidate.content as Record<string, unknown>
+    : null;
+  const parts = Array.isArray(content?.parts) ? content.parts : [];
+  const textParts: string[] = [];
+
+  for (const part of parts) {
+    if (!part || typeof part !== "object") continue;
+    const typedPart = part as Record<string, unknown>;
+    if (typeof typedPart.text === "string") textParts.push(typedPart.text);
+  }
+
+  if (!textParts.length) {
+    throw new ApiError(
+      502,
+      "AI_EMPTY_RESPONSE",
+      "AI 추천 결과가 비어 있습니다.",
+    );
+  }
+
+  const metadata = candidate?.groundingMetadata &&
+      typeof candidate.groundingMetadata === "object"
+    ? candidate.groundingMetadata as Record<string, unknown>
+    : null;
+  const chunks = Array.isArray(metadata?.groundingChunks)
+    ? metadata.groundingChunks
+    : [];
+  const citations = new Map<string, ResponseCitation>();
+
+  for (const chunk of chunks) {
+    if (!chunk || typeof chunk !== "object") continue;
+    const web = (chunk as Record<string, unknown>).web;
+    if (!web || typeof web !== "object") continue;
+    const source = web as Record<string, unknown>;
+    const citation = normalizeCitation({
+      title: source.title,
+      url: source.uri,
+    });
+    if (citation) addCitation(citations, citation);
+  }
+
+  const supports = Array.isArray(metadata?.groundingSupports)
+    ? metadata.groundingSupports
+    : [];
+  for (const support of supports) {
+    if (!support || typeof support !== "object") continue;
+    const typedSupport = support as Record<string, unknown>;
+    const segment = typedSupport.segment &&
+        typeof typedSupport.segment === "object"
+      ? typedSupport.segment as Record<string, unknown>
+      : null;
+    const sourceIndexes = Array.isArray(typedSupport.groundingChunkIndices)
+      ? typedSupport.groundingChunkIndices
+      : [];
+    if (!segment || sourceIndexes.length === 0) continue;
+
+    for (const sourceIndex of sourceIndexes) {
+      if (!Number.isInteger(sourceIndex)) continue;
+      const chunk = chunks[sourceIndex];
+      if (!chunk || typeof chunk !== "object") continue;
+      const web = (chunk as Record<string, unknown>).web;
+      if (!web || typeof web !== "object") continue;
+      const source = web as Record<string, unknown>;
+      const citation = normalizeCitation({
+        title: source.title,
+        url: source.uri,
+        startIndex: segment.startIndex,
+        endIndex: segment.endIndex,
+      });
+      if (citation) addCitation(citations, citation);
+    }
+  }
+
+  return {
+    text: textParts.join(""),
+    citations: [...citations.values()].slice(0, 12),
+    webSearchUsed: Boolean(
+      metadata && (
+        (Array.isArray(metadata.webSearchQueries) &&
+          metadata.webSearchQueries.length > 0) ||
+        chunks.length > 0 ||
+        supports.length > 0
+      )
+    ),
+  };
+}
+
 function retryAfterSeconds(response: Response) {
   const value = response.headers.get("retry-after")?.trim();
   if (!value) return null;
@@ -229,17 +373,131 @@ export async function createStructuredResponse<T>({
   citations: ResponseCitation[];
   webSearchUsed: boolean;
 }> {
-  const model = requiredEnv("OPENAI_MODEL");
+  const primaryApiKey = optionalEnv("OPENAI_API_KEY");
+  const geminiApiKey = optionalEnv("GEMINI_KEY", "GEMINI_API_KEY");
   const controller = new AbortController();
   const timeout = setTimeout(
     () => controller.abort(),
     webSearch ? 45_000 : 25_000,
   );
 
+  const parseStructuredJson = (text: string) => {
+    try {
+      return JSON.parse(text) as T;
+    } catch {
+      throw new ApiError(
+        502,
+        "AI_INVALID_RESPONSE",
+        "AI 추천 결과를 해석하지 못했습니다.",
+      );
+    }
+  };
+
+  const geminiSchema = (value: unknown): unknown => {
+    if (Array.isArray(value)) return value.map(geminiSchema);
+    if (!value || typeof value !== "object") return value;
+
+    return Object.fromEntries(
+      Object.entries(value)
+        .filter(([key]) => key !== "maxLength")
+        .map(([key, nested]) => [key, geminiSchema(nested)]),
+    );
+  };
+
+  const createGeminiResponse = async () => {
+    if (!geminiApiKey) {
+      throw new ApiError(
+        500,
+        "AI_NOT_CONFIGURED",
+        "OPENAI_API_KEY 또는 GEMINI_KEY 설정이 필요합니다.",
+      );
+    }
+
+    const model = optionalEnv("GEMINI_MODEL") ||
+      "gemini-3.1-flash-lite";
+    const requestBody = JSON.stringify({
+      systemInstruction: {
+        parts: [{ text: instructions }],
+      },
+      contents: [{
+        role: "user",
+        parts: [{ text: JSON.stringify(input) }],
+      }],
+      generationConfig: {
+        responseMimeType: "application/json",
+        responseSchema: geminiSchema(schema),
+        maxOutputTokens,
+      },
+      ...(webSearch ? { tools: [{ google_search: {} }] } : {}),
+    });
+
+    let response: Response;
+    let responseBody: Record<string, unknown>;
+    try {
+      ({ response, responseBody } = await requestGemini(
+        geminiApiKey,
+        model,
+        requestBody,
+        controller.signal,
+      ));
+    } catch (error) {
+      if (error instanceof DOMException && error.name === "AbortError") {
+        throw new ApiError(504, "AI_TIMEOUT", "AI 응답 시간이 초과되었습니다.");
+      }
+      throw new ApiError(
+        502,
+        "AI_PROVIDER_UNAVAILABLE",
+        "AI 서비스에 연결할 수 없습니다.",
+      );
+    }
+
+    if (!response.ok) {
+      console.error("Gemini API error", {
+        status: response.status,
+        model,
+      });
+      if (response.status === 429) {
+        const retryAfter = retryAfterSeconds(response);
+        throw new ApiError(
+          429,
+          "AI_PROVIDER_RATE_LIMITED",
+          "AI 요청이 잠시 많습니다. 잠시 후 다시 시도해 주세요.",
+          {
+            providerStatus: 429,
+            ...(retryAfter === null ? {} : { retryAfterSeconds: retryAfter }),
+          },
+        );
+      }
+      throw new ApiError(
+        502,
+        "AI_PROVIDER_ERROR",
+        "AI 추천을 생성하지 못했습니다.",
+        { providerStatus: response.status },
+      );
+    }
+
+    const output = geminiGroundingOutput(responseBody);
+    return {
+      data: parseStructuredJson(output.text),
+      model,
+      citations: output.citations,
+      webSearchUsed: output.webSearchUsed,
+    };
+  };
+
+  if (!primaryApiKey) {
+    try {
+      return await createGeminiResponse();
+    } finally {
+      clearTimeout(timeout);
+    }
+  }
+
+  const model = requiredEnv("OPENAI_MODEL");
+
   let response: Response;
   let responseBody: Record<string, unknown>;
   try {
-    const primaryApiKey = requiredEnv("OPENAI_API_KEY");
     const requestBody = JSON.stringify({
       model,
       store: false,
@@ -286,7 +544,7 @@ export async function createStructuredResponse<T>({
     const backupApiKey = secondaryApiKey(primaryApiKey);
     if (
       !response.ok && backupApiKey &&
-      providerErrorCode(responseBody) === "credit_balance_exhausted"
+      isQuotaExhausted(response, responseBody)
     ) {
       ({ response, responseBody } = await requestOpenAI(
         backupApiKey,
@@ -294,7 +552,13 @@ export async function createStructuredResponse<T>({
         controller.signal,
       ));
     }
+
+    if (!response.ok && geminiApiKey && isQuotaExhausted(response, responseBody)) {
+      clearTimeout(timeout);
+      return await createGeminiResponse();
+    }
   } catch (error) {
+    if (error instanceof ApiError) throw error;
     if (error instanceof DOMException && error.name === "AbortError") {
       throw new ApiError(504, "AI_TIMEOUT", "AI 응답 시간이 초과되었습니다.");
     }
@@ -334,21 +598,10 @@ export async function createStructuredResponse<T>({
     );
   }
 
-  let parsed: T;
   const output = responseOutput(responseBody);
-  try {
-    parsed = JSON.parse(output.text) as T;
-  } catch (error) {
-    if (error instanceof ApiError) throw error;
-    throw new ApiError(
-      502,
-      "AI_INVALID_RESPONSE",
-      "AI 추천 결과를 해석하지 못했습니다.",
-    );
-  }
 
   return {
-    data: parsed,
+    data: parseStructuredJson(output.text),
     model,
     citations: output.citations,
     webSearchUsed: output.webSearchUsed,
