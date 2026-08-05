@@ -12,16 +12,20 @@ const router = createRouter({
       path: '/',
       name: 'weather',
       component: () => import('../views/WeatherHomeView.vue'),
+      children: [
+        {
+          path: 'weather/:cityId',
+          name: 'detail',
+          components: {
+            modal: () => import('../views/WeatherDetailView.vue'),
+          },
+        },
+      ],
     },
     {
       path: '/about',
       name: 'about',
       component: () => import('../views/WeatherAboutView.vue')
-    },
-    {
-      path: '/weather/:cityId',
-      name: 'detail',
-      component: () => import('../views/WeatherDetailView.vue')
     },
     {
       path: '/:pathMatch(.*)*',

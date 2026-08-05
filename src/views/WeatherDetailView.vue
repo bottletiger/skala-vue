@@ -1,5 +1,17 @@
 <template>
-  <section v-if="detail" class="detail-page">
+  <section v-if="isLoading" class="empty-state">
+    <p>상세 정보를 불러오는 중입니다.</p>
+  </section>
+
+  <section v-else-if="detail" class="detail-page">
+    <button
+      type="button"
+      class="modal-close"
+      aria-label="상세 닫기"
+      @click="closeDetail">
+      ×
+    </button>
+
     <header class="weather-hero">
       <div>
         <p class="location">📍 {{ city.name_kr ?? detail.name }}, {{ detail.sys.country }}</p>
@@ -66,28 +78,63 @@
       </dl>
     </div>
 
-    <RouterLink to="/" class="btn-home">← 대시보드 홈으로 이동</RouterLink>
   </section>
 
   <section v-else class="empty-state">
     <p>도시 상세 정보를 불러올 수 없습니다.</p>
-    <RouterLink to="/" class="btn-home">대시보드 홈으로 이동</RouterLink>
+    <button type="button" class="btn-home" @click="closeDetail">대시보드로 돌아가기</button>
   </section>
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { getWeatherList } from '@/api/weatherApi'
 import { useConfigStore } from '@/stores/configStore'
+
 const configStore = useConfigStore();
-const city = window.history.state?.city ?? null
-const detail = city?.detail ?? null
+const route = useRoute();
+const router = useRouter();
+const city = ref(null);
+const isLoading = ref(true);
+
+const loadCity = async () => {
+  isLoading.value = true;
+
+  const routedCity = window.history.state?.city;
+  if (
+    routedCity &&
+    String(routedCity.id) === String(route.params.cityId) &&
+    routedCity.detail
+  ) {
+    city.value = routedCity;
+    isLoading.value = false;
+    return;
+  }
+
+  try {
+    const weatherList = await getWeatherList();
+    city.value = weatherList.find(
+      (item) => String(item.id) === String(route.params.cityId),
+    ) ?? null;
+  } catch (error) {
+    console.error(error);
+    city.value = null;
+  } finally {
+    isLoading.value = false;
+  }
+};
+
+watch(() => route.params.cityId, loadCity, { immediate: true });
+
+const detail = computed(() => city.value?.detail ?? null);
 
 const weatherIcon = computed(() =>
-  `https://openweathermap.org/img/wn/${detail?.weather?.[0]?.icon}@2x.png`,
+  `https://openweathermap.org/img/wn/${detail.value?.weather?.[0]?.icon}@2x.png`,
 )
 
 const formatTime = (timestamp) => {
-  const localTimestamp = (timestamp + detail.timezone) * 1000
+  const localTimestamp = (timestamp + (detail.value?.timezone ?? 0)) * 1000
 
   return new Date(localTimestamp).toLocaleTimeString('ko-KR', {
     timeZone: 'UTC',
@@ -95,21 +142,30 @@ const formatTime = (timestamp) => {
     minute: '2-digit',
   })
 }
+
+const closeDetail = () => {
+  router.push({ name: 'weather' });
+};
 </script>
 
 <style scoped>
 .detail-page,
 .empty-state {
-  margin: 28px auto 0;
+  margin: 0;
   color: #334155;
+}
+
+.detail-page {
+  position: relative;
+  padding: 20px;
 }
 
 .weather-hero {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 24px;
-  border-radius: 12px;
+  padding: 22px 24px;
+  border-radius: 14px;
   background: linear-gradient(135deg, #38bdf8, #2563eb);
   box-shadow: 0 8px 20px rgba(37, 99, 235, 0.2);
   color: #fff;
@@ -122,7 +178,7 @@ const formatTime = (timestamp) => {
 
 .weather-hero h2 {
   margin: 6px 0;
-  font-size: 25px;
+  font-size: 28px;
 }
 
 .updated-at {
@@ -136,47 +192,54 @@ const formatTime = (timestamp) => {
 }
 
 .temperature img {
-  width: 72px;
-  height: 72px;
+  width: 62px;
+  height: 62px;
 }
 
 .temperature strong {
-  font-size: 44px;
+  font-size: 40px;
 }
 
 .summary-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 10px;
-  margin: 14px 0;
+  gap: 8px;
+  margin: 12px 0;
 }
 
 .summary-card {
   display: flex;
   flex-direction: column;
-  gap: 7px;
-  padding: 14px 10px;
+  gap: 6px;
+  min-height: 76px;
+  padding: 12px 8px;
   border: 1px solid #e2e8f0;
-  border-radius: 8px;
+  border-radius: 11px;
   background: #fff;
   text-align: center;
 }
 
 .summary-card span {
   color: #64748b;
-  font-size: 13px;
+  font-size: 12px;
+}
+
+.summary-card strong {
+  color: #334155;
+  font-size: 18px;
 }
 
 .details-card {
-  padding: 20px;
+  padding: 18px;
   border: 1px solid #e2e8f0;
-  border-radius: 10px;
+  border-radius: 12px;
   background: #f8fafc;
 }
 
 .details-card h3 {
   margin: 0 0 12px;
-  font-size: 17px;
+  color: #334155;
+  font-size: 16px;
 }
 
 .details-card dl {
@@ -190,7 +253,7 @@ const formatTime = (timestamp) => {
   display: flex;
   justify-content: space-between;
   gap: 12px;
-  padding: 10px 0;
+  padding: 9px 0;
   border-bottom: 1px solid #e2e8f0;
 }
 
@@ -204,13 +267,40 @@ const formatTime = (timestamp) => {
   text-align: right;
 }
 
+.modal-close {
+  position: absolute;
+  z-index: 1;
+  top: 31px;
+  right: 31px;
+  display: grid;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  padding: 0 0 3px;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 50%;
+  background: rgba(15, 23, 42, 0.24);
+  color: #fff;
+  cursor: pointer;
+  font-size: 24px;
+  line-height: 1;
+  transition: background-color 0.15s ease, transform 0.15s ease;
+}
+
+.modal-close:hover {
+  background: rgba(15, 23, 42, 0.42);
+  transform: scale(1.05);
+}
+
 .btn-home {
   display: block;
   margin-top: 15px;
   padding: 11px 16px;
+  border: 0;
   border-radius: 5px;
   background: #0ea5e9;
   color: #fff;
+  cursor: pointer;
   font-weight: 700;
   text-align: center;
   text-decoration: none;
@@ -228,13 +318,24 @@ const formatTime = (timestamp) => {
 }
 
 @media (max-width: 560px) {
-  .summary-grid,
-  .details-card dl {
+  .summary-grid {
     grid-template-columns: repeat(2, 1fr);
+  }
+
+  .details-card dl {
+    grid-template-columns: 1fr;
+  }
+
+  .detail-page {
+    padding: 12px;
   }
 
   .weather-hero {
     padding: 18px;
+  }
+
+  .weather-hero h2 {
+    font-size: 23px;
   }
 
   .temperature img {
@@ -244,6 +345,11 @@ const formatTime = (timestamp) => {
 
   .temperature strong {
     font-size: 34px;
+  }
+
+  .modal-close {
+    top: 27px;
+    right: 27px;
   }
 }
 </style>

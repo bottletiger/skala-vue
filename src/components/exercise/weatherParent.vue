@@ -66,7 +66,7 @@ import SearchBar from './SearchBar.vue';
 import WeatherCard from './weatherCard.vue';
 import WeatherMap from './WeatherMap.vue';
 import { getWeatherList } from '@/api/weatherApi';
-import { RouterLink, useRouter } from 'vue-router';
+import { useRouter } from 'vue-router';
 
 
 const searchQuery = ref('');
