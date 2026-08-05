@@ -11,8 +11,10 @@
           <SearchBar 
               :cur-query="searchQuery"
               :adding="isAddingCity"
+              :locating="isLocating"
               @update-query="updateSearchQuery"
-              @add-city="addCity">
+              @add-city="addCity"
+              @request-location="loadCurrentLocation">
           </SearchBar>
           <p v-if="cityAddMessage" class="city-add-message" aria-live="polite">
             {{ cityAddMessage }}
@@ -142,7 +144,9 @@ const cacheExpiresAt = ref(0);
 const currentTime = ref(Date.now());
 const isRefreshing = ref(false);
 const isAddingCity = ref(false);
+const isLocating = ref(false);
 const cityAddMessage = ref('');
+const currentLocationCity = ref(null);
 let cacheTimer;
 
 const loadWeather = async ({ forceRefresh = false } = {}) => {
@@ -217,6 +221,56 @@ const favoriteOnly = ref(false);
 const { favoriteIds, isFavorite, toggleFavorite } = useFavoriteCities();
 const favoriteCount = computed(() => favoriteIds.value.length);
 
+const getBrowserPosition = () => new Promise((resolve, reject) => {
+  navigator.geolocation.getCurrentPosition(resolve, reject, {
+    enableHighAccuracy: false,
+    timeout: 10 * 1000,
+    maximumAge: 5 * 60 * 1000,
+  });
+});
+
+const getLocationErrorMessage = (error) => {
+  if (error?.code === 1) return '위치 권한이 거부되었습니다. 브라우저 설정에서 위치 권한을 허용해 주세요.';
+  if (error?.code === 2) return '현재 위치를 확인할 수 없습니다.';
+  if (error?.code === 3) return '위치 확인 시간이 초과되었습니다. 다시 시도해 주세요.';
+  return '현재 위치 날씨를 불러오지 못했습니다.';
+};
+
+const loadCurrentLocation = async () => {
+  if (!('geolocation' in navigator)) {
+    cityAddMessage.value = '이 브라우저에서는 위치 기능을 사용할 수 없습니다.';
+    return;
+  }
+
+  isLocating.value = true;
+  cityAddMessage.value = '현재 위치를 확인하는 중입니다.';
+
+  try {
+    const position = await getBrowserPosition();
+    const currentCity = await getWeatherByLocation({
+      lat: position.coords.latitude,
+      lon: position.coords.longitude,
+    });
+    const existingCity = weatherList.value.find(
+      (item) => String(item.detail?.id) === String(currentCity.detail.id),
+    );
+    const locationName = existingCity?.name_kr ?? currentCity.name;
+
+    currentLocationCity.value = {
+      ...currentCity,
+      name_kr: `현재 위치 · ${locationName}`,
+      isCurrentLocation: true,
+    };
+    searchQuery.value = '';
+    favoriteOnly.value = false;
+    cityAddMessage.value = `현재 위치(${locationName}) 날씨를 불러왔습니다.`;
+  } catch (error) {
+    cityAddMessage.value = getLocationErrorMessage(error);
+  } finally {
+    isLocating.value = false;
+  }
+};
+
 const addCity = async (location) => {
   isAddingCity.value = true;
   cityAddMessage.value = '';
@@ -284,7 +338,15 @@ const filteredWeatherList = computed(() => {
     .map((keyword) => keyword.trim().toLowerCase())
     .filter(Boolean)
 
-  let result = [...weatherList.value]
+  const currentCityId = currentLocationCity.value?.detail?.id
+  let result = currentLocationCity.value
+    ? [
+        currentLocationCity.value,
+        ...weatherList.value.filter(
+          (item) => String(item.detail?.id) !== String(currentCityId),
+        ),
+      ]
+    : [...weatherList.value]
 
   if (keywords.length > 0) {
     result = result.filter((item) =>
@@ -320,6 +382,15 @@ const filteredWeatherList = computed(() => {
 
       return (values[sortKey.value][0] - values[sortKey.value][1]) * multiplier
     })
+  }
+
+  const currentLocationIndex = result.findIndex(
+    (item) => item.isCurrentLocation,
+  )
+
+  if (currentLocationIndex > 0) {
+    const [currentLocation] = result.splice(currentLocationIndex, 1)
+    result.unshift(currentLocation)
   }
 
   return result

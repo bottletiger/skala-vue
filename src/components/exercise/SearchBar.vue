@@ -2,7 +2,7 @@
     <section class="search-child" aria-labelledby="city-search-title">
       <div class="search-heading">
         <h3 id="city-search-title">🔍 검색</h3>
-        <p>입력하면 목록을 필터링하고, 추가 지역도 찾을 수 있습니다.</p>
+        <p>지역을 검색하거나 현재 위치 날씨를 확인할 수 있습니다.</p>
       </div>
 
       <form class="search-row" @submit.prevent="handleCitySearch">
@@ -26,13 +26,26 @@
           </template>
         </UInput>
 
-        <UButton
-          type="submit"
-          color="neutral"
-          variant="outline"
-          :loading="searchStatus === 'loading'">
-          지역 찾기
-        </UButton>
+        <div class="search-actions">
+          <UButton
+            type="button"
+            color="neutral"
+            variant="soft"
+            :loading="locating"
+            :disabled="adding || searchStatus === 'loading'"
+            @click="requestCurrentLocation">
+            ◎ 내 위치
+          </UButton>
+
+          <UButton
+            type="submit"
+            color="neutral"
+            variant="outline"
+            :loading="searchStatus === 'loading'"
+            :disabled="locating">
+            지역 찾기
+          </UButton>
+        </div>
       </form>
 
       <p v-if="searchMessage" class="search-message" aria-live="polite">
@@ -52,7 +65,7 @@
             color="neutral"
             variant="outline"
             size="xs"
-            :disabled="adding"
+            :disabled="adding || locating"
             @click="emit('add-city', city)">
             목록에 추가
           </UButton>
@@ -75,9 +88,13 @@ const props = defineProps({
         type: Boolean,
         default: false,
     },
+    locating: {
+        type: Boolean,
+        default: false,
+    },
 })
 
-const emit = defineEmits(['update-query', 'add-city'])
+const emit = defineEmits(['update-query', 'add-city', 'request-location'])
 const searchResults = ref([])
 const searchStatus = ref('idle')
 
@@ -101,6 +118,11 @@ const sendCurQuery = (value) => {
 const clearQuery = () => {
     resetCandidates()
     emit('update-query', '')
+}
+
+const requestCurrentLocation = () => {
+    resetCandidates()
+    emit('request-location')
 }
 
 const handleCitySearch = async () => {
@@ -161,6 +183,11 @@ const handleCitySearch = async () => {
   flex: 1;
 }
 
+.search-actions {
+  display: flex;
+  gap: 8px;
+}
+
 .search-message {
   margin: 8px 0 0;
   color: var(--color-text-muted);
@@ -214,6 +241,11 @@ const handleCitySearch = async () => {
   .search-row {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .search-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 </style>

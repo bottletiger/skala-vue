@@ -13,6 +13,7 @@
                 <li>도시별 7일 예보 조회 및 localStorage 캐싱</li>
                 <li>캐시 남은 시간 표시 및 최신 날씨 강제 갱신</li>
                 <li>하나의 검색창에서 도시 필터와 새 도시 추가</li>
+                <li>브라우저 위치 권한을 이용한 현재 위치 날씨 조회</li>
             </ul>
         </BaseDashboardCard>
         <UButton to="/" color="neutral" class="btn-home">대시보드로 이동</UButton>
