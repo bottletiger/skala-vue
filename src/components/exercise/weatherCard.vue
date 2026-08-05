@@ -33,7 +33,6 @@
             size="sm"
             square
             class="favorite-button"
-            :class="{ active: isFavorite }"
             :aria-pressed="isFavorite"
             :aria-label="isFavorite ? `${cityItem.name} 즐겨찾기 해제` : `${cityItem.name} 즐겨찾기 추가`"
             @click.stop="emit('toggle-favorite', cityItem.id)">

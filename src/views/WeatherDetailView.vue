@@ -48,6 +48,46 @@
       </article>
     </div>
 
+    <section class="forecast-section" aria-labelledby="weekly-forecast-title">
+      <h3 id="weekly-forecast-title">7일 예보</h3>
+
+      <p v-if="forecastStatus === 'loading'" class="forecast-status" aria-live="polite">
+        주간 예보를 불러오는 중입니다.
+      </p>
+      <p v-else-if="forecastStatus === 'error'" class="forecast-status forecast-status--error">
+        주간 예보를 불러오지 못했습니다.
+      </p>
+
+      <div v-else class="forecast-grid">
+        <article
+          v-for="day in weeklyForecast"
+          :key="day.date"
+          class="forecast-day">
+          <time :datetime="day.date">{{ formatForecastDate(day.date) }}</time>
+          <span class="forecast-icon" aria-hidden="true">
+            {{ getForecastCondition(day.weatherCode).icon }}
+          </span>
+          <span class="forecast-condition">
+            {{ getForecastCondition(day.weatherCode).label }}
+          </span>
+          <strong>
+            {{ configStore.formatTemp(day.tempMax) }}
+            <span>{{ configStore.formatTemp(day.tempMin) }}</span>
+          </strong>
+          <small>강수 {{ day.precipitationProbability }}%</small>
+        </article>
+      </div>
+
+      <a
+        v-if="forecastStatus === 'success'"
+        class="forecast-source"
+        href="https://open-meteo.com/"
+        target="_blank"
+        rel="noopener">
+        예보 데이터: Open-Meteo
+      </a>
+    </section>
+
     <div class="details-card">
       <h3>상세 관측 정보</h3>
       <dl>
@@ -93,7 +133,7 @@
 <script setup>
 import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { getWeatherList } from '@/api/weatherApi'
+import { getWeatherList, getWeeklyForecast } from '@/api/weatherApi'
 import { useConfigStore } from '@/stores/configStore'
 
 const configStore = useConfigStore();
@@ -101,9 +141,40 @@ const route = useRoute();
 const router = useRouter();
 const city = ref(null);
 const isLoading = ref(true);
+const weeklyForecast = ref([]);
+const forecastStatus = ref('loading');
+
+const loadWeeklyForecast = async (currentCity) => {
+  const requestedCityId = String(currentCity.id);
+  const { lat, lon } = currentCity.detail.coord;
+
+  forecastStatus.value = 'loading';
+
+  try {
+    const forecast = await getWeeklyForecast({
+      cityId: requestedCityId,
+      latitude: lat,
+      longitude: lon,
+    });
+
+    if (String(city.value?.id) !== requestedCityId) return;
+
+    weeklyForecast.value = forecast;
+    forecastStatus.value = 'success';
+  } catch (error) {
+    console.error(error);
+
+    if (String(city.value?.id) !== requestedCityId) return;
+
+    weeklyForecast.value = [];
+    forecastStatus.value = 'error';
+  }
+};
 
 const loadCity = async () => {
   isLoading.value = true;
+  weeklyForecast.value = [];
+  forecastStatus.value = 'loading';
 
   const routedCity = window.history.state?.city;
   if (
@@ -113,6 +184,7 @@ const loadCity = async () => {
   ) {
     city.value = routedCity;
     isLoading.value = false;
+    loadWeeklyForecast(routedCity);
     return;
   }
 
@@ -126,6 +198,10 @@ const loadCity = async () => {
     city.value = null;
   } finally {
     isLoading.value = false;
+  }
+
+  if (city.value?.detail?.coord) {
+    loadWeeklyForecast(city.value);
   }
 };
 
@@ -145,6 +221,30 @@ const formatTime = (timestamp) => {
     hour: '2-digit',
     minute: '2-digit',
   })
+}
+
+const formatForecastDate = (date) =>
+  new Intl.DateTimeFormat('ko-KR', {
+    month: 'numeric',
+    day: 'numeric',
+    weekday: 'short',
+  }).format(new Date(`${date}T00:00:00`))
+
+const getForecastCondition = (code) => {
+  if (code === 0) return { icon: '☀️', label: '맑음' }
+  if ([1, 2].includes(code)) return { icon: '🌤️', label: '구름 조금' }
+  if (code === 3) return { icon: '☁️', label: '흐림' }
+  if ([45, 48].includes(code)) return { icon: '🌫️', label: '안개' }
+  if ([51, 53, 55, 56, 57].includes(code)) return { icon: '🌦️', label: '이슬비' }
+  if ([61, 63, 65, 66, 67, 80, 81, 82].includes(code)) {
+    return { icon: '🌧️', label: '비' }
+  }
+  if ([71, 73, 75, 77, 85, 86].includes(code)) {
+    return { icon: '🌨️', label: '눈' }
+  }
+  if ([95, 96, 99].includes(code)) return { icon: '⛈️', label: '뇌우' }
+
+  return { icon: '🌥️', label: '날씨 변화' }
 }
 
 const closeDetail = () => {
@@ -231,6 +331,83 @@ const closeDetail = () => {
 .summary-card strong {
   color: #334155;
   font-size: 18px;
+}
+
+.forecast-section {
+  margin: 12px 0;
+  padding: 14px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: #fff;
+}
+
+.forecast-section h3 {
+  margin: 0 0 10px;
+  font-size: 16px;
+}
+
+.forecast-status {
+  margin: 0;
+  padding: 14px 0;
+  color: #64748b;
+  text-align: center;
+}
+
+.forecast-status--error {
+  color: #b91c1c;
+}
+
+.forecast-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(84px, 1fr));
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.forecast-day {
+  display: flex;
+  min-width: 84px;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 9px 5px;
+  border-radius: 8px;
+  background: #f8fafc;
+  text-align: center;
+}
+
+.forecast-day time,
+.forecast-day small {
+  color: #64748b;
+  font-size: 11px;
+}
+
+.forecast-icon {
+  font-size: 23px;
+}
+
+.forecast-condition {
+  min-height: 32px;
+  color: #475569;
+  font-size: 11px;
+}
+
+.forecast-day strong {
+  font-size: 13px;
+}
+
+.forecast-day strong span {
+  color: #64748b;
+  font-weight: 500;
+}
+
+.forecast-source {
+  display: block;
+  width: fit-content;
+  margin: 6px 0 0 auto;
+  color: #94a3b8;
+  font-size: 10px;
 }
 
 .details-card {
