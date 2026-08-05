@@ -3,23 +3,30 @@
         :class="cityItem.temp >= hotTemperature ? 'card-hot':'card-cool'"
         @click="emit('select-card', cityItem)">
 
-        <h3>{{ cityItem.name_kr }} ({{ cityItem.status }})</h3>
+        <div class="weather-content">
+          <header class="card-heading">
+            <div>
+              <h3>{{ cityItem.name_kr ?? cityItem.name }} ({{ cityItem.status }})</h3>
+              <p>{{ cityItem.name }}</p>
+            </div>
+            <UBadge
+              :color="cityItem.temp >= hotTemperature ? 'error' : 'info'"
+              variant="soft"
+              size="sm">
+              {{ cityItem.temp >= hotTemperature ? '🔥 더움' : '❄️ 선선함' }}
+            </UBadge>
+          </header>
 
-        <p >🌡️ 현재 기온: 
-          <span :style="{color: cityItem.temp >= hotTemperature ? 'red': 'blue' }">
-            {{ configStore.formatTemp(cityItem.temp) }}
-          </span>
-        </p>
+          <div class="current-temperature">
+            <span>🌡️ 현재 기온</span>
+            <strong>{{ configStore.formatTemp(cityItem.temp) }}</strong>
+          </div>
 
-        <p>👤 체감온도: 
-          <span :style="{color: cityItem.main.feels_like >= hotTemperature ? 'red': 'blue' }">
-              {{ configStore.formatTemp(Math.round(cityItem.main.feels_like))}}
-          </span>
-        </p>
-
-        <p>💦 습도: {{ cityItem.main.humidity }}%</p>
-        <UBadge v-if="cityItem.temp >= hotTemperature" color="error" variant="soft">🔥 더움</UBadge>
-        <UBadge v-else color="info" variant="soft">❄️ 선선함</UBadge>
+          <div class="card-metrics">
+            <span>👤 체감온도 <strong>{{ configStore.formatTemp(cityItem.main.feels_like) }}</strong></span>
+            <span>💦 습도 <strong>{{ cityItem.main.humidity }}%</strong></span>
+          </div>
+        </div>
         <div class="weather-side">
           <img
             v-if="cityItem.detail?.weather?.[0]?.icon"
@@ -81,70 +88,98 @@
 .weather-card {
   position: relative;
   margin-bottom: 10px;
-  min-height: 174px;
-  padding: 12px 132px 12px 12px;
-  border: 1px solid #dee2e6;
-  border-radius: 6px;
+  min-height: 176px;
+  padding: 16px 126px 16px 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
   background: #fff;
   cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .card-hot {
-  background: linear-gradient(
-    to right,
-    #fff7ed 0%,
-    #fffaf5 55%,
-    #ffffff 100%
-  );
-  border-color: #fed7aa;
+  background: linear-gradient(105deg, #fff 0%, #fff 62%, #fff7ed 100%);
 }
 
 .card-cool {
-  background: linear-gradient(
-    to right,
-    #eff6ff 0%,
-    #f7fbff 55%,
-    #ffffff 100%
-  );
-  border-color: #bfdbfe;
+  background: linear-gradient(105deg, #fff 0%, #fff 62%, #eff6ff 100%);
 }
 
-.card-hot:hover {
-  background: linear-gradient(
-    to right,
-    #ffedd5 0%,
-    #fff7ed 55%,
-    #ffffff 100%
-  );
-}
-
-.card-cool:hover {
-  background: linear-gradient(
-    to right,
-    #dbeafe 0%,
-    #eff6ff 55%,
-    #ffffff 100%
-  );
+.weather-card:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
 }
 .weather-card:last-child {
   margin-bottom: 0;
 }
 
-.weather-card h3 {
+.card-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.card-heading h3 {
   margin: 0;
+  color: #111827;
+  font-size: 17px;
   font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.card-heading p {
+  margin: 2px 0 0;
+  color: #9ca3af;
+  font-size: 11px;
+}
+
+.current-temperature {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 13px 0 10px;
+}
+
+.current-temperature span {
+  color: #6b7280;
+  font-size: 12px;
+}
+
+.current-temperature strong {
+  color: #111827;
+  font-size: 28px;
+  font-weight: 650;
+  letter-spacing: -0.04em;
+  line-height: 1;
+}
+
+.card-metrics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  color: #9ca3af;
+  font-size: 12px;
+}
+
+.card-metrics strong {
+  margin-left: 3px;
+  color: #4b5563;
+  font-weight: 600;
 }
 
 .weather-icon {
-  width: 64px;
-  height: 64px;
+  width: 72px;
+  height: 72px;
   object-fit: contain;
+  border-radius: 50%;
+  background: #f8fafc;
 }
 
 .weather-side {
   position: absolute;
-  top: 12px;
-  right: 12px;
+  top: 16px;
+  right: 14px;
   display: flex;
   width: 100px;
   flex-direction: column;
@@ -153,7 +188,7 @@
 }
 
 .favorite-button {
-  font-size: 19px;
+  font-size: 17px;
   line-height: 1;
 }
 
@@ -161,7 +196,7 @@
   width: 100%;
   min-height: 30px;
   padding: 6px 10px;
-  font-size: 13px;
+  font-size: 12px;
   text-align: center;
   cursor: pointer;
 }

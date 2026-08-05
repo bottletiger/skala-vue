@@ -6,56 +6,115 @@ import UnitToggler from './components/exercise/UnitToggler.vue';
 <template>
 <UApp>
   <div class="app-container">
-    <h1>⛅ 과제 4: 라우터적용</h1>
-    <hr />
-    <div class="dashboard-wrapper">
-      <nav class="nav-bar">
+    <header class="app-header">
+      <RouterLink to="/" class="brand">
+        <span class="brand-mark" aria-hidden="true"></span>
+        <span>
+          <strong>Weather</strong>
+          <small>과제 4: 라우터 적용</small>
+        </span>
+      </RouterLink>
+
+      <nav class="nav-bar" aria-label="주요 메뉴">
         <RouterLink to="/" class="nav-item">🌦️ 날씨 대시보드</RouterLink>
-        <span class="nav-div"></span>
         <RouterLink to="/about" class="nav-item">ℹ️ 서비스 소개</RouterLink>
-        <UnitToggler class="unit-toggler"></UnitToggler>
       </nav>
-      <main>
-        <RouterView />
-      </main>
-    </div>
+
+      <UnitToggler class="unit-toggler"></UnitToggler>
+    </header>
+
+    <main>
+      <RouterView />
+    </main>
   </div>
 </UApp>
 </template>
 
 <style scoped>
 
+.app-container {
+  width: min(1120px, 100%);
+  margin: 0 auto;
+}
+
+.app-header {
+  display: flex;
+  align-items: center;
+  min-height: 56px;
+  padding: 0 2px 14px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  color: #111827;
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.brand > span:last-child {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+}
+
+.brand strong {
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.brand small {
+  margin-top: 2px;
+  color: #9ca3af;
+  font-size: 10px;
+}
+
+.brand-mark {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #0f172a;
+}
+
 .nav-bar {
   display: flex;
   align-items: center;
-  justify-content: left;
-  gap: 14px;
-  min-height: 52px;
-  margin: 10px;
-  padding: 0 20px;
-  border-radius: 0 0 8px 8px;
-  color: #6b7280;
-  background: #fff;
-  box-shadow: 0 5px 6px -6px rgba(0, 0, 0, 0.25);
+  gap: 6px;
+  margin-left: 26px;
 }
 
 .nav-item {
+  padding: 6px 9px;
+  border-radius: 6px;
+  color: #6b7280;
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 500;
   white-space: nowrap;
-  color: black;
-}
-.nav-item:hover{
-  text-decoration: underline 2px;
-  color: steelblue;
 }
 
-.nav-div {
-  width: 1px;
-  height: 16px;
-  background: #e5e7eb;
+.nav-item:hover,
+.nav-item.router-link-active {
+  background: #eef0f3;
+  color: #111827;
 }
+
 .unit-toggler{
   margin-left: auto;
+}
+
+@media (max-width: 560px) {
+  .app-header {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .nav-bar {
+    order: 3;
+    width: 100%;
+    margin-left: 0;
+  }
 }
 </style>

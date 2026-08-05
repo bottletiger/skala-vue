@@ -256,23 +256,23 @@ const closeDetail = () => {
 .detail-page,
 .empty-state {
   margin: 0;
-  color: #334155;
+  color: #374151;
 }
 
 .detail-page {
   position: relative;
-  padding: 20px;
+  padding: 22px;
 }
 
 .weather-hero {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 22px 24px;
-  border-radius: 14px;
-  background: linear-gradient(135deg, #38bdf8, #2563eb);
-  box-shadow: 0 8px 20px rgba(37, 99, 235, 0.2);
-  color: #fff;
+  padding: 20px 22px;
+  border: 1px solid #e5e7eb;
+  border-radius: 11px;
+  background: #f8fafc;
+  color: #111827;
 }
 
 .location,
@@ -280,14 +280,21 @@ const closeDetail = () => {
   margin: 0;
 }
 
+.location {
+  color: #6b7280;
+  font-size: 12px;
+  font-weight: 600;
+}
+
 .weather-hero h2 {
-  margin: 6px 0;
-  font-size: 28px;
+  margin: 4px 0;
+  font-size: 23px;
+  font-weight: 700;
 }
 
 .updated-at {
-  color: rgba(255, 255, 255, 0.8);
-  font-size: 13px;
+  color: #9ca3af;
+  font-size: 12px;
 }
 
 .temperature {
@@ -296,12 +303,14 @@ const closeDetail = () => {
 }
 
 .temperature img {
-  width: 62px;
-  height: 62px;
+  width: 58px;
+  height: 58px;
 }
 
 .temperature strong {
-  font-size: 40px;
+  font-size: 34px;
+  font-weight: 650;
+  letter-spacing: -0.04em;
 }
 
 .summary-grid {
@@ -318,7 +327,7 @@ const closeDetail = () => {
   min-height: 76px;
   padding: 12px 8px;
   border: 1px solid #e2e8f0;
-  border-radius: 11px;
+  border-radius: 9px;
   background: #fff;
   text-align: center;
 }
@@ -329,7 +338,7 @@ const closeDetail = () => {
 }
 
 .summary-card strong {
-  color: #334155;
+  color: #111827;
   font-size: 18px;
 }
 
@@ -337,7 +346,7 @@ const closeDetail = () => {
   margin: 12px 0;
   padding: 14px;
   border: 1px solid #e2e8f0;
-  border-radius: 12px;
+  border-radius: 10px;
   background: #fff;
 }
 
@@ -373,7 +382,8 @@ const closeDetail = () => {
   gap: 4px;
   padding: 9px 5px;
   border-radius: 8px;
-  background: #f8fafc;
+  border: 1px solid #eef0f2;
+  background: #fafafa;
   text-align: center;
 }
 
@@ -413,13 +423,13 @@ const closeDetail = () => {
 .details-card {
   padding: 18px;
   border: 1px solid #e2e8f0;
-  border-radius: 12px;
-  background: #f8fafc;
+  border-radius: 10px;
+  background: #fff;
 }
 
 .details-card h3 {
   margin: 0 0 12px;
-  color: #334155;
+  color: #111827;
   font-size: 16px;
 }
 
@@ -458,10 +468,10 @@ const closeDetail = () => {
   height: 32px;
   place-items: center;
   padding: 0 0 3px;
-  border: 1px solid rgba(255, 255, 255, 0.5);
+  border: 1px solid #e5e7eb;
   border-radius: 50%;
-  background: rgba(15, 23, 42, 0.24);
-  color: #fff;
+  background: #fff;
+  color: #6b7280;
   cursor: pointer;
   font-size: 24px;
   line-height: 1;
@@ -469,8 +479,8 @@ const closeDetail = () => {
 }
 
 .modal-close:hover {
-  background: rgba(15, 23, 42, 0.42);
-  transform: scale(1.05);
+  background: #f3f4f6;
+  color: #111827;
 }
 
 .btn-home {

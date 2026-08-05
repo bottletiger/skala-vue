@@ -12,7 +12,10 @@
       </BaseDashboardCard>
 
       <BaseDashboardCard>
-        <h3>🏞️ 지역별 날씨 현황</h3>
+        <div class="section-heading">
+          <h2>🏞️ 지역별 날씨 현황</h2>
+          <p>도시별 현재 관측 정보</p>
+        </div>
 
         <p class="api-status" :class="`api-status--${apiStatus}`">
           <span v-if="apiStatus === 'loading'">{{ API_LOADING }}</span>
@@ -42,7 +45,7 @@
 
           <UButton
             type="button"
-            :color="favoriteOnly ? 'warning' : 'neutral'"
+            :color="favoriteOnly ? 'primary' : 'neutral'"
             variant="outline"
             size="sm"
             class="favorite-filter"
@@ -233,15 +236,16 @@ const showDetail = (city) => {
 
 <style scoped>
 .container {
-  margin: 2rem auto 0;
+  display: grid;
+  gap: 16px;
+  margin: 20px auto 0;
 }
 .status-bar {
-  padding: 10px;
-  border-radius: 6px;
-  background: #e8f5e9;
-  color: #2e7d32;
-  font-weight: bold;
-  text-align: center;
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid #eef0f2;
+  color: #9ca3af;
+  font-size: 12px;
 }
 .empty-message{
   color: red;
@@ -252,6 +256,26 @@ const showDetail = (city) => {
   gap: 8px;
   margin-bottom: 16px;
   flex-wrap: wrap;
+}
+
+.section-heading {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.section-heading h2 {
+  margin: 0;
+  color: #111827;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.section-heading p {
+  margin: 0;
+  color: #9ca3af;
+  font-size: 12px;
 }
 
 .filter-select {
@@ -278,8 +302,8 @@ const showDetail = (city) => {
 }
 
 .api-status {
-  margin: 8px 0 14px;
-  font-size: 13px;
+  margin: 3px 0 14px;
+  font-size: 11px;
 }
 
 .api-status--loading {
@@ -287,7 +311,7 @@ const showDetail = (city) => {
 }
 
 .api-status--success {
-  color: #047857;
+  color: #6b7280;
 }
 
 .api-status--error {

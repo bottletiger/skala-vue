@@ -3,30 +3,22 @@
 @import './base.css';
 
 :root {
-  --ui-primary: var(--ui-color-sky-600);
-  --ui-radius: 0.45rem;
+  --ui-primary: var(--ui-color-slate-900);
+  --ui-radius: 0.5rem;
 }
 
 #app {
   width: 100%;
   min-height: 100vh;
   margin: 0 auto;
-  padding: clamp(1.25rem, 4vw, 3rem);
+  padding: clamp(16px, 3vw, 32px);
   font-weight: normal;
 }
 
 a,
 .green {
   text-decoration: none;
-  color: hsla(160, 100%, 37%, 1);
-  transition: 0.4s;
-  padding: 3px;
-}
-
-@media (hover: hover) {
-  a:hover {
-    background-color: hsla(160, 100%, 37%, 0.2);
-  }
+  color: inherit;
 }
 
 body {

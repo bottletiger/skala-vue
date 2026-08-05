@@ -22,7 +22,7 @@
           </template>
         </UInput>
 
-      <p>
+      <p v-if="curQuery">
         검색 중인 도시: {{ curQuery }}
       </p>
     </div>
@@ -51,6 +51,19 @@ const clearQuery = () => {
 <style scoped>
 .search-input {
   width: 100%;
+}
+
+.search-child h3 {
+  margin: 0 0 10px;
+  color: #111827;
+  font-size: 15px;
+  font-weight: 650;
+}
+
+.search-child p {
+  margin: 8px 0 0;
+  color: #9ca3af;
+  font-size: 12px;
 }
 
 </style>

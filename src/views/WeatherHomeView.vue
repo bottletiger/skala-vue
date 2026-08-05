@@ -93,19 +93,19 @@ h1 {
   display: grid;
   place-items: center;
   padding: clamp(12px, 3vw, 28px);
-  background: rgba(15, 23, 42, 0.58);
-  backdrop-filter: blur(3px);
+  background: rgba(15, 23, 42, 0.38);
+  backdrop-filter: blur(2px);
 }
 
 .weather-modal-shell {
-  width: min(640px, 100%);
-  max-height: min(780px, 88vh);
+  width: min(720px, 100%);
+  max-height: min(820px, 90vh);
   overflow-y: auto;
   overscroll-behavior: contain;
-  border: 1px solid rgba(226, 232, 240, 0.9);
-  border-radius: 18px;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
   background: #fff;
-  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.3);
+  box-shadow: 0 20px 48px rgba(15, 23, 42, 0.2);
 }
 
 .weather-modal-enter-active,

@@ -10,10 +10,9 @@
 
 <style scoped>
 .base-dashboard-card {
-  background: #f8f9fa;
-  padding: 15px;
-  border-radius: 8px;
-  margin-bottom: 15px;
-  border: 1px solid #e9ecef;
+  padding: clamp(16px, 2.5vw, 22px);
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #fff;
 }
 </style>

@@ -1,11 +1,16 @@
 <template>
   <section class="weather-map" aria-label="날씨 지도">
+    <div class="map-heading">
+      <h2>날씨 지도</h2>
+      <p>원하는 레이어를 선택하세요</p>
+    </div>
+
     <div class="windy-categories" aria-label="날씨 지도 레이어 선택">
       <UButton
         v-for="category in windyCategories"
         :key="category.overlay"
         type="button"
-        color="neutral"
+        :color="selectedOverlay === category.overlay ? 'primary' : 'neutral'"
         :variant="selectedOverlay === category.overlay ? 'soft' : 'outline'"
         size="xs"
         @click="selectedOverlay = category.overlay">
@@ -46,19 +51,39 @@ const windyEmbedUrl = computed(() =>
 </script>
 
 <style scoped>
+.map-heading {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.map-heading h2 {
+  margin: 0;
+  color: #111827;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.map-heading p {
+  margin: 0;
+  color: #9ca3af;
+  font-size: 12px;
+}
+
 .windy-categories {
   display: flex;
   flex-wrap: wrap;
   gap: 7px;
-  margin-top: 15px;
+  margin-top: 12px;
 }
 
 .weather-map-frame {
   display: block;
   width: 100%;
   height: clamp(320px, 75vw, 450px);
-  margin-top: 15px;
+  margin-top: 12px;
   border: 0;
-  border-radius: 8px;
+  border-radius: 10px;
 }
 </style>

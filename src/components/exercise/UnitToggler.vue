@@ -1,6 +1,6 @@
 <template>
     <div class="unit-toggle">
-        <p>날씨단위: {{ configStore.unitSymbol}}</p>
+        <span>날씨단위: {{ configStore.unitSymbol }}</span>
         <UButton
           type="button"
           color="neutral"
@@ -27,8 +27,9 @@ const configStore = useConfigStore();
   white-space: nowrap;
 }
 
-.unit-toggle p {
+.unit-toggle span {
   margin: 0;
+  color: #6b7280;
 }
 
 </style>

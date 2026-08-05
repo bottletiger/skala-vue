@@ -1,12 +1,13 @@
 <template>
   <section class="not-found" aria-labelledby="not-found-title">
-    <div class="weather-icon">❓</div>
+    <div class="weather-icon" aria-hidden="true">❓</div>
+    <span class="error-code">404</span>
     <h2 id="not-found-title">페이지를 찾을 수 없습니다</h2>
     <p class="description">
       요청하신 페이지가 없거나 주소가 변경되었습니다.
     </p>
     <code class="requested-path">{{ route.fullPath }}</code>
-    <RouterLink to="/" class="btn-home">🌦️ 날씨 메인으로 이동</RouterLink>
+    <UButton to="/" color="neutral">대시보드로 이동</UButton>
   </section>
 </template>
 
@@ -26,26 +27,33 @@ const route = useRoute()
     transform: rotate(360deg);
   }
 }
+
 .not-found {
   margin: 40px auto 0;
   padding: 42px 24px;
-  border: 1px solid #e9ecef;
-  border-radius: 10px;
-  background: #f8f9fa;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #fff;
   color: #475569;
   text-align: center;
 }
 
-.weather-icon {
-  margin-bottom: 4px;
-  font-size: 44px;
-  animation: rotation 2s infinite linear;
+.error-code {
+  color: #9ca3af;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
 
+.weather-icon {
+  margin-bottom: 2px;
+  font-size: 36px;
+  animation: rotation 2s infinite linear;
 }
 
 h2 {
   margin: 12px 0 8px;
-  color: #334155;
+  color: #111827;
   font-size: 22px;
 }
 
@@ -62,24 +70,8 @@ h2 {
   padding: 5px 10px;
   overflow-wrap: anywhere;
   border-radius: 4px;
-  background: #e9ecef;
+  background: #f3f4f6;
   color: #64748b;
-}
-
-.btn-home {
-  display: inline-block;
-  padding: 10px 20px;
-  border-radius: 4px;
-  background: #0ea5e9;
-  color: #fff;
-  font-size: 14px;
-  font-weight: 700;
-  text-decoration: none;
-  transition: background-color 0.2s ease;
-}
-
-.btn-home:hover {
-  background: #0284c7;
 }
 
 </style>
