@@ -1,6 +1,5 @@
 <template>
-    <div
-        class="weather-card"
+    <div class="weather-card"
         :class="cityItem.temp >= hotTemperature ? 'card-hot':'card-cool'"
         @click="emit('select-card', cityItem)">
 
@@ -21,17 +20,25 @@
         <p>💦 습도: {{ cityItem.main.humidity }}%</p>
         <span v-if="cityItem.temp >= hotTemperature" class="badge hot">🔥 더움 </span>
         <span v-else class="badge cool">❄️ 선선함</span>
-        <button 
-          class="detail-button" 
-          @click.stop="emit('click-detail', cityItem)">
-        상세보기
-        </button>
+        <div class="weather-side">
+          <img
+            v-if="cityItem.detail?.weather?.[0]?.icon"
+            class="weather-icon"
+            :src="weatherIcon"
+            :alt="cityItem.detail.weather[0].description">
+          <button
+            class="detail-button"
+            @click.stop="emit('click-detail', cityItem)">
+            상세보기
+          </button>
+        </div>
     </div>
 </template>
 
 <script setup>
   import { useConfigStore } from '@/stores/configStore';
-  defineProps({
+  import { computed } from 'vue';
+  const props = defineProps({
       cityItem: {
           type: Object,
           required: true,
@@ -43,9 +50,13 @@
   })
   const emit = defineEmits(['select-card','click-detail'])
   const configStore = useConfigStore();
+  const weatherIcon = computed(() =>
+    `https://openweathermap.org/img/wn/${props.cityItem.detail?.weather?.[0]?.icon}@2x.png`,
+  )
 </script>
 
 <style scoped>
+
 .weather-card {
   position: relative;
   margin-bottom: 10px;
@@ -57,29 +68,63 @@
 }
 
 .card-hot {
-  background-color: #fff7ed;
+  background: linear-gradient(
+    to right,
+    #fff7ed 0%,
+    #fffaf5 55%,
+    #ffffff 100%
+  );
   border-color: #fed7aa;
 }
 
 .card-cool {
-  background-color: #eff6ff;
+  background: linear-gradient(
+    to right,
+    #eff6ff 0%,
+    #f7fbff 55%,
+    #ffffff 100%
+  );
   border-color: #bfdbfe;
 }
 
 .card-hot:hover {
-  background-color: #ffedd5;
+  background: linear-gradient(
+    to right,
+    #ffedd5 0%,
+    #fff7ed 55%,
+    #ffffff 100%
+  );
 }
 
 .card-cool:hover {
-  background-color: #dbeafe;
+  background: linear-gradient(
+    to right,
+    #dbeafe 0%,
+    #eff6ff 55%,
+    #ffffff 100%
+  );
 }
-
 .weather-card:last-child {
   margin-bottom: 0;
 }
 
 .weather-card h3 {
+  margin: 0;
   font-weight: 700;
+}
+
+.weather-icon {
+  width: 90px;
+}
+
+.weather-side {
+  position: absolute;
+  top: 15px;
+  right: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
 }
 
 .badge {
@@ -98,9 +143,6 @@
   background-color: #2787c5;
 }
 .detail-button {
-  position: absolute;
-  top: 15px;
-  right: 12px;
   padding: 6px 10px;
   text-align: center;
   cursor: pointer;
