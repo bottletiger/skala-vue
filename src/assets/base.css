@@ -45,7 +45,7 @@ body {
 
 button,
 a {
-  cursor: url("bonobono-cursor.png") 0 0, pointer;
+  cursor: pointer;
 }
 .practice-section{
   border: 1px dotted black;
