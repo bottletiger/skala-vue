@@ -9,12 +9,12 @@
       class="modal-close"
       aria-label="상세 닫기"
       @click="closeDetail">
-      ×
+      <Close aria-hidden="true" />
     </button>
 
     <header class="weather-hero">
       <div>
-        <p class="location">📍 {{ city.name_kr ?? detail.name }}, {{ detail.sys.country }}</p>
+        <p class="location"><LocationInformation aria-hidden="true" /> {{ city.name_kr ?? detail.name }}, {{ detail.sys.country }}</p>
         <h2>{{ detail.weather[0].description }}</h2>
         <p class="updated-at">관측 시간 {{ formatTime(detail.dt) }}</p>
       </div>
@@ -144,7 +144,7 @@ const formatTime = (timestamp) => {
 }
 
 const closeDetail = () => {
-  router.push({ name: 'weather' });
+  router.push({ name: 'weather', query: route.query });
 };
 </script>
 
@@ -174,6 +174,12 @@ const closeDetail = () => {
 .location,
 .updated-at {
   margin: 0;
+}
+
+.location {
+  display: flex;
+  align-items: center;
+  gap: 5px;
 }
 
 .weather-hero h2 {
@@ -285,6 +291,11 @@ const closeDetail = () => {
   font-size: 24px;
   line-height: 1;
   transition: background-color 0.15s ease, transform 0.15s ease;
+}
+
+.modal-close svg {
+  width: 17px;
+  height: 17px;
 }
 
 .modal-close:hover {

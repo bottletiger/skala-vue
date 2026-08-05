@@ -36,6 +36,15 @@
             @click="toggleSortDirection">
             {{ sortDirection === 'asc' ? '↑' : '↓' }}
           </button>
+
+          <button
+            type="button"
+            class="favorite-filter"
+            :class="{ active: favoriteOnly }"
+            :aria-pressed="favoriteOnly"
+            @click="favoriteOnly = !favoriteOnly">
+            ★ 즐겨찾기 <span>{{ favoriteCount }}</span>
+          </button>
         </div>
           
         <div class="weather-grid">
@@ -44,11 +53,15 @@
             :key="item.id"
             :city-item="item"
             :hot-temperature="HOT_TEMPERATURE"
+            :is-favorite="isFavorite(item.id)"
             @select-card="selectCity"
+            @toggle-favorite="toggleFavorite"
             @click-detail="showDetail">
           </WeatherCard>
         </div>
-          <p v-if="filteredWeatherList.length === 0">검색 결과와 일치하는 도시가 없습니다. </p>
+          <p v-if="filteredWeatherList.length === 0">
+            {{ favoriteOnly ? '즐겨찾기한 도시가 없습니다.' : '검색 결과와 일치하는 도시가 없습니다.' }}
+          </p>
           
           <div class="status-bar">
           {{ selectedCityInfo }}
@@ -66,10 +79,14 @@ import SearchBar from './SearchBar.vue';
 import WeatherCard from './weatherCard.vue';
 import WeatherMap from './WeatherMap.vue';
 import { getWeatherList } from '@/api/weatherApi';
-import { useRouter } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
+import { useFavoriteCities } from '@/composables/useFavoriteCities';
 
 
-const searchQuery = ref('');
+const route = useRoute();
+const router = useRouter();
+const initialQuery = typeof route.query.q === 'string' ? route.query.q : '';
+const searchQuery = ref(initialQuery);
 // - searchQuery 감시 (watchEffect 이용): 도시 검색어를 타이핑할 때 마다 변하는 searchQuery를 추적하여 콘솔로그로 작성
 const updateSearchQuery = (query) => {
     searchQuery.value = query;
@@ -97,6 +114,34 @@ onMounted(async () => {
 
 const sortKey = ref('name');
 const sortDirection = ref('asc');
+const favoriteOnly = ref(false);
+const { favoriteIds, isFavorite, toggleFavorite } = useFavoriteCities();
+const favoriteCount = computed(() => favoriteIds.value.length);
+
+watch(searchQuery, (query) => {
+  const normalizedQuery = query.trim();
+  const currentQuery = typeof route.query.q === 'string' ? route.query.q : '';
+
+  if (normalizedQuery === currentQuery) return;
+
+  router.replace({
+    query: {
+      ...route.query,
+      q: normalizedQuery || undefined,
+    },
+  });
+});
+
+watch(
+  () => route.query.q,
+  (query) => {
+    const normalizedQuery = typeof query === 'string' ? query : '';
+
+    if (normalizedQuery !== searchQuery.value) {
+      searchQuery.value = normalizedQuery;
+    }
+  },
+);
 
 const toggleSortDirection = () => {
   sortDirection.value = sortDirection.value === 'asc' ? 'desc' : 'asc'
@@ -118,6 +163,10 @@ const filteredWeatherList = computed(() => {
           item.name_kr.includes(keyword),
       ),
     )
+  }
+
+  if (favoriteOnly.value) {
+    result = result.filter((item) => isFavorite(item.id))
   }
 
   if (sortKey.value !== 'default') {
@@ -156,7 +205,6 @@ const selectCity = (city) => {
     `${city.name_kr ?? city.name}이(가) 선택되었습니다.`
 }
 
-const router = useRouter();
 const showDetail = (city) => {
   router.push({
     name: 'detail',
@@ -166,6 +214,7 @@ const showDetail = (city) => {
     state: {
       city: JSON.parse(JSON.stringify(city)),
     },
+    query: route.query,
   })
 }
 </script>
@@ -228,6 +277,30 @@ const showDetail = (city) => {
 .sort-direction:hover {
   background: #1e293b;
   transform: translateY(-1px);
+}
+
+.favorite-filter {
+  min-height: 36px;
+  padding: 0 12px;
+  border: 1px solid #d7dde5;
+  border-radius: 8px;
+  background: #fff;
+  color: #64748b;
+  font-size: 13px;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background-color 0.15s ease, color 0.15s ease;
+}
+
+.favorite-filter span {
+  margin-left: 3px;
+  color: #94a3b8;
+}
+
+.favorite-filter:hover,
+.favorite-filter.active {
+  border-color: #f59e0b;
+  background: #fffbeb;
+  color: #b45309;
 }
 
 .api-status {

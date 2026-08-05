@@ -1,6 +1,6 @@
 <template>
     <div class="search-child">
-      <h3>🔍 도시 검색</h3>
+      <h3><Search aria-hidden="true" /> 도시 검색</h3>
       <!-- <input type="text" v-model="searchQuery" placeholder="검색할 도시 이름 입력" /> -->
       <!-- <input type="text" :value="searchQuery" @input="(e) => (searchQuery = e.target.value)" placeholder="검색할 도시 이름 입력" /> -->
         <input type="text" :value="curQuery" @input="sendCurQuery" placeholder="검색할 도시 이름 입력" />
@@ -33,5 +33,11 @@ input {
   padding: 8px;
   border: 1px solid #adb5bd;
   font-size: 14px;
+}
+
+h3 {
+  display: flex;
+  align-items: center;
+  gap: 5px;
 }
 </style>

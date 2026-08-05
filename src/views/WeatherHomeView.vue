@@ -35,7 +35,7 @@ watch(
 onBeforeUnmount(restorePageScroll);
 
 const closeDetail = () => {
-  router.push({ name: 'weather' });
+  router.push({ name: 'weather', query: route.query });
 };
 </script>
 

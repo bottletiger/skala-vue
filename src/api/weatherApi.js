@@ -25,7 +25,6 @@ const getCachedWeather = () => {
 export const getWeatherList = async () => {
   const cachedWeather = getCachedWeather()
 
-  // 유효 캐시
   if (cachedWeather) {
     return cachedWeather
   }
@@ -52,7 +51,7 @@ export const getWeatherList = async () => {
         visibility: data.visibility,
         wind: data.wind,
         clouds: data.clouds,
-        detail: data
+        detail: data,
       }
     }),
   )
