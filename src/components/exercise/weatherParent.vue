@@ -20,11 +20,23 @@
           <span v-else>{{ API_FAIL }}</span>
         </p>
         
-        <select class="temperature-filter" v-model="temperatureFilter">
-          <option value="all">전체 도시</option>
-          <option value="hot">🔥 더운 도시 ({{HOT_TEMPERATURE}}도 이상)</option>
-          <option value="cold">❄️ 시원한 도시 ({{HOT_TEMPERATURE}}도 미만)</option>
-        </select>
+        <div class="filter-row">
+          <select class="filter-select" v-model="sortKey" aria-label="정렬 기준">
+            <option value="name">이름순</option>
+            <option value="temp">기온순</option>
+            <option value="feels">체감온도순</option>
+            <option value="humidity">습도순</option>
+            <option value="wind">풍속순</option>
+          </select>
+
+          <button
+            type="button"
+            class="sort-direction"
+            :aria-label="sortDirection === 'asc' ? '내림차순으로 변경' : '오름차순으로 변경'"
+            @click="toggleSortDirection">
+            {{ sortDirection === 'asc' ? '↑' : '↓' }}
+          </button>
+        </div>
           
         <div class="weather-grid">
           <WeatherCard
@@ -83,26 +95,20 @@ onMounted(async () => {
   }
 })
 
-const temperatureFilter = ref('all');
+const sortKey = ref('name');
+const sortDirection = ref('asc');
+
+const toggleSortDirection = () => {
+  sortDirection.value = sortDirection.value === 'asc' ? 'desc' : 'asc'
+}
+
 const filteredWeatherList = computed(() => {
   const keywords = searchQuery.value
     .split(',')
     .map((keyword) => keyword.trim().toLowerCase())
     .filter(Boolean)
 
-  let result = weatherList.value
-
-  if (temperatureFilter.value === 'hot') {
-    result = result.filter(
-      (item) => item.temp >= HOT_TEMPERATURE,
-    )
-  }
-
-  if (temperatureFilter.value === 'cold') {
-    result = result.filter(
-      (item) => item.temp < HOT_TEMPERATURE,
-    )
-  }
+  let result = [...weatherList.value]
 
   if (keywords.length > 0) {
     result = result.filter((item) =>
@@ -112,6 +118,28 @@ const filteredWeatherList = computed(() => {
           item.name_kr.includes(keyword),
       ),
     )
+  }
+
+  if (sortKey.value !== 'default') {
+    const multiplier = sortDirection.value === 'asc' ? 1 : -1
+
+    result.sort((first, second) => {
+      if (sortKey.value === 'name') {
+        return (first.name_kr ?? first.name).localeCompare(
+          second.name_kr ?? second.name,
+          'ko',
+        ) * multiplier
+      }
+
+      const values = {
+        temp: [first.temp, second.temp],
+        feels: [first.main.feels_like, second.main.feels_like],
+        humidity: [first.main.humidity, second.main.humidity],
+        wind: [first.wind?.speed ?? 0, second.wind?.speed ?? 0],
+      }
+
+      return (values[sortKey.value][0] - values[sortKey.value][1]) * multiplier
+    })
   }
 
   return result
@@ -157,20 +185,49 @@ const showDetail = (city) => {
 .empty-message{
   color: red;
 }
-.temperature-filter {
+.filter-row {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-bottom: 12px;
-  font-weight: 600;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
 }
 
-.temperature-filter select {
-  padding: 7px 10px;
-  border: 1px solid #adb5bd;
-  border-radius: 4px;
+.filter-select {
+  height: 36px;
+  min-width: 132px;
+  padding: 0 34px 0 12px;
+  border: 1px solid #d7dde5;
+  border-radius: 8px;
+  outline: none;
   background: #fff;
-  font-size: 14px;
+  color: #273449;
+  font-size: 13px;
+  cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.filter-select:focus {
+  border-color: #64748b;
+  box-shadow: 0 0 0 3px rgba(100, 116, 139, 0.12);
+}
+
+.sort-direction {
+  width: 36px;
+  height: 36px;
+  border: 1px solid #d7dde5;
+  border-radius: 8px;
+  background: #273449;
+  color: #fff;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  transition: background-color 0.15s ease, transform 0.15s ease;
+}
+
+.sort-direction:hover {
+  background: #1e293b;
+  transform: translateY(-1px);
 }
 
 .api-status {
