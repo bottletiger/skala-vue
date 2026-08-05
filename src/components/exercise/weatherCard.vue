@@ -98,11 +98,11 @@
 }
 
 .card-hot {
-  background: linear-gradient(105deg, #fff 0%, #fff 62%, #fff7ed 100%);
+  background: linear-gradient(to bottom right, #fff 0%, #fff 62%, #fff7ed 100%);
 }
 
 .card-cool {
-  background: linear-gradient(105deg, #fff 0%, #fff 62%, #eff6ff 100%);
+  background: linear-gradient(to bottom right, #fff 0%, #fff 62%, #eff6ff 100%);
 }
 
 .weather-card:hover {
