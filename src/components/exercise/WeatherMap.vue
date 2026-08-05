@@ -81,9 +81,15 @@ const windyEmbedUrl = computed(() =>
 .weather-map-frame {
   display: block;
   width: 100%;
-  height: clamp(320px, 75vw, 450px);
+  height: clamp(500px, calc(100vh - 240px), 640px);
   margin-top: 12px;
   border: 0;
   border-radius: 10px;
+}
+
+@media (max-width: 900px) {
+  .weather-map-frame {
+    height: clamp(320px, 75vw, 450px);
+  }
 }
 </style>

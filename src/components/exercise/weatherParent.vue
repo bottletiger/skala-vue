@@ -1,10 +1,13 @@
 <template>
     <div class="container">
-      <BaseDashboardCard>
-        <WeatherMap />
-      </BaseDashboardCard>
+      <aside class="map-column">
+        <BaseDashboardCard>
+          <WeatherMap />
+        </BaseDashboardCard>
+      </aside>
       
-      <BaseDashboardCard>
+      <div class="content-column">
+        <BaseDashboardCard>
           <SearchBar 
               :cur-query="searchQuery"
               :adding="isAddingCity"
@@ -14,88 +17,87 @@
           <p v-if="cityAddMessage" class="city-add-message" aria-live="polite">
             {{ cityAddMessage }}
           </p>
-      </BaseDashboardCard>
+        </BaseDashboardCard>
 
-      <BaseDashboardCard>
-        <div class="section-heading">
-          <h2>🏞️ 지역별 날씨 현황</h2>
-          <p>도시별 현재 관측 정보</p>
-        </div>
+        <BaseDashboardCard>
+          <div class="section-heading">
+            <h2>🏞️ 지역별 날씨 현황</h2>
+            <p>도시별 현재 관측 정보</p>
+          </div>
 
-        <p class="api-status" :class="`api-status--${apiStatus}`">
-          <span v-if="apiStatus === 'loading'">{{ API_LOADING }}</span>
-          <span v-else-if="apiStatus === 'success'">{{ API_SUCCESS }}</span>
-          <span v-else>{{ API_FAIL }}</span>
-        </p>
+          <p class="api-status" :class="`api-status--${apiStatus}`">
+            <span v-if="apiStatus === 'loading'">{{ API_LOADING }}</span>
+            <span v-else-if="apiStatus === 'success'">{{ API_SUCCESS }}</span>
+            <span v-else>{{ API_FAIL }}</span>
+          </p>
 
-        <div class="cache-row">
-          <p>{{ cacheStatusText }}</p>
-          <UButton
-            type="button"
-            color="neutral"
-            variant="outline"
-            size="xs"
-            :loading="isRefreshing"
-            :disabled="apiStatus === 'loading'"
-            @click="loadWeather({ forceRefresh: true })">
-            최신 날씨 다시 불러오기
-          </UButton>
-        </div>
+          <div class="cache-row">
+            <p>{{ cacheStatusText }}</p>
+            <UButton
+              type="button"
+              color="neutral"
+              variant="outline"
+              size="xs"
+              :loading="isRefreshing"
+              :disabled="apiStatus === 'loading'"
+              @click="loadWeather({ forceRefresh: true })">
+              최신 날씨 다시 불러오기
+            </UButton>
+          </div>
         
-        <div class="filter-row">
-          <USelect
-            v-model="sortKey"
-            :items="sortOptions"
-            class="filter-select"
-            size="sm"
-            aria-label="정렬 기준" />
+          <div class="filter-row">
+            <USelect
+              v-model="sortKey"
+              :items="sortOptions"
+              class="filter-select"
+              size="sm"
+              aria-label="정렬 기준" />
 
-          <UButton
-            type="button"
-            color="neutral"
-            variant="solid"
-            size="sm"
-            square
-            class="sort-direction"
-            :aria-label="sortDirection === 'asc' ? '내림차순으로 변경' : '오름차순으로 변경'"
-            @click="toggleSortDirection">
-            {{ sortDirection === 'asc' ? '↑' : '↓' }}
-          </UButton>
+            <UButton
+              type="button"
+              color="neutral"
+              variant="solid"
+              size="sm"
+              square
+              class="sort-direction"
+              :aria-label="sortDirection === 'asc' ? '내림차순으로 변경' : '오름차순으로 변경'"
+              @click="toggleSortDirection">
+              {{ sortDirection === 'asc' ? '↑' : '↓' }}
+            </UButton>
 
-          <UButton
-            type="button"
-            :color="favoriteOnly ? 'primary' : 'neutral'"
-            variant="outline"
-            size="sm"
-            class="favorite-filter"
-            :aria-pressed="favoriteOnly"
-            @click="favoriteOnly = !favoriteOnly">
-            ★ 즐겨찾기 <span>{{ favoriteCount }}</span>
-          </UButton>
-        </div>
+            <UButton
+              type="button"
+              :color="favoriteOnly ? 'primary' : 'neutral'"
+              variant="outline"
+              size="sm"
+              class="favorite-filter"
+              :aria-pressed="favoriteOnly"
+              @click="favoriteOnly = !favoriteOnly">
+              ★ 즐겨찾기 <span>{{ favoriteCount }}</span>
+            </UButton>
+          </div>
           
-        <div class="weather-grid">
-          <WeatherCard
-            v-for="item in filteredWeatherList"
-            :key="item.id"
-            :city-item="item"
-            :hot-temperature="HOT_TEMPERATURE"
-            :is-favorite="isFavorite(item.id)"
-            @select-card="selectCity"
-            @toggle-favorite="toggleFavorite"
-            @click-detail="showDetail">
-          </WeatherCard>
-        </div>
+          <div class="weather-grid">
+            <WeatherCard
+              v-for="item in filteredWeatherList"
+              :key="item.id"
+              :city-item="item"
+              :hot-temperature="HOT_TEMPERATURE"
+              :is-favorite="isFavorite(item.id)"
+              @select-card="selectCity"
+              @toggle-favorite="toggleFavorite"
+              @click-detail="showDetail">
+            </WeatherCard>
+          </div>
           <p v-if="filteredWeatherList.length === 0">
             {{ favoriteOnly ? '즐겨찾기한 도시가 없습니다.' : '검색 결과와 일치하는 도시가 없습니다.' }}
           </p>
           
           <div class="status-bar">
-          {{ selectedCityInfo }}
+            {{ selectedCityInfo }}
           </div>
-      </BaseDashboardCard>
-
-
+        </BaseDashboardCard>
+      </div>
     </div>
 </template>
 
@@ -351,9 +353,24 @@ const showDetail = (city) => {
 <style scoped>
 .container {
   display: grid;
+  grid-template-columns: minmax(320px, 7fr) minmax(0, 13fr);
+  align-items: start;
   gap: 16px;
   margin: 20px auto 0;
 }
+
+.map-column {
+  position: sticky;
+  top: 16px;
+  min-width: 0;
+}
+
+.content-column {
+  display: grid;
+  min-width: 0;
+  gap: 16px;
+}
+
 .status-bar {
   margin-top: 16px;
   padding-top: 12px;
@@ -474,6 +491,16 @@ const showDetail = (city) => {
 
   .weather-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 900px) {
+  .container {
+    grid-template-columns: 1fr;
+  }
+
+  .map-column {
+    position: static;
   }
 }
 </style>
