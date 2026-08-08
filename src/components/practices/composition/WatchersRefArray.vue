@@ -9,6 +9,7 @@ const logMember = ref('대기 중...')
 const cityWeather = ref([
   { name: '서울', temp: 25 },
   { name: '수원', temp: 22 },
+  { name: '수원', temp: 25 },
 ])
 const logWeather = ref('대기 중...')
 
@@ -40,6 +41,7 @@ watch(
     <h3>⛅ 2) 객체형 배열: 현재 {{ cityWeather[0].name }} 기온 [ {{ cityWeather[0].temp }}°C ]</h3>
     <button @click="cityWeather[0].temp++">서울 기온 1도 올리기 (temp++)</button>
     <p class="log object">로그: {{ logWeather }}</p>
+    <button @click="cityWeather.shift()">첫번째배열제거</button>
   </div>
 </template>
 
