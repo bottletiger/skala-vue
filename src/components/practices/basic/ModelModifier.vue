@@ -23,7 +23,7 @@ const price = ref('')
     <!-- 2) .number 수식어 실습 -->
     <section style="margin-bottom: 20px">
       <h3>2) .number 수식어 (Number 타입 자동 형변환)</h3>
-      <input type="text" v-model.number="age" placeholder="나이를 입력하세요" />
+      <input type="text" v-model="age" placeholder="나이를 입력하세요" />
       <p>
         입력된 값: <strong>{{ age }}</strong>
       </p>
@@ -35,7 +35,7 @@ const price = ref('')
     <!-- 3) .trim 수식어 실습 -->
     <section>
       <h3>3) .trim 수식어 (양끝 공백 자동 제거)</h3>
-      <input type="text" v-model.trim="userEmail" placeholder="앞뒤 공백을 포함해 입력해 보세요" />
+      <input type="text" v-model="userEmail" placeholder="앞뒤 공백을 포함해 입력해 보세요" />
       <p>
         공백 제거된 값: <strong>"{{ userEmail }}"</strong>
       </p>
