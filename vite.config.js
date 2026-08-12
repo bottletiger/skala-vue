@@ -6,7 +6,13 @@ import vueDevTools from 'vite-plugin-vue-devtools'
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [vue(), vueDevTools()],
+  plugins: [
+    vue(),
+    vueDevTools({
+      // 배포(Production) 빌드 시에도 In-App DevTools 포함시키기
+      appendTo: 'src/main.js', // main.js에 강제 삽입
+    }),
+  ],
   // 배포(Production) 빌드에서도 Vue DevTools 활성화
   define: {
     __VUE_PROD_DEVTOOLS__: true,

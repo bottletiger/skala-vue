@@ -14,7 +14,4 @@ app.use(createPinia())
 app.use(router)
 app.use(ElementPlus)
 
-// 개발자 도구 활성화 설정
-app.config.devtools = true
-
 app.mount('#app')
